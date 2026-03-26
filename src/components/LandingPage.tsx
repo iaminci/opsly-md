@@ -96,6 +96,25 @@ const CAPABILITIES = [
   },
 ];
 
+function LandingPageScreenshot({ className }: { className?: string }) {
+  const altBase =
+    "Opsly MD interface with workspaces sidebar, rendered Markdown, and on-page navigation";
+  return (
+    <>
+      <img
+        src="/opsly-md-light.png"
+        alt={`${altBase} in light mode`}
+        className={cn("w-full object-contain dark:hidden", className)}
+      />
+      <img
+        src="/opsly-md-dark.png"
+        alt={`${altBase} in dark mode`}
+        className={cn("hidden w-full object-contain dark:block", className)}
+      />
+    </>
+  );
+}
+
 function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -155,11 +174,7 @@ function Hero() {
           </Link>
         </div>
         <div className="mt-16 overflow-hidden rounded-xl border border-border/50 bg-card shadow-lg ring-1 ring-border/30 dark:ring-border/50">
-          <img
-            src="/screenshot.png"
-            alt="Opsly MD app interface with sidebar, document content, and table of contents"
-            className="w-full object-contain"
-          />
+          <LandingPageScreenshot />
         </div>
       </div>
     </section>
@@ -211,11 +226,7 @@ function InterfaceOverview() {
         </p>
         <div className="mt-12 relative">
           <div className="overflow-hidden rounded-xl border border-border/50 bg-card shadow-lg ring-1 ring-border/30 dark:ring-border/50">
-            <img
-              src="/screenshot.png"
-              alt="Opsly MD interface"
-              className="w-full object-contain"
-            />
+            <LandingPageScreenshot />
           </div>
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
             <Card className="ring-1 ring-border/50 ring-orange-500/30">
