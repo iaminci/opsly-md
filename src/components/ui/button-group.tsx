@@ -70,10 +70,12 @@ function ButtonGroupSeparator({
     <Separator
       data-slot="button-group-separator"
       orientation={orientation}
-      className={cn(
-        "relative self-stretch bg-input data-horizontal:mx-px data-horizontal:w-auto data-vertical:my-px data-vertical:h-auto",
-        className
-      )}
+      className={(state) =>
+        cn(
+          "relative self-stretch bg-input data-horizontal:mx-px data-horizontal:w-auto data-vertical:my-px data-vertical:h-auto",
+          typeof className === "function" ? className(state) : className
+        )
+      }
       {...props}
     />
   )
