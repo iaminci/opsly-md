@@ -297,9 +297,14 @@ function SidebarTrigger({
     <Button
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
-      variant="ghost"
+      variant="outline"
       size="icon-sm"
-      className={cn(className)}
+      className={(state) =>
+        cn(
+          "text-foreground",
+          typeof className === "function" ? className(state) : className
+        )
+      }
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
@@ -398,7 +403,12 @@ function SidebarSeparator({
     <Separator
       data-slot="sidebar-separator"
       data-sidebar="separator"
-      className={cn("mx-2 w-auto bg-sidebar-border", className)}
+      className={(state) =>
+        cn(
+          "mx-2 w-auto bg-sidebar-border",
+          typeof className === "function" ? className(state) : className
+        )
+      }
       {...props}
     />
   )
