@@ -128,20 +128,12 @@ function Navbar() {
             href="https://github.com/iaminci/opsly-md"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className={cn(buttonVariants({ variant: "outline"}))}
           >
+            <Github className="size-4" />
             GitHub
           </a>
           <ThemeToggle />
-          <Link
-            href="/app?loadSample=1"
-            className={cn(
-              "inline-flex h-9 items-center justify-center rounded-lg px-4 text-sm font-medium",
-              "bg-orange-600 text-white hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700"
-            )}
-          >
-            Open App
-          </Link>
         </div>
       </nav>
     </header>
@@ -159,7 +151,7 @@ function Hero() {
         <p className="mt-6 text-lg text-muted-foreground sm:text-xl">
           Write, organize and render Markdown documents directly in your browser.
         </p>
-        <p className="mt-2 text-muted-foreground">
+        <p className="mt-2 text-lg text-muted-foreground">
           No accounts. No cloud. Your documents stay on your device.
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-4">
@@ -167,9 +159,6 @@ function Hero() {
             href="/app?loadSample=1"
             className={cn(buttonVariants({ size: "lg" }), "bg-orange-600 text-white hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700")}
           >
-            Open App
-          </Link>
-          <Link href="/app?loadSample=1" className={cn(buttonVariants({ size: "lg", variant: "outline" }))}>
             View Example Workspace
           </Link>
         </div>
@@ -183,7 +172,7 @@ function Hero() {
 
 function LiveMarkdownDemo() {
   return (
-    <section className="border-t border-border/50 px-4 py-24 sm:px-6">
+    <section className="px-4 py-24 sm:px-6">
       <div className="mx-auto max-w-6xl">
         <h2 className="text-center text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
           Live Markdown Demo
@@ -216,7 +205,7 @@ function LiveMarkdownDemo() {
 
 function InterfaceOverview() {
   return (
-    <section className="border-t border-border/50 px-4 py-24 sm:px-6">
+    <section className="px-4 py-24 sm:px-6">
       <div className="mx-auto max-w-5xl">
         <h2 className="text-center text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
           Interface Overview
@@ -277,7 +266,7 @@ function InterfaceOverview() {
 
 function CorePrinciples() {
   return (
-    <section className="border-t border-border/50 px-4 py-24 sm:px-6">
+    <section className="px-4 py-24 sm:px-6">
       <div className="mx-auto max-w-4xl">
         <h2 className="text-center text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
           Core Principles
@@ -307,7 +296,7 @@ function CorePrinciples() {
 
 function Capabilities() {
   return (
-    <section className="border-t border-border/50 px-4 py-24 sm:px-6">
+    <section className="px-4 py-24 sm:px-6">
       <div className="mx-auto max-w-6xl">
         <h2 className="text-center text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
           Capabilities
@@ -334,7 +323,7 @@ function Capabilities() {
 
 function LocalStorageTransparency() {
   return (
-    <section className="border-t border-border/50 px-4 py-24 sm:px-6">
+    <section className="px-4 py-24 sm:px-6">
       <div className="mx-auto max-w-2xl">
         <h2 className="text-center text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
           Your documents are stored locally
@@ -362,7 +351,7 @@ function LocalStorageTransparency() {
 
 function Architecture() {
   return (
-    <section className="border-t border-border/50 px-4 py-24 sm:px-6">
+    <section className="px-4 py-24 sm:px-6">
       <div className="mx-auto max-w-4xl">
         <h2 className="text-center text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
           Architecture
@@ -421,73 +410,13 @@ function Architecture() {
   );
 }
 
-function OpenSourceSection() {
-  return (
-    <section className="border-t border-border/50 px-4 py-24 sm:px-6">
-      <div className="mx-auto max-w-2xl text-center">
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-          Open Source
-        </h2>
-        <p className="mt-4 text-muted-foreground">
-          Opsly MD is open source.
-          Inspect the code, suggest improvements, or contribute.
-        </p>
-        <a
-          href="https://github.com/iaminci/opsly-md"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={cn(buttonVariants({ variant: "outline", size: "lg" }), "mt-6 inline-flex items-center gap-2")}
-        >
-          <Github className="size-4" />
-          View on GitHub
-        </a>
-      </div>
-    </section>
-  );
-}
-
-function FinalCTA() {
-  return (
-    <section className="border-t border-border/50 px-4 py-24 sm:px-6">
-      <div className="mx-auto max-w-2xl text-center">
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-          Start using Opsly MD
-        </h2>
-        <div className="mt-8 flex flex-wrap justify-center gap-4">
-          <Link
-            href="/app?loadSample=1"
-            className={cn(buttonVariants({ size: "lg" }), "bg-orange-600 text-white hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700")}
-          >
-            Open App
-          </Link>
-          <Link href="/app?loadSample=1" className={cn(buttonVariants({ size: "lg", variant: "outline" }))}>
-            View Demo Workspace
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function Footer() {
   return (
-    <footer className="border-t border-border/50 px-4 py-12 sm:px-6">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 sm:flex-row">
-        <div className="flex items-center gap-2 font-semibold">
-          <span>Opsly</span>
-          <span className="text-orange-500 dark:text-orange-400">MD</span>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Local-first Markdown workspaces.
+    <footer className="border-t border-border/50 px-4 py-6 sm:px-6">
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-center">
+        <p className="text-m text-muted-foreground">
+          Copyright &copy; 2026 Opsly MD
         </p>
-        <a
-          href="https://github.com/iaminci/opsly-md"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          GitHub
-        </a>
       </div>
     </footer>
   );
@@ -505,8 +434,6 @@ export function LandingPage() {
         <Capabilities />
         <LocalStorageTransparency />
         <Architecture />
-        <OpenSourceSection />
-        <FinalCTA />
       </main>
       <Footer />
     </div>
