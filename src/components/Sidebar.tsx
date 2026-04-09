@@ -740,7 +740,7 @@ export function Sidebar({
               type="button"
               variant="outline"
               size="sm"
-              className="w-full border-red-500 text-destructive hover:bg-destructive/10 hover:text-destructive dark:border-red-600"
+              className="bg-destructive text-white hover:bg-destructive/90"
               onClick={handleDeleteAllClick}
               title={
                 selectedWorkspaceId
@@ -748,7 +748,7 @@ export function Sidebar({
                   : "Delete all workspaces, folders, and documents"
               }
             >
-              <Trash2 className="mr-1.5 size-4 shrink-0" />
+              <Trash2 className="h-4 w-4 mr-2" />
               {selectedWorkspaceId ? "Delete Workspace" : "Delete Everything"}
             </Button>
           </div>
