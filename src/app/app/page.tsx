@@ -104,7 +104,7 @@ function DocumentRightSidebar({
 }) {
   return (
     <Tabs defaultValue="on-this-page" className="flex flex-col h-full">
-      <TabsList variant="line" className="w-full justify-start h-8 mb-2">
+      <TabsList className="w-full justify-start h-11 mb-5">
         <TabsTrigger value="on-this-page">On This Page</TabsTrigger>
         <TabsTrigger value="info">Info</TabsTrigger>
       </TabsList>
