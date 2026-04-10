@@ -662,7 +662,7 @@ export function Sidebar({
                 </div>
                 <Button
                   type="button"
-                  variant="default"
+                  variant="neutral"
                   size="icon"
                   className="size-7 shrink-0 dark:[color:var(--dm-text)]"
                   onClick={handleAddWorkspace}
