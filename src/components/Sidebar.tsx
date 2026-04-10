@@ -662,7 +662,7 @@ export function Sidebar({
                 </div>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="default"
                   size="icon"
                   className="size-7 shrink-0 dark:[color:var(--dm-text)]"
                   onClick={handleAddWorkspace}
@@ -705,7 +705,7 @@ export function Sidebar({
           <div className="flex flex-col gap-1.5">
             <Button
               type="button"
-              variant="outline"
+              variant="default"
               size="sm"
               onClick={() => setShowPaste(true)}
               className="w-full rounded-lg border-orange-500/50 focus-visible:border-orange-500 focus-visible:ring-orange-500/50 dark:[border-color:var(--dm-border)] dark:focus-visible:[border-color:var(--dm-text)] dark:focus-visible:[--tw-ring-color:var(--dm-focus-ring)]"
@@ -715,7 +715,7 @@ export function Sidebar({
             <div className="flex gap-1.5">
               <Button
                 type="button"
-                variant="outline"
+                variant="default"
                 size="sm"
                 className="flex-1 border-orange-500/50 focus-visible:border-orange-500 focus-visible:ring-orange-500/50 dark:[border-color:var(--dm-border)] dark:focus-visible:[border-color:var(--dm-text)] dark:focus-visible:[--tw-ring-color:var(--dm-focus-ring)]"
               onClick={handleImportWorkspace}
@@ -726,7 +726,7 @@ export function Sidebar({
               </Button>
               <Button
                 type="button"
-                variant="outline"
+                variant="default"
                 size="sm"
                 className="flex-1 border-orange-500/50 focus-visible:border-orange-500 focus-visible:ring-orange-500/50 dark:[border-color:var(--dm-border)] dark:focus-visible:[border-color:var(--dm-text)] dark:focus-visible:[--tw-ring-color:var(--dm-focus-ring)]"
                 onClick={handleExportClick}
@@ -738,7 +738,7 @@ export function Sidebar({
             </div>
             <Button
               type="button"
-              variant="outline"
+              variant="default"
               size="sm"
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={handleDeleteAllClick}
@@ -827,7 +827,7 @@ export function Sidebar({
             />
           </div>
           <DialogFooter className="gap-2 sm:gap-3">
-            <Button variant="outline" onClick={() => { setShowPaste(false); setPasteValue(""); }}>
+            <Button variant="default" onClick={() => { setShowPaste(false); setPasteValue(""); }}>
               Cancel
             </Button>
             <Button
@@ -894,7 +894,7 @@ export function Sidebar({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              variant="destructive"
+              variant="default"
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 void handleDeleteAllConfirm();
@@ -926,7 +926,7 @@ export function Sidebar({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              variant="destructive"
+              variant="default"
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 void handleDeleteWorkspaceConfirm();
@@ -958,7 +958,7 @@ export function Sidebar({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              variant="destructive"
+              variant="default"
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 void handleDeleteFolderConfirm();
@@ -989,7 +989,7 @@ export function Sidebar({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              variant="destructive"
+              variant="default"
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 void handleDeleteDocumentConfirm();
@@ -1035,7 +1035,7 @@ export function Sidebar({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setExportDialogOpen(false)}>
+            <Button variant="default" onClick={() => setExportDialogOpen(false)}>
               Cancel
             </Button>
             <Button
@@ -1103,7 +1103,7 @@ function PasteInput({
           className="mb-2 border-orange-500/50 focus-visible:border-orange-500 focus-visible:ring-orange-500/50 dark:[border-color:var(--dm-border)] dark:focus-visible:[border-color:var(--dm-text)] dark:focus-visible:[--tw-ring-color:var(--dm-focus-ring)]"
         />
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+          <Button type="button" variant="default" size="sm" onClick={onClose}>
             Cancel
           </Button>
           <Button

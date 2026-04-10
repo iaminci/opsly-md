@@ -156,17 +156,15 @@ function AlertDialogAction({
   return (
     <Button
       data-slot="alert-dialog-action"
-      className={(state) =>
-        cn(typeof className === "function" ? className(state) : className)
-      }
+      className={cn(className)}
       {...props}
     />
   )
 }
 
 function AlertDialogCancel({
-  className,
-  variant = "outline",
+  className="text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]",
+  variant = "neutral",
   size = "default",
   ...props
 }: AlertDialogPrimitive.Close.Props &
@@ -175,7 +173,8 @@ function AlertDialogCancel({
     <AlertDialogPrimitive.Close
       data-slot="alert-dialog-cancel"
       className={(state) =>
-        cn(typeof className === "function" ? className(state) : className)
+        cn(
+          typeof className === "function" ? className(state) : className)
       }
       render={<Button variant={variant} size={size} />}
       {...props}

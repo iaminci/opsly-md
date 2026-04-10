@@ -305,7 +305,7 @@ function AppContent() {
       />
 
       <SidebarInset className="min-h-0 overflow-hidden">
-        <header className="relative flex h-12 shrink-0 items-center gap-2 border-b border-orange-500/50 dark:[border-color:var(--dm-border)] px-4">
+        <header className="relative flex h-16 shrink-0 items-center gap-2 border-b border-orange-500/50 dark:[border-color:var(--dm-border)] px-4">
           <SidebarTrigger className="shrink-0" />
           <Link
             href="/"
@@ -352,9 +352,9 @@ function AppContent() {
                     <div className="flex shrink-0 gap-2">
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="neutral"
                         size="sm"
-                        className="border-orange-500/50 focus-visible:border-orange-500 focus-visible:ring-orange-500/50 dark:[border-color:var(--dm-border)] dark:focus-visible:[border-color:var(--dm-text)] dark:focus-visible:[--tw-ring-color:var(--dm-focus-ring)]"
+                        className="text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"
                         onClick={handleEditOpen}
                       >
                         <Pencil className="mr-1.5 size-4" />
@@ -362,9 +362,9 @@ function AppContent() {
                       </Button>
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="default"
                         size="sm"
-                        className="border-orange-500/50 focus-visible:border-orange-500 focus-visible:ring-orange-500/50 dark:[border-color:var(--dm-border)] dark:focus-visible:[border-color:var(--dm-text)] dark:focus-visible:[--tw-ring-color:var(--dm-focus-ring)]"
+                        className="bg-orange-600 text-white hover:bg-orange-700 dark:[background-color:var(--dm-btn)] dark:hover:[background-color:var(--dm-btn-hover)]"
                         onClick={() => {
                           const blob = new Blob([currentDoc.content], {
                             type: "text/markdown",
@@ -416,11 +416,15 @@ function AppContent() {
             />
           </div>
           <DialogFooter className="gap-2 sm:gap-3">
-            <Button variant="outline" onClick={() => setEditOpen(false)}>
+            <Button
+              variant="neutral" onClick={() => setEditOpen(false)}
+              className="text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"
+            >
               Cancel
             </Button>
             <Button
               onClick={handleEditSave}
+              variant="neutral"
               className="bg-orange-600 text-white hover:bg-orange-700 dark:[background-color:var(--dm-btn)] dark:hover:[background-color:var(--dm-btn-hover)]"
             >
               Save
