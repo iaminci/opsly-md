@@ -39,7 +39,7 @@ export function WorkspaceSwitcher({
             render={
               <SidebarMenuButton
                 isActive
-                className="!bg-orange-200/50 dark:![background-color:var(--dm-bg)]"
+                className="!h-9 !min-h-9 !border-0 !rounded-[10px] !bg-sidebar-primary !font-heading !font-bold !text-sidebar-primary-foreground !shadow-none !outline-0 hover:!bg-sidebar-primary/90 hover:!text-sidebar-primary-foreground hover:!outline-0 focus-visible:!outline-0 focus-visible:!bg-sidebar-primary"
               >
                 <span className="truncate">{label}</span>
                 <ChevronDown className="ml-auto size-4 shrink-0" />
@@ -48,11 +48,14 @@ export function WorkspaceSwitcher({
           />
           <DropdownMenuContent
             align="start"
-            className="w-[--radix-popper-anchor-width] min-w-48"
+            className="w-[--radix-popper-anchor-width] min-w-48 rounded-[10px] border border-sidebar-border bg-sidebar font-heading shadow-md"
           >
             <DropdownMenuItem
               onClick={() => onSelect(null)}
-              className={cn(!selectedId && "bg-orange-200/50 text-foreground font-bold dark:[background-color:var(--dm-bg)]")}
+              className={cn(
+                !selectedId &&
+                  "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
+              )}
             >
               <span className="truncate">All workspaces</span>
             </DropdownMenuItem>
@@ -61,7 +64,8 @@ export function WorkspaceSwitcher({
                 key={ws.id}
                 onClick={() => onSelect(ws.id)}
                 className={cn(
-                  selectedId === ws.id && "bg-orange-200/50 text-foreground font-bold dark:[background-color:var(--dm-bg)]"
+                  selectedId === ws.id &&
+                    "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
                 )}
               >
                 <span className="truncate">{ws.name}</span>

@@ -499,7 +499,7 @@ export function Sidebar({
     : null;
 
   return (
-    <ShadcnSidebar collapsible="icon" className="print:hidden border-r border-orange-500/50 dark:[border-color:var(--dm-border)]">
+    <ShadcnSidebar collapsible="icon" className="print:hidden border-r-2 border-sidebar-border">
       <SidebarRail />
       <input
         ref={fileInputRef}
@@ -529,8 +529,8 @@ export function Sidebar({
               <TooltipTrigger
                 type="button"
                 className={cn(
-                  "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md transition-colors duration-150 hover:bg-muted [&_svg]:[stroke:var(--sidebar-foreground)]",
-                  commandPaletteOpen ? "bg-accent/10 text-accent" : "text-sidebar-foreground"
+                  "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-base border-2 border-transparent transition-colors duration-150 hover:border-sidebar-border hover:bg-sidebar-accent hover:shadow-none [&_svg]:[stroke:var(--sidebar-foreground)]",
+                  commandPaletteOpen ? "border-sidebar-border bg-sidebar-accent shadow-none text-sidebar-primary" : "text-sidebar-foreground"
                 )}
                 onClick={() => setOpen(true)}
                 aria-label="Search Markdown Files"
@@ -547,8 +547,8 @@ export function Sidebar({
               <TooltipTrigger
                 type="button"
                 className={cn(
-                  "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md transition-colors duration-150 hover:bg-muted [&_svg]:[stroke:var(--sidebar-foreground)]",
-                  !commandPaletteOpen && currentId ? "bg-accent/10 text-accent" : "text-sidebar-foreground"
+                  "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-base border-2 border-transparent transition-colors duration-150 hover:border-sidebar-border hover:bg-sidebar-accent hover:shadow-none [&_svg]:[stroke:var(--sidebar-foreground)]",
+                  !commandPaletteOpen && currentId ? "border-sidebar-border bg-sidebar-accent shadow-none text-sidebar-primary" : "text-sidebar-foreground"
                 )}
                 onClick={() => setOpen(true)}
                 aria-label="Documents"
@@ -560,7 +560,7 @@ export function Sidebar({
             <Tooltip>
               <TooltipTrigger
                 type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-sidebar-foreground transition-colors duration-150 hover:bg-muted [&_svg]:[stroke:var(--sidebar-foreground)]"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-base border-2 border-transparent text-sidebar-foreground transition-colors duration-150 hover:border-sidebar-border hover:bg-sidebar-accent hover:shadow-none [&_svg]:[stroke:var(--sidebar-foreground)]"
                 onClick={() => {
                   setOpen(true);
                   handleAddWorkspace();
@@ -577,11 +577,11 @@ export function Sidebar({
           <div className="min-h-0 flex-1" aria-hidden />
 
           {/* 4-7. Bottom action bar - matches opened: Paste, Import|Export, Delete */}
-          <div className="shrink-0 border-t border-orange-500/50 dark:[border-color:var(--dm-border)] flex flex-col items-center gap-1.5 py-2 px-0">
+          <div className="flex shrink-0 flex-col items-center gap-1.5 border-t border-sidebar-border px-0 py-2">
             <Tooltip>
               <TooltipTrigger
                 type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-sidebar-foreground transition-colors duration-150 hover:bg-muted [&_svg]:[stroke:var(--sidebar-foreground)]"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-base border-2 border-transparent text-sidebar-foreground transition-colors duration-150 hover:border-sidebar-border hover:bg-sidebar-accent hover:shadow-none [&_svg]:[stroke:var(--sidebar-foreground)]"
                 onClick={() => {
                   setOpen(true);
                   setShowPaste(true);
@@ -595,7 +595,7 @@ export function Sidebar({
             <Tooltip>
               <TooltipTrigger
                 type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-sidebar-foreground transition-colors duration-150 hover:bg-muted [&_svg]:[stroke:var(--sidebar-foreground)]"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-base border-2 border-transparent text-sidebar-foreground transition-colors duration-150 hover:border-sidebar-border hover:bg-sidebar-accent hover:shadow-none [&_svg]:[stroke:var(--sidebar-foreground)]"
                 onClick={() => {
                   setOpen(true);
                   handleImportWorkspace();
@@ -609,7 +609,7 @@ export function Sidebar({
             <Tooltip>
               <TooltipTrigger
                 type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-sidebar-foreground transition-colors duration-150 hover:bg-muted [&_svg]:[stroke:var(--sidebar-foreground)]"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-base border-2 border-transparent text-sidebar-foreground transition-colors duration-150 hover:border-sidebar-border hover:bg-sidebar-accent hover:shadow-none [&_svg]:[stroke:var(--sidebar-foreground)]"
                 onClick={() => {
                   setOpen(true);
                   handleExportClick();
@@ -623,7 +623,7 @@ export function Sidebar({
             <Tooltip>
               <TooltipTrigger
                 type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-destructive transition-colors duration-150 hover:bg-muted hover:text-destructive [&_svg]:![stroke:var(--destructive)]"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-base border-2 border-transparent text-destructive transition-colors duration-150 hover:border-destructive hover:bg-destructive/10 hover:shadow-none [&_svg]:![stroke:var(--destructive)]"
                 onClick={() => {
                   setOpen(true);
                   handleDeleteAllClick();
@@ -641,7 +641,7 @@ export function Sidebar({
         {/* Main content - hidden when sidebar is collapsed to icon mode */}
         {!isCollapsed && (
         <div className="flex flex-1 min-h-0 flex-col">
-        <div className="shrink-0 flex flex-col">
+        <div className="mb-2 flex shrink-0 flex-col border-b border-sidebar-border pb-3">
           <SidebarGroup>
             <SidebarGroupLabel className="sr-only">Search</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -661,10 +661,8 @@ export function Sidebar({
                   />
                 </div>
                 <Button
-                  type="button"
                   variant="neutral"
-                  size="icon"
-                  className="size-7 shrink-0 dark:[color:var(--dm-text)]"
+                  className="inline-flex size-8 shrink-0 text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"
                   onClick={handleAddWorkspace}
                   title="New workspace"
                 >
@@ -676,7 +674,7 @@ export function Sidebar({
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-          <SidebarGroup className="flex-1">
+          <SidebarGroup className="flex-1 border-b-0">
             <SidebarGroupContent>
               <WorkspaceTree
               workspaces={displayedWorkspaces}
@@ -704,20 +702,18 @@ export function Sidebar({
         <div className="shrink-0 border-t border-orange-500/50 dark:[border-color:var(--dm-border)] px-2 py-2">
           <div className="flex flex-col gap-1.5">
             <Button
-              type="button"
-              variant="default"
+              variant="neutral"
               size="sm"
               onClick={() => setShowPaste(true)}
-              className="w-full rounded-lg border-orange-500/50 focus-visible:border-orange-500 focus-visible:ring-orange-500/50 dark:[border-color:var(--dm-border)] dark:focus-visible:[border-color:var(--dm-text)] dark:focus-visible:[--tw-ring-color:var(--dm-focus-ring)]"
+              className="text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"
             >
               Paste Markdown
             </Button>
             <div className="flex gap-1.5">
               <Button
-                type="button"
-                variant="default"
+                variant="neutral"
                 size="sm"
-                className="flex-1 border-orange-500/50 focus-visible:border-orange-500 focus-visible:ring-orange-500/50 dark:[border-color:var(--dm-border)] dark:focus-visible:[border-color:var(--dm-text)] dark:focus-visible:[--tw-ring-color:var(--dm-focus-ring)]"
+                className="flex-1 text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"
               onClick={handleImportWorkspace}
               title="Import workspace"
               >
@@ -725,10 +721,9 @@ export function Sidebar({
                 Import
               </Button>
               <Button
-                type="button"
-                variant="default"
+                variant="neutral"
                 size="sm"
-                className="flex-1 border-orange-500/50 focus-visible:border-orange-500 focus-visible:ring-orange-500/50 dark:[border-color:var(--dm-border)] dark:focus-visible:[border-color:var(--dm-text)] dark:focus-visible:[--tw-ring-color:var(--dm-focus-ring)]"
+                className="flex-1 text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"
                 onClick={handleExportClick}
                 title={selectedWorkspaceId ? "Export workspace" : "Export all workspaces"}
               >
@@ -738,9 +733,9 @@ export function Sidebar({
             </div>
             <Button
               type="button"
-              variant="default"
+              variant="neutral"
               size="sm"
-              className="bg-destructive text-white hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:ring-destructive"
               onClick={handleDeleteAllClick}
               title={
                 selectedWorkspaceId
@@ -827,7 +822,7 @@ export function Sidebar({
             />
           </div>
           <DialogFooter className="gap-2 sm:gap-3">
-            <Button variant="default" onClick={() => { setShowPaste(false); setPasteValue(""); }}>
+            <Button variant="neutral" className="text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"onClick={() => { setShowPaste(false); setPasteValue(""); }}>
               Cancel
             </Button>
             <Button
@@ -895,6 +890,7 @@ export function Sidebar({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               variant="default"
+              className="bg-orange-600 text-white hover:bg-orange-700 dark:[background-color:var(--dm-btn)] dark:hover:[background-color:var(--dm-btn-hover)]"
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 void handleDeleteAllConfirm();
@@ -1035,7 +1031,7 @@ export function Sidebar({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="default" onClick={() => setExportDialogOpen(false)}>
+            <Button variant="neutral" className="text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]" onClick={() => setExportDialogOpen(false)}>
               Cancel
             </Button>
             <Button
@@ -1103,7 +1099,7 @@ function PasteInput({
           className="mb-2 border-orange-500/50 focus-visible:border-orange-500 focus-visible:ring-orange-500/50 dark:[border-color:var(--dm-border)] dark:focus-visible:[border-color:var(--dm-text)] dark:focus-visible:[--tw-ring-color:var(--dm-focus-ring)]"
         />
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="default" size="sm" onClick={onClose}>
+          <Button type="button" variant="neutral" className="text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]" size="sm" onClick={onClose}>
             Cancel
           </Button>
           <Button

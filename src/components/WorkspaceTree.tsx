@@ -10,7 +10,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -153,17 +152,15 @@ export function WorkspaceTree({
   return (
     <div className="flex flex-col gap-0">
       <Accordion
-        multiple
+        type="multiple"
         key={workspaceIds.join(",")}
         value={workspaceValue}
         onValueChange={handleWorkspaceValueChange}
-        className="border-none max-w-full"
+        className="w-full max-w-full"
       >
-        {workspaces.map((ws, index) => (
+        {workspaces.map((ws) => (
           <WorkspaceSection
             key={ws.id}
-            showSeparatorAbove={true}
-            showSeparatorBelow={index === workspaces.length - 1}
             workspace={ws}
             expandedFolders={expandedFolders}
             onExpandedFoldersChange={handleExpandedFoldersChange}
@@ -192,8 +189,6 @@ export function WorkspaceTree({
 }
 
 interface WorkspaceSectionProps {
-  showSeparatorAbove?: boolean;
-  showSeparatorBelow?: boolean;
   expandedFolders: string[];
   onExpandedFoldersChange: (parentFolderId: string | null, childIds: string[], newExpanded: string[]) => void;
   workspace: Workspace;
@@ -217,8 +212,6 @@ interface WorkspaceSectionProps {
 }
 
 function WorkspaceSection({
-  showSeparatorAbove = false,
-  showSeparatorBelow = false,
   expandedFolders,
   onExpandedFoldersChange,
   workspace,
@@ -264,30 +257,24 @@ function WorkspaceSection({
   };
 
   return (
-    <AccordionItem
-      value={workspace.id}
-      className="border-none rounded-xl px-2 py-0 -mx-2"
-    >
-      {showSeparatorAbove && (
-        <div
-          className="h-px shrink-0 bg-orange-500/40 dark:[background-color:var(--dm-bg-line)] mx-2 my-1"
-          aria-hidden
-        />
-      )}
+    <AccordionItem value={workspace.id}>
         <AccordionTrigger
+          triggerVariant="section"
           className={cn(
-            "group/ws flex w-full items-center rounded-xl pl-3 pr-2 py-1 hover:no-underline hover:bg-orange-200/50 dark:hover:[background-color:var(--dm-bg)] [&>[data-slot=accordion-trigger-icon]]:ml-auto",
-            wsDragOver && "bg-primary/15 ring-2 ring-primary/30"
+            "group/ws hover:no-underline",
+            wsDragOver && "ring-2 ring-sidebar-primary ring-inset"
           )}
           onDragOver={handleWsDragOver}
           onDragLeave={handleWsDragLeave}
           onDrop={handleWsDrop}
         >
-          <div className="flex flex-1 min-w-0 items-center gap-3">
-            <Library className="size-4 shrink-0 text-orange-500/80 dark:[color:var(--dm-text-muted)]" />
-            <span className="truncate text-left">{workspace.name}</span>
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <Library className="size-4 shrink-0 text-sidebar-primary-foreground" />
+            <span className="truncate text-left font-heading font-bold">
+              {workspace.name}
+            </span>
           </div>
-          <div className="ml-auto shrink-0 opacity-0 transition-opacity group-hover/ws:opacity-100" onClick={(e) => e.stopPropagation()}>
+          <div className="shrink-0 opacity-0 transition-opacity group-hover/ws:opacity-100" onClick={(e) => e.stopPropagation()}>
             <DropdownMenu>
               <DropdownMenuTrigger
                 nativeButton={false}
@@ -295,7 +282,7 @@ function WorkspaceSection({
                   <div
                     role="button"
                     tabIndex={0}
-                    className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded transition-opacity hover:bg-sidebar-accent text-orange-600 dark:[color:var(--dm-text-muted)] dark:hover:[color:var(--dm-text)]"
+                    className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md border border-transparent text-sidebar-primary-foreground/90 transition-opacity hover:bg-black/10"
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") e.preventDefault();
                     }}
@@ -304,7 +291,11 @@ function WorkspaceSection({
                   </div>
                 }
               />
-              <DropdownMenuContent align="end" className="rounded-lg shadow-lg" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuContent
+                align="end"
+                className="rounded-lg border border-sidebar-border/80 bg-sidebar font-heading shadow-sm"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <DropdownMenuItem onClick={() => onAddFolder(workspace.id, null)}>
                   <FolderIcon className="mr-2 size-4" />
                   Add folder
@@ -327,20 +318,20 @@ function WorkspaceSection({
             </DropdownMenu>
           </div>
         </AccordionTrigger>
-        <AccordionContent className="pb-0">
+        <AccordionContent className="!p-0">
           <WorkspaceDropArea
             workspaceId={workspace.id}
             folderId={null}
             onDrop={onMoveDocument}
-            className="flex flex-col gap-0 pt-0.5 pb-1 ml-2 pl-3"
+            className="flex flex-col gap-0 border-l border-[color:var(--sidebar-guide)] ml-4 pb-1 pl-3 pt-1"
           >
             {folders.length > 0 && (
               <Accordion
-                multiple
+                type="multiple"
                 key={folderIds.join(",")}
                 value={folderIds.filter((id) => expandedFolders.includes(id))}
                 onValueChange={(v) => onExpandedFoldersChange(null, folderIds, v)}
-                className="border-none"
+                className="w-full"
               >
                 {folders.map((folder) => (
                   <FolderItem
@@ -378,12 +369,6 @@ function WorkspaceSection({
             ))}
           </WorkspaceDropArea>
         </AccordionContent>
-      {showSeparatorBelow && (
-        <div
-          className="h-px shrink-0 bg-orange-500/40 dark:[background-color:var(--dm-bg-line)] mx-2 my-1"
-          aria-hidden
-        />
-      )}
     </AccordionItem>
   );
 }
@@ -429,8 +414,8 @@ function WorkspaceDropArea({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={cn(
-        "transition-all duration-150 rounded-lg",
-        isDragOver && "bg-primary/15 ring-2 ring-primary/30 ring-inset",
+        "rounded-base transition-all duration-150",
+        isDragOver && "bg-sidebar-accent/40 ring-2 ring-sidebar-primary ring-inset",
         className
       )}
     >
@@ -503,21 +488,24 @@ function FolderItem({
   };
 
   return (
-    <AccordionItem value={folder.id} className="border-none">
+    <AccordionItem value={folder.id} variant="nested">
       <AccordionTrigger
+        triggerVariant="tree"
         className={cn(
-          "group/folder flex w-full items-center rounded-xl pl-3 pr-2 py-1 hover:no-underline hover:bg-orange-200/50 dark:hover:[background-color:var(--dm-bg)] [&>[data-slot=accordion-trigger-icon]]:ml-auto",
-          folderDragOver && "bg-primary/15 ring-2 ring-primary/30"
+          "group/folder min-h-9 py-1.5 hover:no-underline",
+          folderDragOver && "ring-2 ring-sidebar-primary ring-inset"
         )}
         onDragOver={handleFolderDragOver}
         onDragLeave={handleFolderDragLeave}
         onDrop={handleFolderDrop}
       >
-        <div className="flex flex-1 min-w-0 items-center gap-3">
-          <FolderIcon className="size-4 shrink-0 text-orange-500/80 dark:[color:var(--dm-text-muted)]" />
-          <span className="truncate text-left">{folder.name}</span>
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <FolderIcon className="size-4 shrink-0 text-sidebar-foreground opacity-90" />
+          <span className="truncate text-left font-heading font-semibold group-data-[state=open]/folder:font-bold">
+            {folder.name}
+          </span>
         </div>
-        <div className="ml-auto shrink-0 opacity-0 transition-opacity group-hover/folder:opacity-100" onClick={(e) => e.stopPropagation()}>
+        <div className="shrink-0 opacity-0 transition-opacity group-hover/folder:opacity-100" onClick={(e) => e.stopPropagation()}>
           <DropdownMenu>
             <DropdownMenuTrigger
               nativeButton={false}
@@ -525,7 +513,7 @@ function FolderItem({
                 <div
                   role="button"
                   tabIndex={0}
-                  className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded transition-opacity hover:bg-sidebar-accent text-orange-600 dark:[color:var(--dm-text-muted)] dark:hover:[color:var(--dm-text)]"
+                  className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md border border-transparent text-sidebar-foreground transition-opacity hover:border-sidebar-border/40 hover:bg-sidebar-accent/80 group-data-[state=open]/folder:text-sidebar-foreground"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") e.preventDefault();
                   }}
@@ -534,7 +522,11 @@ function FolderItem({
                 </div>
               }
             />
-            <DropdownMenuContent align="end" className="rounded-lg shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuContent
+              align="end"
+              className="rounded-lg border border-sidebar-border/80 bg-sidebar font-heading shadow-sm"
+              onClick={(e) => e.stopPropagation()}
+            >
               <DropdownMenuItem onClick={() => onAddFolder(workspaceId, folder.id)}>
                 <FolderIcon className="mr-2 size-4" />
                 Add folder
@@ -555,20 +547,20 @@ function FolderItem({
           </DropdownMenu>
         </div>
       </AccordionTrigger>
-      <AccordionContent className="pb-0">
+      <AccordionContent className="!p-0">
         <WorkspaceDropArea
           workspaceId={workspaceId}
           folderId={folder.id}
           onDrop={onMoveDocument}
-          className="ml-2 flex flex-col gap-0 pl-3 pt-0.5"
+          className="flex flex-col gap-0 border-l border-[color:var(--sidebar-guide)] ml-2 pb-1 pl-3 pt-0.5"
         >
           {subfolders.length > 0 && (
             <Accordion
-              multiple
+              type="multiple"
               key={subfolderIds.join(",")}
               value={subfolderIds.filter((id) => expandedFolders.includes(id))}
               onValueChange={(v) => onExpandedFoldersChange(folder.id, subfolderIds, v)}
-              className="border-none"
+              className="w-full"
             >
               {subfolders.map((sub) => (
                 <FolderItem
@@ -637,10 +629,10 @@ function FileItem({
       draggable
       onDragStart={handleDragStart}
       className={cn(
-        "group flex items-center gap-1 rounded-xl pl-0 pr-1.5 py-1 transition-colors cursor-pointer",
+        "group flex cursor-pointer items-center gap-1 rounded-md py-1.5 pl-1 pr-1 transition-colors",
         isActive
-          ? "bg-orange-200/50 dark:[background-color:var(--dm-bg)]"
-          : "hover:bg-orange-200/50 dark:hover:[background-color:var(--dm-bg)]"
+          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+          : "hover:bg-sidebar-accent/60"
       )}
       onClick={(e) => {
         if (!(e.target as HTMLElement).closest("[data-slot='dropdown-menu-trigger']")) {
@@ -648,36 +640,41 @@ function FileItem({
         }
       }}
     >
-      <Button
+      <button
         type="button"
-        variant="ghost"
-        size="sm"
         className={cn(
-          "flex-1 min-w-0 justify-start gap-1 truncate font-normal h-6 px-1.5 rounded-lg",
-          isActive && "font-bold"
+          "flex h-auto min-h-7 min-w-0 flex-1 items-center justify-start gap-2 truncate rounded-md border-0 bg-transparent px-1.5 text-left text-sm font-normal hover:bg-transparent",
+          isActive && "font-medium text-sidebar-foreground",
+          !isActive && "text-sidebar-foreground"
         )}
       >
-        <FileIcon className="size-4 shrink-0 text-orange-500/80 dark:[color:var(--dm-text-muted)]" />
+        <FileIcon
+          className={cn(
+            "size-4 shrink-0 text-sidebar-foreground opacity-80",
+            isActive && "opacity-100"
+          )}
+        />
         <span className="truncate" title={displayName}>
           {displayName}
         </span>
-      </Button>
+      </button>
       <div className="ml-auto shrink-0">
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button
+              <button
                 type="button"
-                variant="ghost"
-                size="icon"
-                className="size-6 shrink-0 rounded-md opacity-0 group-hover:opacity-100 transition-opacity text-orange-600 dark:[color:var(--dm-text-muted)] dark:hover:[color:var(--dm-text)]"
+                className="flex size-6 shrink-0 items-center justify-center rounded-md bg-transparent text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
                 onClick={(e) => e.stopPropagation()}
               >
                 <MoreHorizontal className="size-3.5" />
-              </Button>
+              </button>
             }
           />
-          <DropdownMenuContent align="end" className="rounded-lg shadow-lg">
+          <DropdownMenuContent
+            align="end"
+            className="rounded-lg border border-sidebar-border/80 bg-sidebar font-heading shadow-sm"
+          >
             <DropdownMenuItem onClick={onRename}>
               <Pencil className="mr-2 size-4" />
               Rename

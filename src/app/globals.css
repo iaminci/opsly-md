@@ -31,6 +31,7 @@
 
   --font-sans: var(--font-fira-code), ui-monospace, monospace;
   --font-mono: var(--font-fira-code), ui-monospace, monospace;
+  --font-sidebar: var(--font-sidebar-sans), ui-sans-serif, system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -67,6 +68,11 @@
 
 body {
   font-family: var(--font-sans);
+}
+
+/* Sidebar: reference-style bold sans, not monospace (rest of app unchanged) */
+[data-sidebar="sidebar"] {
+  font-family: var(--font-sidebar);
 }
 
 /* Table styling (Cursor-like) */
@@ -173,12 +179,15 @@ body {
   --destructive-foreground: #ffffff;
   --sidebar: #ffffff;
   --sidebar-foreground: #000000;
-  --sidebar-primary: #ea435f;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f5f5f5;
-  --sidebar-accent-foreground: #000000;
-  --sidebar-border: #000000;
-  --sidebar-ring: #000000;
+  /* Workspace bars + switcher — warm orange (~reference), black labels */
+  --sidebar-primary: #e79e5e;
+  --sidebar-primary-foreground: #000000;
+  /* Selected file / soft fills (light beige) */
+  --sidebar-accent: #faf6f0;
+  --sidebar-accent-foreground: #171717;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: #e79e5e;
+  --sidebar-guide: #c4c4c4;
 }
 
 .dark {
@@ -216,12 +225,13 @@ body {
   --destructive-foreground: #ffffff;
   --sidebar: #1a1a1a;
   --sidebar-foreground: #f5f5f5;
-  --sidebar-primary: #f07200;
-  --sidebar-primary-foreground: #fdead9;
+  --sidebar-primary: #e8894a;
+  --sidebar-primary-foreground: #141414;
   --sidebar-accent: #3a2617;
   --sidebar-accent-foreground: #f5f5f5;
-  --sidebar-border: #2a2a2a;
-  --sidebar-ring: #f07200;
+  --sidebar-border: #3f3f46;
+  --sidebar-ring: #e8894a;
+  --sidebar-guide: #71717a;
 }
 
 /* Dark mode accent variables - only affect dark mode, light mode untouched */
