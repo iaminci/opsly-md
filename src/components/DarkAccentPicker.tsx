@@ -32,9 +32,8 @@ export function DarkAccentPicker() {
       <DropdownMenuTrigger
         render={
           <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
+            variant="neutral"
+            // size="icon-sm"
             className="text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"
             aria-label="Choose dark mode accent"
           >
