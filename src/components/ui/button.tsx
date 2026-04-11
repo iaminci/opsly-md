@@ -17,12 +17,17 @@ const buttonVariants = cva(
           "bg-secondary-background text-foreground border-2 border-border shadow-shadow hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none",
         reverse:
           "text-main-foreground bg-main border-2 border-border hover:translate-x-reverseBoxShadowX hover:translate-y-reverseBoxShadowY hover:shadow-shadow",
+        outline:
+          "border-2 border-border bg-transparent text-foreground shadow-none hover:bg-secondary-background",
+        ghost:
+          "border-2 border-transparent bg-transparent text-foreground shadow-none hover:bg-secondary-background",
       },
       size: {
         default: "h-10 px-4 py-2",
         sm: "h-9 px-3",
         lg: "h-11 px-8",
         icon: "size-10",
+        "icon-sm": "size-8 rounded-base p-0 has-[>svg]:p-0",
       },
     },
     defaultVariants: {

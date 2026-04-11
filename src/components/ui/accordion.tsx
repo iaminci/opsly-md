@@ -13,12 +13,20 @@ function Accordion({
 
 function AccordionItem({
   className,
+  variant,
   ...props
-}: React.ComponentProps<typeof AccordionPrimitive.Item>) {
+}: React.ComponentProps<typeof AccordionPrimitive.Item> & {
+  variant?: "default" | "nested"
+}) {
   return (
     <AccordionPrimitive.Item
       data-slot="accordion-item"
-      className={cn("border-none shadow-none", className)}
+      data-variant={variant}
+      className={cn(
+        "border-none shadow-none",
+        variant === "nested" && "border-l border-sidebar-border pl-2",
+        className
+      )}
       {...props}
     />
   )

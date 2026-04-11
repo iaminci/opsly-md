@@ -50,7 +50,7 @@ export function DocumentList({
           <Button
             type="button"
             variant="neutral"
-            size="icon-xs"
+            size="sm"
             onClick={(e) => {
               e.stopPropagation();
               onDelete(doc.id);
