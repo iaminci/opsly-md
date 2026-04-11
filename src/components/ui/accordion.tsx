@@ -1,10 +1,8 @@
 "use client"
 
 import * as AccordionPrimitive from "@radix-ui/react-accordion"
-import { ChevronDown } from "lucide-react"
-
+import { ChevronRight } from "lucide-react"
 import * as React from "react"
-
 import { cn } from "@/lib/utils"
 
 function Accordion({
@@ -20,10 +18,7 @@ function AccordionItem({
   return (
     <AccordionPrimitive.Item
       data-slot="accordion-item"
-      className={cn(
-        "border-none shadow-none",
-        className,
-      )}
+      className={cn("border-none shadow-none", className)}
       {...props}
     />
   )
@@ -32,20 +27,30 @@ function AccordionItem({
 function AccordionTrigger({
   className,
   children,
+  triggerVariant,
+  isActive,
   ...props
-}: React.ComponentProps<typeof AccordionPrimitive.Trigger>) {
+}: React.ComponentProps<typeof AccordionPrimitive.Trigger> & {
+  triggerVariant?: "section" | "tree"
+  isActive?: boolean
+}) {
   return (
     <AccordionPrimitive.Header className="flex">
       <AccordionPrimitive.Trigger
         data-slot="accordion-trigger"
         className={cn(
-          "flex flex-1 items-center justify-between text-left text-base text-main-foreground border-border focus-visible:ring-[3px] bg-transparent data-[state=open]:bg-main p-1.5 font-base rounded-base transition-all [&[data-state=open]>svg]:rotate-180 disabled:pointer-events-none disabled:opacity-50",
+          "flex flex-1 items-center justify-between text-left text-base border-border focus-visible:ring-[3px] rounded-base transition-all [&[data-state=open]>svg]:rotate-90 disabled:pointer-events-none disabled:opacity-50",
           className,
+          triggerVariant === "section" && !isActive && "bg-zinc-200 text-sidebar-foreground font-heading font-bold p-1.5",
+          triggerVariant === "section" && isActive && "bg-sidebar-primary text-sidebar-primary-foreground font-heading font-bold p-1.5 border-2 border-border",
+          triggerVariant === "tree" && !isActive && "bg-transparent text-sidebar-foreground font-base p-1.5",
+          triggerVariant === "tree" && isActive && "bg-transparent text-sidebar-primary font-base p-1.5 border-2 border-sidebar-primary",
+          !triggerVariant && "bg-transparent text-sidebar-foreground font-base p-1.5",
         )}
         {...props}
       >
         {children}
-        <ChevronDown className="pointer-events-none size-5 shrink-0 transition-transform duration-200" />
+        <ChevronRight className="pointer-events-none size-5 shrink-0 transition-transform duration-200" />
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>
   )
@@ -59,10 +64,10 @@ function AccordionContent({
   return (
     <AccordionPrimitive.Content
       data-slot="accordion-content"
-      className="overflow-hidden bg-transparent border-l-2 border-border ml-6 pl-2 text-sm font-base transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
+      className="overflow-hidden bg-transparent text-sm font-base transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
       {...props}
     >
-      <div className={cn("py-1 pl-2", className)}>{children}</div>
+      <div className={cn("p-0", className)}>{children}</div>
     </AccordionPrimitive.Content>
   )
 }

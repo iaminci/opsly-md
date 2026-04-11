@@ -31,6 +31,22 @@ const DRAG_TYPE = "application/x-md-viewer-document";
 const EXPANDED_WORKSPACES_KEY = "md-viewer-expanded-workspaces";
 const EXPANDED_FOLDERS_KEY = "md-viewer-expanded-folders";
 
+function containsActiveDoc(
+  workspaceId: string,
+  folderId: string | null,
+  currentId: string | null,
+  getDocuments: (wsId: string, fId: string | null) => Document[],
+  getFolders: (wsId: string, fId: string | null) => Folder[]
+): boolean {
+  if (!currentId) return false
+  const docs = getDocuments(workspaceId, folderId)
+  if (docs.some((d) => d.id === currentId)) return true
+  const subfolders = getFolders(workspaceId, folderId)
+  return subfolders.some((f) =>
+    containsActiveDoc(workspaceId, f.id, currentId, getDocuments, getFolders)
+  )
+}
+
 function getFirstHeading(content: string): string | null {
   const match = content.match(/^#{1,6}\s+(.+)$/m);
   return match ? match[1].replace(/#+\s*$/, "").trim() : null;
@@ -260,6 +276,7 @@ function WorkspaceSection({
     <AccordionItem value={workspace.id}>
         <AccordionTrigger
           triggerVariant="section"
+          isActive={containsActiveDoc(workspace.id, null, currentId, getDocuments, getFolders)}
           className={cn(
             "group/ws hover:no-underline",
             wsDragOver && "ring-2 ring-sidebar-primary ring-inset"
@@ -323,7 +340,7 @@ function WorkspaceSection({
             workspaceId={workspace.id}
             folderId={null}
             onDrop={onMoveDocument}
-            className="flex flex-col gap-0 border-l border-[color:var(--sidebar-guide)] ml-4 pb-1 pl-3 pt-1"
+            className="flex flex-col gap-0 border-l-2 border-[color:var(--sidebar-guide)] ml-3 pb-1 pl-3 pt-1"
           >
             {folders.length > 0 && (
               <Accordion
@@ -414,7 +431,7 @@ function WorkspaceDropArea({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={cn(
-        "rounded-base transition-all duration-150",
+        "transition-all duration-150",
         isDragOver && "bg-sidebar-accent/40 ring-2 ring-sidebar-primary ring-inset",
         className
       )}
@@ -491,6 +508,7 @@ function FolderItem({
     <AccordionItem value={folder.id} variant="nested">
       <AccordionTrigger
         triggerVariant="tree"
+        isActive={containsActiveDoc(workspaceId, folder.id, currentId, getDocuments, getFolders)}
         className={cn(
           "group/folder min-h-9 py-1.5 hover:no-underline",
           folderDragOver && "ring-2 ring-sidebar-primary ring-inset"
@@ -552,7 +570,7 @@ function FolderItem({
           workspaceId={workspaceId}
           folderId={folder.id}
           onDrop={onMoveDocument}
-          className="flex flex-col gap-0 border-l border-[color:var(--sidebar-guide)] ml-2 pb-1 pl-3 pt-0.5"
+          className="flex flex-col gap-0 border-l-2 border-[color:var(--sidebar-guide)] ml-2 pb-1 pl-3 pt-0.5"
         >
           {subfolders.length > 0 && (
             <Accordion
@@ -631,7 +649,7 @@ function FileItem({
       className={cn(
         "group flex cursor-pointer items-center gap-1 rounded-md py-1.5 pl-1 pr-1 transition-colors",
         isActive
-          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+          ? "bg-sidebar-primary/15 text-sidebar-primary"
           : "hover:bg-sidebar-accent/60"
       )}
       onClick={(e) => {
