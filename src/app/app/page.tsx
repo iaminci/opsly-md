@@ -305,7 +305,7 @@ function AppContent() {
       />
 
       <SidebarInset className="min-h-0 overflow-hidden">
-        <header className="relative flex h-14.5 shrink-0 items-center gap-2 border-b border-orange-500/50 dark:[border-color:var(--dm-border)] px-4">
+        <header className="relative flex h-14.5 shrink-0 items-center gap-5 border-b border-orange-500/50 dark:[border-color:var(--dm-border)] px-4">
           <SidebarTrigger className="shrink-0" />
           <Link
             href="/"
@@ -315,7 +315,7 @@ function AppContent() {
             <span>Opsly </span>
             <span className="text-orange-500 dark:[color:var(--dm-text)]">MD</span>
           </Link>
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-3">
             <DarkAccentPicker />
             <ThemeToggle />
           </div>

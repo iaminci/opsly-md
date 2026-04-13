@@ -33,7 +33,7 @@ export function DarkAccentPicker() {
         render={
           <Button
             variant="neutral"
-            // size="icon-sm"
+            size="icon"
             className="text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"
             aria-label="Choose dark mode accent"
           >

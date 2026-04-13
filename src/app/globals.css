@@ -204,6 +204,7 @@ body {
   --chart-5: #7A83FF;
   --chart-active-dot: #fff;
 
+  --radius: 0.5rem;
   --muted: #3a2617;
   --muted-foreground: #ffb679;
   --card: #1a1a1a;
@@ -225,11 +226,11 @@ body {
   --sidebar-foreground: #f5f5f5;
   --sidebar-primary: #e8894a;
   --sidebar-primary-foreground: #141414;
-  --sidebar-accent: #3a2617;
-  --sidebar-accent-foreground: #f5f5f5;
+  /* --sidebar-accent: #3a2617;
+  --sidebar-accent-foreground: #f5f5f5; */
   --sidebar-border: #3f3f46;
   --sidebar-ring: #e8894a;
-  --sidebar-guide: #71717a;
+  /* --sidebar-guide: #71717a; */
 }
 
 /* Dark mode accent variables - only affect dark mode, light mode untouched */
