@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, Fira_Code } from "next/font/google";
+import { Fira_Code } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -8,14 +8,6 @@ const firaCode = Fira_Code({
   variable: "--font-fira-code",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
-  display: "swap",
-});
-
-/** Neo-brutalist sidebar: bold clean sans (main app content stays monospace) */
-const sidebarSans = DM_Sans({
-  variable: "--font-sidebar-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -33,7 +25,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${firaCode.variable} ${sidebarSans.variable}`}
+      className={firaCode.variable}
     >
       <body className="antialiased">
         <script

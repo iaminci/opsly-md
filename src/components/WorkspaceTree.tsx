@@ -286,7 +286,7 @@ function WorkspaceSection({
           onDrop={handleWsDrop}
         >
           <div className="flex min-w-0 flex-1 items-center gap-3">
-            <Library className="size-4 shrink-0 text-sidebar-primary-foreground" />
+            <Library className="size-4 shrink-0" />
             <span className="truncate text-left font-heading font-bold">
               {workspace.name}
             </span>
@@ -340,7 +340,7 @@ function WorkspaceSection({
             workspaceId={workspace.id}
             folderId={null}
             onDrop={onMoveDocument}
-            className="flex flex-col gap-0 border-l-2 border-[color:var(--sidebar-guide)] ml-3 pb-1 pl-3 pt-1"
+            className="flex flex-col gap-0 border-l-2 border-[color:var(--sidebar-guide)] ml-2 pb-1 pl-1.5 pt-1.5"
           >
             {folders.length > 0 && (
               <Accordion
@@ -570,7 +570,7 @@ function FolderItem({
           workspaceId={workspaceId}
           folderId={folder.id}
           onDrop={onMoveDocument}
-          className="flex flex-col gap-0 border-l-2 border-[color:var(--sidebar-guide)] ml-2 pb-1 pl-3 pt-0.5"
+          className="flex flex-col gap-0 border-l-2 border-[color:var(--sidebar-guide)] ml-2 pb-1 pl-1.5 pt-1.5"
         >
           {subfolders.length > 0 && (
             <Accordion
@@ -647,7 +647,7 @@ function FileItem({
       draggable
       onDragStart={handleDragStart}
       className={cn(
-        "group flex cursor-pointer items-center gap-1 rounded-md py-1.5 pl-1 pr-1 transition-colors",
+        "group flex cursor-pointer items-center gap-1 rounded-md py-1 pl-1 pr-1 transition-colors",
         isActive
           ? "bg-sidebar-primary/15 text-sidebar-primary"
           : "hover:bg-sidebar-accent/60"
@@ -661,7 +661,7 @@ function FileItem({
       <button
         type="button"
         className={cn(
-          "flex h-auto min-h-7 min-w-0 flex-1 items-center justify-start gap-2 truncate rounded-md border-0 bg-transparent px-1.5 text-left text-sm font-normal hover:bg-transparent",
+          "flex h-auto min-h-7 min-w-0 flex-1 items-center justify-start gap-2 truncate rounded-md border-0 bg-transparent px-1 text-left text-sm font-normal hover:bg-transparent",
           isActive && "font-medium text-sidebar-foreground",
           !isActive && "text-sidebar-foreground"
         )}

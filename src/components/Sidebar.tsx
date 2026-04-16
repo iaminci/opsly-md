@@ -13,7 +13,6 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
@@ -484,7 +483,6 @@ export function Sidebar({
 
   return (
     <ShadcnSidebar collapsible="offcanvas" className="print:hidden border-r-2 border-sidebar-border">
-      <SidebarRail />
       <input
         ref={fileInputRef}
         type="file"
@@ -501,7 +499,7 @@ export function Sidebar({
       />
       <SidebarContent className="flex flex-col min-h-0 overflow-hidden">
         <div className="flex flex-1 min-h-0 flex-col">
-        <div className="mb-2 flex shrink-0 flex-col border-b border-sidebar-border pb-3">
+        <div className="mb-2 flex shrink-0 flex-col border-b-2 border-sidebar-border pb-3">
           <SidebarGroup>
             <SidebarGroupLabel className="sr-only">Search</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -559,7 +557,7 @@ export function Sidebar({
           </SidebarGroup>
         </div>
 
-        <div className="shrink-0 border-t px-2 py-2">
+        <div className="shrink-0 border-t-2 px-2 py-2">
           <div className="flex flex-col gap-1.5">
             <Button
               variant="neutral"

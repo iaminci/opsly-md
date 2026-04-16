@@ -304,7 +304,7 @@ function AppContent() {
       />
 
       <SidebarInset className="min-h-0 overflow-hidden">
-        <header className="relative flex h-14.5 shrink-0 items-center gap-5 border-b border-orange-500/50 dark:[border-color:var(--dm-border)] px-4">
+        <header className="relative flex h-14.5 shrink-0 items-center gap-5 border-b-2 px-4">
           <SidebarTrigger className="shrink-0" />
           <Link
             href="/"
@@ -389,7 +389,7 @@ function AppContent() {
           </div>
 
           {currentDoc && (
-            <div className="hidden min-h-0 w-56 shrink-0 overflow-y-auto overflow-x-hidden border-l border-orange-500/50 dark:[border-color:var(--dm-border)] px-4 py-6 lg:block print:hidden">
+            <div className="hidden min-h-0 w-56 shrink-0 overflow-y-auto overflow-x-hidden border-l-2 px-4 py-6 lg:block print:hidden">
               <DocumentRightSidebar
                 doc={currentDoc}
                 content={currentDoc.content}

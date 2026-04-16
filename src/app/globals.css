@@ -30,7 +30,7 @@
   --font-weight-heading: 700;
   --font-sans: var(--font-fira-code), ui-monospace, monospace;
   --font-mono: var(--font-fira-code), ui-monospace, monospace;
-  --font-sidebar: var(--font-sidebar-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sidebar: var(--font-fira-code), ui-monospace, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -67,11 +67,6 @@
 
 body {
   font-family: var(--font-sans);
-}
-
-/* Sidebar: reference-style bold sans, not monospace (rest of app unchanged) */
-[data-sidebar="sidebar"] {
-  font-family: var(--font-sidebar);
 }
 
 /* Table styling (Cursor-like) */
@@ -157,7 +152,7 @@ body {
   --chart-5: #7A83FF;
   --chart-active-dot: #000;
   --radius: 0.5rem;
-  --muted: #efd0d5;
+  --muted: #dcdcdc;
   --muted-foreground: #a42439;
   --card: #ffffff;
   --card-foreground: #000000;
@@ -176,7 +171,7 @@ body {
   --destructive-foreground: #ffffff;
   --sidebar: #ffffff;
   --sidebar-foreground: oklch(0% 0 0);
-  --sidebar-primary: #EA580C;
+  --sidebar-primary: oklch(72.27% 0.1894 50.19);
   --sidebar-primary-foreground: #ffffff;
   --sidebar-border: oklch(0% 0 0);
   --sidebar-ring: oklch(0% 0 0);
@@ -198,7 +193,7 @@ body {
   --chart-5: #7A83FF;
   --chart-active-dot: #fff;
   --radius: 0.5rem;
-  --muted: #3a2617;
+  --muted: #383838;
   --muted-foreground: #ffb679;
   --card: #1a1a1a;
   --card-foreground: #ffffff;
@@ -217,10 +212,10 @@ body {
   --destructive-foreground: #ffffff;
   --sidebar: #1a1a1a;
   --sidebar-foreground: #f5f5f5;
-  --sidebar-primary: #e8894a;
+  --sidebar-primary: oklch(67.56% 0.1796 49.61);
   --sidebar-primary-foreground: #141414;
-  --sidebar-border: #3f3f46;
-  --sidebar-ring: #e8894a;
+  --sidebar-border: oklch(100% 0 0);
+  --sidebar-ring: oklch(100% 0 0);
 }
 
 /* Dark mode accent variables - only affect dark mode, light mode untouched */
@@ -331,9 +326,6 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
-  /* body {
-    @apply bg-background text-foreground;
-  } */
   body {
     @apply text-foreground font-base bg-background;
   }
@@ -344,5 +336,3 @@ body {
     @apply font-sans;
   }
 }
-
-@source inline("data-[state=open]:bg-sidebar-primary data-[state=open]:text-sidebar-primary-foreground data-[state=open]:border-2 data-[state=open]:border-border");
