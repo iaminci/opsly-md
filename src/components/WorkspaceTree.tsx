@@ -649,7 +649,7 @@ function FileItem({
       className={cn(
         "group flex cursor-pointer items-center gap-1 rounded-md py-1 pl-1 pr-1 transition-colors",
         isActive
-          ? "bg-sidebar-primary/15 text-sidebar-primary"
+          ? "bg-sidebar-primary/85 text-sidebar-primary"
           : "hover:bg-sidebar-accent/60"
       )}
       onClick={(e) => {

@@ -39,7 +39,7 @@ export function WorkspaceSwitcher({
             render={
               <SidebarMenuButton
                 isActive
-                className="!h-9 !min-h-9 !rounded-[5px] !border-2 !border-border !bg-sidebar-primary !font-heading !font-bold !text-sidebar-primary-foreground !shadow-shadow !outline-0 transition-[transform,box-shadow] hover:!translate-x-[2px] hover:!translate-y-[2px] hover:!bg-sidebar-primary hover:!text-sidebar-primary-foreground hover:!shadow-none hover:!outline-0 focus-visible:!outline-0 focus-visible:!bg-sidebar-primary focus-visible:!shadow-shadow"
+                className="!h-9 !min-h-9 !rounded-[5px] !border-2 !border-border !bg-sidebar-primary !font-heading !font-bold !text-sidebar-primary-foreground !shadow-shadow !outline-0 transition-[transform,box-shadow] hover:!translate-x-[2px] hover:!translate-y-[2px] hover:!bg-sidebar-primary hover:!text-sidebar-primary-foreground hover:!shadow-shadow hover:!outline-0 focus-visible:!outline-0 focus-visible:!bg-sidebar-primary focus-visible:!shadow-shadow"
               >
                 <span className="truncate">{label}</span>
                 <ChevronDown className="ml-auto size-4 shrink-0" />
@@ -48,7 +48,7 @@ export function WorkspaceSwitcher({
           />
           <DropdownMenuContent
             align="start"
-            className="w-[--radix-popper-anchor-width] min-w-48 rounded-[10px] border border-sidebar-border bg-sidebar font-heading shadow-md"
+            className="w-[--radix-popper-anchor-width] min-w-48 rounded-[10px] border-2 border-sidebar-border bg-sidebar font-heading shadow-md"
           >
             <DropdownMenuItem
               onClick={() => onSelect(null)}

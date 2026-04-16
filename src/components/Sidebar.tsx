@@ -510,7 +510,7 @@ export function Sidebar({
           <SidebarGroup>
             <SidebarGroupLabel className="sr-only">Workspace</SidebarGroupLabel>
             <SidebarGroupContent>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2.5">
                 <div className="flex-1 min-w-0">
                   <WorkspaceSwitcher
                     workspaces={sortedWorkspaces}
@@ -520,7 +520,8 @@ export function Sidebar({
                 </div>
                 <Button
                   variant="neutral"
-                  className="inline-flex size-8 shrink-0 text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"
+                  size="icon"
+                  className="inline-flex size-9 shrink-0 text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"
                   onClick={handleAddWorkspace}
                   title="New workspace"
                 >

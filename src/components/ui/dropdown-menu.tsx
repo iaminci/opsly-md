@@ -13,14 +13,40 @@ function DropdownMenu({
   return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />
 }
 
+type DropdownMenuTriggerProps = React.ComponentProps<
+  typeof DropdownMenuPrimitive.Trigger
+> & {
+  /** Base UI–style API: single element as trigger (implemented with Radix `asChild`). */
+  render?: React.ReactElement
+  /** Base UI compat — ignored; Radix trigger uses `asChild` only. */
+  nativeButton?: boolean
+}
+
 function DropdownMenuTrigger({
+  render,
+  children,
+  nativeButton: _nativeButton,
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>) {
+}: DropdownMenuTriggerProps) {
+  if (render != null) {
+    return (
+      <DropdownMenuPrimitive.Trigger
+        data-slot="dropdown-menu-trigger"
+        asChild
+        {...props}
+      >
+        {render}
+      </DropdownMenuPrimitive.Trigger>
+    )
+  }
+
   return (
     <DropdownMenuPrimitive.Trigger
       data-slot="dropdown-menu-trigger"
       {...props}
-    />
+    >
+      {children}
+    </DropdownMenuPrimitive.Trigger>
   )
 }
 
@@ -119,7 +145,7 @@ function DropdownMenuItem({
       data-slot="dropdown-menu-item"
       data-inset={inset}
       className={cn(
-        "relative gap-2 [&_svg]:pointer-events-none [&_svg]:w-4 [&_svg]:h-4 [&_svg]:shrink-0 flex cursor-default select-none items-center rounded-base border-2 border-transparent data-[inset=true]:pl-8 bg-main px-2 py-1.5 text-sm font-base outline-hidden transition-colors focus:border-border data-disabled:pointer-events-none data-disabled:opacity-50",
+        "relative flex cursor-default select-none items-center gap-2 rounded-base border-2 border-transparent bg-transparent px-2 py-1.5 text-sm font-base text-foreground outline-hidden transition-colors data-[highlighted]:bg-main/90 data-[highlighted]:text-foreground data-[inset=true]:pl-8 focus:border-border data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0",
         className,
       )}
       {...props}

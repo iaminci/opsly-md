@@ -173,6 +173,8 @@ body {
   --sidebar-foreground: oklch(0% 0 0);
   --sidebar-primary: oklch(72.27% 0.1894 50.19);
   --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: oklch(0.96 0 0);
+  --sidebar-accent-foreground: oklch(0.145 0 0);
   --sidebar-border: oklch(0% 0 0);
   --sidebar-ring: oklch(0% 0 0);
 }
@@ -214,6 +216,8 @@ body {
   --sidebar-foreground: #f5f5f5;
   --sidebar-primary: oklch(67.56% 0.1796 49.61);
   --sidebar-primary-foreground: #141414;
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(100% 0 0);
   --sidebar-ring: oklch(100% 0 0);
 }
