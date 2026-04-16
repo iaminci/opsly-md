@@ -45,7 +45,6 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { DarkAccentPicker } from "@/components/DarkAccentPicker";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { TableOfContents } from "@/components/TableOfContents";
-import { ReadingProgressBar } from "@/components/ReadingProgressBar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -327,7 +326,6 @@ function AppContent() {
           >
           {currentDoc ? (
             <>
-              <ReadingProgressBar scrollContainerRef={contentScrollRef} />
               <div className="mx-auto max-w-4xl">
                 <div className="mb-6 flex flex-col gap-3 print:mb-4">
                   <div className="flex flex-wrap items-start justify-between gap-4">

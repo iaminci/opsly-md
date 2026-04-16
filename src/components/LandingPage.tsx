@@ -141,7 +141,10 @@ function Navbar() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <Button variant="neutral">
+            <Button 
+              variant="neutral"
+              size="sm"
+            >
             <GitHubIcon className="size-4" />
             GitHub
             </Button>
@@ -172,7 +175,7 @@ function Hero() {
             href="/app?loadSample=1"
             className={cn(buttonVariants({ size: "lg" }), "bg-orange-600 text-white hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700")}
           >
-            View Example Workspace
+            Open Workspace
           </Link>
         </div>
         <div className="mt-16 overflow-hidden rounded-xl border border-border/50 bg-card shadow-lg ring-1 ring-border/30 dark:ring-border/50">

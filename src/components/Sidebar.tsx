@@ -13,17 +13,9 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import {
   getWorkspaces,
   getAllFolders,
@@ -90,8 +82,7 @@ export function Sidebar({
   onAddDocument,
   onRefresh,
 }: SidebarProps) {
-  const { setOpen, state } = useSidebar();
-  const isCollapsed = state === "collapsed";
+  const { setOpen } = useSidebar();
   const [showPaste, setShowPaste] = useState(false);
   const [pasteValue, setPasteValue] = useState("");
   const [workspaceDialogOpen, setWorkspaceDialogOpen] = useState(false);
@@ -129,13 +120,6 @@ export function Sidebar({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [hoverExpandEnabled, setHoverExpandEnabled] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = localStorage.getItem("md-viewer-hover-expand");
-    setHoverExpandEnabled(stored === "true");
-  }, []);
 
   const WORKSPACE_KEY = "md-viewer-current-workspace";
 
@@ -499,7 +483,7 @@ export function Sidebar({
     : null;
 
   return (
-    <ShadcnSidebar collapsible="icon" className="print:hidden border-r-2 border-sidebar-border">
+    <ShadcnSidebar collapsible="offcanvas" className="print:hidden border-r-2 border-sidebar-border">
       <SidebarRail />
       <input
         ref={fileInputRef}
@@ -516,130 +500,6 @@ export function Sidebar({
         className="hidden"
       />
       <SidebarContent className="flex flex-col min-h-0 overflow-hidden">
-        {/* Icon bar - visible only when sidebar is collapsed to icon mode */}
-        {isCollapsed && (
-        <div
-          className="flex flex-col flex-1 min-h-0 text-sidebar-foreground"
-          onMouseEnter={() => hoverExpandEnabled && setOpen(true)}
-          onMouseLeave={() => hoverExpandEnabled && setOpen(false)}
-        >
-          {/* 1. Search - matches opened position 1 */}
-          <div className="shrink-0 flex flex-col items-center pt-1.5">
-            <Tooltip>
-              <TooltipTrigger
-                type="button"
-                className={cn(
-                  "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-base border-2 border-transparent transition-colors duration-150 hover:border-sidebar-border hover:bg-sidebar-accent hover:shadow-none [&_svg]:[stroke:var(--sidebar-foreground)]",
-                  commandPaletteOpen ? "border-sidebar-border bg-sidebar-accent shadow-none text-sidebar-primary" : "text-sidebar-foreground"
-                )}
-                onClick={() => setOpen(true)}
-                aria-label="Search Markdown Files"
-              >
-                <SearchIcon className="size-5" />
-              </TooltipTrigger>
-              <TooltipContent side="right">Search Markdown Files</TooltipContent>
-            </Tooltip>
-          </div>
-
-          {/* 2. Workspace switcher + Plus - matches opened position 2 */}
-          <div className="shrink-0 flex flex-col items-center gap-1 mt-1">
-            <Tooltip>
-              <TooltipTrigger
-                type="button"
-                className={cn(
-                  "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-base border-2 border-transparent transition-colors duration-150 hover:border-sidebar-border hover:bg-sidebar-accent hover:shadow-none [&_svg]:[stroke:var(--sidebar-foreground)]",
-                  !commandPaletteOpen && currentId ? "border-sidebar-border bg-sidebar-accent shadow-none text-sidebar-primary" : "text-sidebar-foreground"
-                )}
-                onClick={() => setOpen(true)}
-                aria-label="Documents"
-              >
-                <FileText className="size-5" />
-              </TooltipTrigger>
-              <TooltipContent side="right">Documents</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger
-                type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-base border-2 border-transparent text-sidebar-foreground transition-colors duration-150 hover:border-sidebar-border hover:bg-sidebar-accent hover:shadow-none [&_svg]:[stroke:var(--sidebar-foreground)]"
-                onClick={() => {
-                  setOpen(true);
-                  handleAddWorkspace();
-                }}
-                aria-label="Create Workspace"
-              >
-                <Plus className="size-5" />
-              </TooltipTrigger>
-              <TooltipContent side="right">Create Workspace</TooltipContent>
-            </Tooltip>
-          </div>
-
-          {/* 3. Spacer for workspace tree area - matches opened scrollable middle */}
-          <div className="min-h-0 flex-1" aria-hidden />
-
-          {/* 4-7. Bottom action bar - matches opened: Paste, Import|Export, Delete */}
-          <div className="flex shrink-0 flex-col items-center gap-1.5 border-t border-sidebar-border px-0 py-2">
-            <Tooltip>
-              <TooltipTrigger
-                type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-base border-2 border-transparent text-sidebar-foreground transition-colors duration-150 hover:border-sidebar-border hover:bg-sidebar-accent hover:shadow-none [&_svg]:[stroke:var(--sidebar-foreground)]"
-                onClick={() => {
-                  setOpen(true);
-                  setShowPaste(true);
-                }}
-                aria-label="Paste Markdown"
-              >
-                <ClipboardPaste className="size-5" />
-              </TooltipTrigger>
-              <TooltipContent side="right">Paste Markdown</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger
-                type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-base border-2 border-transparent text-sidebar-foreground transition-colors duration-150 hover:border-sidebar-border hover:bg-sidebar-accent hover:shadow-none [&_svg]:[stroke:var(--sidebar-foreground)]"
-                onClick={() => {
-                  setOpen(true);
-                  handleImportWorkspace();
-                }}
-                aria-label="Import Workspace"
-              >
-                <Upload className="size-5" />
-              </TooltipTrigger>
-              <TooltipContent side="right">Import Workspace</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger
-                type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-base border-2 border-transparent text-sidebar-foreground transition-colors duration-150 hover:border-sidebar-border hover:bg-sidebar-accent hover:shadow-none [&_svg]:[stroke:var(--sidebar-foreground)]"
-                onClick={() => {
-                  setOpen(true);
-                  handleExportClick();
-                }}
-                aria-label="Export Workspace"
-              >
-                <Download className="size-5" />
-              </TooltipTrigger>
-              <TooltipContent side="right">Export Workspace</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger
-                type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-base border-2 border-transparent text-destructive transition-colors duration-150 hover:border-destructive hover:bg-destructive/10 hover:shadow-none [&_svg]:![stroke:var(--destructive)]"
-                onClick={() => {
-                  setOpen(true);
-                  handleDeleteAllClick();
-                }}
-                aria-label="Delete Everything"
-              >
-                <Trash2 className="size-5 text-destructive [&_path]:[stroke:var(--destructive)] [&_line]:[stroke:var(--destructive)]" />
-              </TooltipTrigger>
-              <TooltipContent side="right">Delete Everything</TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
-        )}
-
-        {/* Main content - hidden when sidebar is collapsed to icon mode */}
-        {!isCollapsed && (
         <div className="flex flex-1 min-h-0 flex-col">
         <div className="mb-2 flex shrink-0 flex-col border-b border-sidebar-border pb-3">
           <SidebarGroup>
@@ -699,7 +559,7 @@ export function Sidebar({
           </SidebarGroup>
         </div>
 
-        <div className="shrink-0 border-t border-orange-500/50 dark:[border-color:var(--dm-border)] px-2 py-2">
+        <div className="shrink-0 border-t px-2 py-2">
           <div className="flex flex-col gap-1.5">
             <Button
               variant="neutral"
@@ -749,7 +609,6 @@ export function Sidebar({
           </div>
         </div>
         </div>
-        )}
       </SidebarContent>
 
       <CreateNameDialog
