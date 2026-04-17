@@ -7,7 +7,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -51,32 +50,30 @@ export function WorkspaceSwitcher({
             align="start"
             className="w-[var(--radix-popper-anchor-width)] min-w-0 max-w-[var(--radix-popper-anchor-width)] rounded-[5px] border-2 border-sidebar-border bg-sidebar p-0 font-heading shadow-md"
           >
-            <div className="h-[min(50vh,16rem)] w-full overflow-hidden">
-              <ScrollArea className="h-full w-full">
-                <div className="p-1">
+            <div className="no-scrollbar max-h-[min(50vh,16rem)] w-full overflow-y-auto overflow-x-hidden">
+              <div className="p-1">
+                <DropdownMenuItem
+                  onClick={() => onSelect(null)}
+                  className={cn(
+                    !selectedId &&
+                      "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
+                  )}
+                >
+                  <span className="truncate">All Workspaces</span>
+                </DropdownMenuItem>
+                {workspaces.map((ws) => (
                   <DropdownMenuItem
-                    onClick={() => onSelect(null)}
+                    key={ws.id}
+                    onClick={() => onSelect(ws.id)}
                     className={cn(
-                      !selectedId &&
+                      selectedId === ws.id &&
                         "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
                     )}
                   >
-                    <span className="truncate">All Workspaces</span>
+                    <span className="truncate">{ws.name}</span>
                   </DropdownMenuItem>
-                  {workspaces.map((ws) => (
-                    <DropdownMenuItem
-                      key={ws.id}
-                      onClick={() => onSelect(ws.id)}
-                      className={cn(
-                        selectedId === ws.id &&
-                          "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
-                      )}
-                    >
-                      <span className="truncate">{ws.name}</span>
-                    </DropdownMenuItem>
-                  ))}
-                </div>
-              </ScrollArea>
+                ))}
+              </div>
             </div>
           </DropdownMenuContent>
         </DropdownMenu>

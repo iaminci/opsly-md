@@ -531,7 +531,7 @@ export function Sidebar({
           </SidebarGroup>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
           <SidebarGroup className="flex-1 border-b-0">
             <SidebarGroupContent>
               <WorkspaceTree

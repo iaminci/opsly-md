@@ -78,7 +78,7 @@ export function Search({ documents, onSelect }: SearchProps) {
         )}
       </div>
       {isOpen && results.length > 0 && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto overflow-x-hidden rounded-[5px] border-2 border-sidebar-border bg-sidebar shadow-md">
+        <div className="no-scrollbar absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto overflow-x-hidden rounded-[5px] border-2 border-sidebar-border bg-sidebar shadow-md">
           {results.map((doc) => (
             <Button
               key={doc.id}

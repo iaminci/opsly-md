@@ -166,41 +166,39 @@ export function WorkspaceTree({
   const workspaceValue = expandedWorkspaces.filter((id) => workspaceIds.includes(id));
 
   return (
-    <div className="flex flex-col gap-0">
-      <Accordion
-        type="multiple"
-        key={workspaceIds.join(",")}
-        value={workspaceValue}
-        onValueChange={handleWorkspaceValueChange}
-        className="w-full max-w-full"
-      >
-        {workspaces.map((ws) => (
-          <WorkspaceSection
-            key={ws.id}
-            workspace={ws}
-            expandedFolders={expandedFolders}
-            onExpandedFoldersChange={handleExpandedFoldersChange}
-            folders={folders(ws.id, null)}
-            documents={documents(ws.id, null)}
-            getFolders={folders}
-            getDocuments={documents}
-            currentId={currentId}
-            selectedWorkspaceId={selectedWorkspaceId}
-            onSelectDocument={onSelectDocument}
-            onDeleteDocument={onDeleteDocument}
-            onAddFolder={onAddFolder}
-            onAddFile={onAddFile}
-            onUploadFile={onUploadFile}
-            onMoveDocument={onMoveDocument}
-            onRenameWorkspace={onRenameWorkspace}
-            onDeleteWorkspace={onDeleteWorkspace}
-            onRenameFolder={onRenameFolder}
-            onDeleteFolder={onDeleteFolder}
-            onRenameDocument={onRenameDocument}
-          />
-        ))}
-      </Accordion>
-    </div>
+    <Accordion
+      type="multiple"
+      key={workspaceIds.join(",")}
+      value={workspaceValue}
+      onValueChange={handleWorkspaceValueChange}
+      className="flex w-full max-w-full flex-col gap-2"
+    >
+      {workspaces.map((ws) => (
+        <WorkspaceSection
+          key={ws.id}
+          workspace={ws}
+          expandedFolders={expandedFolders}
+          onExpandedFoldersChange={handleExpandedFoldersChange}
+          folders={folders(ws.id, null)}
+          documents={documents(ws.id, null)}
+          getFolders={folders}
+          getDocuments={documents}
+          currentId={currentId}
+          selectedWorkspaceId={selectedWorkspaceId}
+          onSelectDocument={onSelectDocument}
+          onDeleteDocument={onDeleteDocument}
+          onAddFolder={onAddFolder}
+          onAddFile={onAddFile}
+          onUploadFile={onUploadFile}
+          onMoveDocument={onMoveDocument}
+          onRenameWorkspace={onRenameWorkspace}
+          onDeleteWorkspace={onDeleteWorkspace}
+          onRenameFolder={onRenameFolder}
+          onDeleteFolder={onDeleteFolder}
+          onRenameDocument={onRenameDocument}
+        />
+      ))}
+    </Accordion>
   );
 }
 
@@ -340,7 +338,7 @@ function WorkspaceSection({
             workspaceId={workspace.id}
             folderId={null}
             onDrop={onMoveDocument}
-            className="flex flex-col gap-0 border-l-2 border-[color:var(--sidebar-guide)] ml-2 pb-1 pl-1.5 pt-1.5"
+            className="flex flex-col gap-1 border-l-2 border-[color:var(--sidebar-guide)] ml-2 pb-1.5 pl-2 pt-2"
           >
             {folders.length > 0 && (
               <Accordion
@@ -348,7 +346,7 @@ function WorkspaceSection({
                 key={folderIds.join(",")}
                 value={folderIds.filter((id) => expandedFolders.includes(id))}
                 onValueChange={(v) => onExpandedFoldersChange(null, folderIds, v)}
-                className="w-full"
+                className="flex w-full flex-col gap-1.5"
               >
                 {folders.map((folder) => (
                   <FolderItem
@@ -570,7 +568,7 @@ function FolderItem({
           workspaceId={workspaceId}
           folderId={folder.id}
           onDrop={onMoveDocument}
-          className="flex flex-col gap-0 border-l-2 border-[color:var(--sidebar-guide)] ml-2 pb-1 pl-1.5 pt-1.5"
+          className="flex flex-col gap-1 border-l-2 border-[color:var(--sidebar-guide)] ml-2 pb-1.5 pl-2 pt-2"
         >
           {subfolders.length > 0 && (
             <Accordion
@@ -578,7 +576,7 @@ function FolderItem({
               key={subfolderIds.join(",")}
               value={subfolderIds.filter((id) => expandedFolders.includes(id))}
               onValueChange={(v) => onExpandedFoldersChange(folder.id, subfolderIds, v)}
-              className="w-full"
+              className="flex w-full flex-col gap-1.5"
             >
               {subfolders.map((sub) => (
                 <FolderItem
