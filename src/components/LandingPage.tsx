@@ -133,7 +133,7 @@ function Navbar() {
       <nav className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2 text-3xl font-semibold tracking-tight">
           <span>Opsly</span>
-          <span className="text-orange-500 dark:text-orange-400">MD</span>
+          <span className="text-main">MD</span>
         </Link>
         <div className="flex items-center gap-4">
           <a

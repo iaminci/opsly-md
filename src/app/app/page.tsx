@@ -312,7 +312,7 @@ function AppContent() {
             aria-label="Go to home"
           >
             <span>Opsly </span>
-            <span className="text-orange-500 dark:[color:var(--dm-text)]">MD</span>
+            <span className="text-main dark:[color:var(--dm-text)]">MD</span>
           </Link>
           <div className="ml-auto flex items-center gap-3">
             <DarkAccentPicker />
