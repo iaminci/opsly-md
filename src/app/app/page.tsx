@@ -389,7 +389,7 @@ function AppContent() {
           </div>
 
           {currentDoc && (
-            <div className="hidden min-h-0 w-56 shrink-0 overflow-y-auto overflow-x-hidden border-l-2 px-4 py-6 lg:block print:hidden">
+            <div className="hidden min-h-0 w-56 shrink-0 overflow-hidden border-l-2 px-4 py-6 lg:block print:hidden">
               <DocumentRightSidebar
                 doc={currentDoc}
                 content={currentDoc.content}

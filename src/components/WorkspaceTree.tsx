@@ -287,7 +287,7 @@ function WorkspaceSection({
         >
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <Library className="size-4 shrink-0" />
-            <span className="truncate text-left font-heading font-bold">
+            <span className="min-w-0 truncate text-left font-heading font-bold">
               {workspace.name}
             </span>
           </div>
@@ -519,7 +519,7 @@ function FolderItem({
       >
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <FolderIcon className="size-4 shrink-0 text-sidebar-foreground opacity-90" />
-          <span className="truncate text-left font-heading font-semibold group-data-[state=open]/folder:font-bold">
+          <span className="min-w-0 truncate text-left font-heading font-semibold group-data-[state=open]/folder:font-bold">
             {folder.name}
           </span>
         </div>

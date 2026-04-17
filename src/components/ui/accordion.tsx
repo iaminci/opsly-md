@@ -47,7 +47,7 @@ function AccordionTrigger({
       <AccordionPrimitive.Trigger
         data-slot="accordion-trigger"
         className={cn(
-          "flex flex-1 items-center justify-between text-left text-base border-border focus-visible:ring-[3px] rounded-base transition-all [&[data-state=open]>svg]:rotate-90 disabled:pointer-events-none disabled:opacity-50",
+          "min-w-0 flex flex-1 items-center justify-between text-left text-base border-border focus-visible:ring-[3px] rounded-base transition-all [&[data-state=open]>svg]:rotate-90 disabled:pointer-events-none disabled:opacity-50",
           className,
           triggerVariant === "section" && !isActive && "bg-muted text-sidebar-foreground font-heading font-bold p-1.5",
           triggerVariant === "section" && isActive && "bg-sidebar-primary text-sidebar-primary-foreground font-heading font-bold p-1.5 border-2 border-border",
