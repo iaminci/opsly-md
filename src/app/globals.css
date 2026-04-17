@@ -13,13 +13,7 @@
   --color-foreground: var(--foreground);
   --color-main-foreground: var(--main-foreground);
   --color-border: var(--border);
-  --color-overlay: var(--overlay);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
   --spacing-boxShadowX: 2px;
   --spacing-boxShadowY: 2px;
   --spacing-reverseBoxShadowX: -2px;
@@ -30,7 +24,7 @@
   --font-weight-heading: 700;
   --font-sans: var(--font-fira-code), ui-monospace, monospace;
   --font-mono: var(--font-fira-code), ui-monospace, monospace;
-  --font-sidebar: var(--font-fira-code), ui-monospace, monospace;
+  /* --font-sidebar: var(--font-fira-code), ui-monospace, monospace; */
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -61,8 +55,7 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+
 }
 
 body {
@@ -145,12 +138,6 @@ body {
   --border: oklch(0% 0 0);
   --ring: oklch(0% 0 0);
   --shadow: 2px 2px 0px 0px var(--border);
-  --chart-1: #FF7A05;
-  --chart-2: #0099FF;
-  --chart-3: #FFBF00;
-  --chart-4: #00D696;
-  --chart-5: #7A83FF;
-  --chart-active-dot: #000;
   --radius: 0.5rem;
   --muted: #dcdcdc;
   --muted-foreground: #a42439;
@@ -188,12 +175,6 @@ body {
   --border: oklch(100% 0 0);
   --ring: oklch(100% 0 0);
   --shadow: 1px 1px 0px 0px var(--border);
-  --chart-1: #EB6D00;
-  --chart-2: #008AE5;
-  --chart-3: #E5AC00;
-  --chart-4: #00BD84;
-  --chart-5: #7A83FF;
-  --chart-active-dot: #fff;
   --radius: 0.5rem;
   --muted: #383838;
   --muted-foreground: #ffb679;
