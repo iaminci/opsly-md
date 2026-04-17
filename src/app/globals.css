@@ -134,8 +134,8 @@ body {
   --secondary-background: oklch(100% 0 0);
   --foreground: oklch(0% 0 0);
   --main-foreground: oklch(0% 0 0);
-  --main: oklch(72.27% 0.1894 50.19);
-  --border: oklch(0% 0 0);
+  --main: #ef4400;
+  --border: oklch(11.492% 0.00001 271.152);
   --ring: oklch(0% 0 0);
   --shadow: 2px 2px 0px 0px var(--border);
   --radius: 0.5rem;
@@ -158,7 +158,7 @@ body {
   --destructive-foreground: #ffffff;
   --sidebar: #ffffff;
   --sidebar-foreground: oklch(0% 0 0);
-  --sidebar-primary: oklch(72.27% 0.1894 50.19);
+  --sidebar-primary: #ef4400;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: oklch(0.96 0 0);
   --sidebar-accent-foreground: oklch(0.145 0 0);
@@ -171,7 +171,7 @@ body {
   --secondary-background: oklch(23.93% 0 0);
   --foreground: oklch(92.49% 0 0);
   --main-foreground: oklch(0% 0 0);
-  --main: oklch(67.56% 0.1796 49.61);
+  --main: #ef4400;
   --border: oklch(100% 0 0);
   --ring: oklch(100% 0 0);
   --shadow: 1px 1px 0px 0px var(--border);
@@ -195,7 +195,7 @@ body {
   --destructive-foreground: #ffffff;
   --sidebar: #1a1a1a;
   --sidebar-foreground: #f5f5f5;
-  --sidebar-primary: oklch(67.56% 0.1796 49.61);
+  --sidebar-primary: o#ef4400;
   --sidebar-primary-foreground: #141414;
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);

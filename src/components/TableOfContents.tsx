@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { buildHeadingManifest } from "@/lib/heading-manifest";
 
@@ -70,6 +70,24 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
     else window.addEventListener("scroll", onScroll, { passive: true });
     return cleanup;
   }, [content, scrollContainerRef]);
+
+  useLayoutEffect(() => {
+    if (!activeId) return;
+    const list = tocRef.current;
+    const node = activeItemRef.current;
+    if (!list || !node) return;
+
+    // Only adjust the TOC list’s scrollTop — avoid scrollIntoView(), which can
+    // scroll ancestor panes (tabs/sidebar) and move headings/tabs with it.
+    const pad = 8;
+    const listRect = list.getBoundingClientRect();
+    const nodeRect = node.getBoundingClientRect();
+    if (nodeRect.top < listRect.top + pad) {
+      list.scrollTop += nodeRect.top - listRect.top - pad;
+    } else if (nodeRect.bottom > listRect.bottom - pad) {
+      list.scrollTop += nodeRect.bottom - listRect.bottom + pad;
+    }
+  }, [activeId]);
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
