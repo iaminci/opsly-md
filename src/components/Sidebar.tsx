@@ -856,7 +856,7 @@ export function Sidebar({
       </AlertDialog>
 
       <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
-        <DialogContent className="sm:max-w-sm ring-orange-500/50 dark:ring-[color:var(--dm-border)]" showCloseButton>
+        <DialogContent className="sm:max-w-sm dark:ring-[color:var(--dm-border)]" showCloseButton>
           <DialogHeader>
             <DialogTitle>Export workspaces</DialogTitle>
           </DialogHeader>
@@ -872,7 +872,7 @@ export function Sidebar({
               />
               <span className="text-sm font-medium">Select all</span>
             </label>
-            <div className="max-h-48 overflow-y-auto flex flex-col gap-1 border border-orange-500/50 rounded-lg p-2 dark:[border-color:var(--dm-border)]">
+            <div className="max-h-48 overflow-y-auto flex flex-col gap-1 border border-2 rounded-lg p-2">
               {sortedWorkspaces.map((ws) => (
                 <label
                   key={ws.id}
