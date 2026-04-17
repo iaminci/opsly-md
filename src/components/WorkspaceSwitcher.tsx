@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -48,29 +49,35 @@ export function WorkspaceSwitcher({
           />
           <DropdownMenuContent
             align="start"
-            className="w-[--radix-popper-anchor-width] min-w-48 rounded-[10px] border-2 border-sidebar-border bg-sidebar font-heading shadow-md"
+            className="w-[var(--radix-popper-anchor-width)] min-w-0 max-w-[var(--radix-popper-anchor-width)] rounded-[5px] border-2 border-sidebar-border bg-sidebar p-0 font-heading shadow-md"
           >
-            <DropdownMenuItem
-              onClick={() => onSelect(null)}
-              className={cn(
-                !selectedId &&
-                  "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
-              )}
-            >
-              <span className="truncate">All workspaces</span>
-            </DropdownMenuItem>
-            {workspaces.map((ws) => (
-              <DropdownMenuItem
-                key={ws.id}
-                onClick={() => onSelect(ws.id)}
-                className={cn(
-                  selectedId === ws.id &&
-                    "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
-                )}
-              >
-                <span className="truncate">{ws.name}</span>
-              </DropdownMenuItem>
-            ))}
+            <div className="h-[min(50vh,16rem)] w-full overflow-hidden">
+              <ScrollArea className="h-full w-full">
+                <div className="p-1">
+                  <DropdownMenuItem
+                    onClick={() => onSelect(null)}
+                    className={cn(
+                      !selectedId &&
+                        "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
+                    )}
+                  >
+                    <span className="truncate">All workspaces</span>
+                  </DropdownMenuItem>
+                  {workspaces.map((ws) => (
+                    <DropdownMenuItem
+                      key={ws.id}
+                      onClick={() => onSelect(ws.id)}
+                      className={cn(
+                        selectedId === ws.id &&
+                          "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
+                      )}
+                    >
+                      <span className="truncate">{ws.name}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

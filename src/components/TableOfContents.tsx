@@ -88,7 +88,7 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
       </h3>
       <ul
         ref={tocRef}
-        className="space-y-1 border-l-2 max-h-[calc(100vh-8rem)] overflow-y-auto"
+        className="space-y-1 border-l-2 pl-2 max-h-[calc(100vh-8rem)] overflow-y-auto overflow-x-hidden no-scrollbar"
       >
         {headings.map(({ id, text, level }) => (
           <li key={id} style={{ paddingLeft: `${(level - 1) * 8}px` }} className="text-sm">
@@ -97,9 +97,9 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
               href={`#${id}`}
               onClick={(e) => handleClick(e, id)}
               className={cn(
-                "block rounded-md border-2 px-2 py-1 transition-colors scroll-mt-4 border-l -ml-2",
+                "block rounded-md border-2 border-l-2 px-2 py-1 transition-colors scroll-mt-4",
                 activeId === id
-                  ? "border-border text-background font-medium bg-orange-600"
+                  ? "border-border text-background font-medium bg-main"
                   : "border-transparent text-foreground hover:text-primary hover:bg-main-500/10"
               )}
             >

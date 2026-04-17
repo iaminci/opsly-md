@@ -305,7 +305,7 @@ function AppContent() {
 
       <SidebarInset className="min-h-0 overflow-hidden">
         <header className="relative flex h-14.5 shrink-0 items-center gap-5 border-b-2 px-4">
-          <SidebarTrigger className="shrink-0" />
+          <SidebarTrigger className="shrink-0 text-primary" />
           <Link
             href="/"
             className="text-2xl font-semibold tracking-[-0.02em] text-foreground cursor-pointer hover:opacity-80 transition-opacity shrink-0"
