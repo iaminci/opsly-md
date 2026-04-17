@@ -99,8 +99,8 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
               className={cn(
                 "block rounded-md border-2 px-2 transition-colors scroll-mt-4 border-l-2 -ml-px",
                 activeId === id
-                  ? "border-border text-background font-medium bg-main dark:border-main-400 dark:text-primary dark:[color:var(--dm-text)] dark:bg-main-500/20 dark:[background-color:var(--dm-bg)] dark:[border-color:var(--dm-text)]"
-                  : "border-transparent text-zinc-700 dark:text-zinc-300 hover:text-primary hover:bg-main-500/10 dark:hover:text-primary dark:hover:[background-color:var(--dm-bg)]"
+                  ? "border-border text-foreground font-medium bg-main"
+                  : "border-transparent text-foreground hover:text-primary hover:bg-main-500/10"
               )}
             >
               {text}
