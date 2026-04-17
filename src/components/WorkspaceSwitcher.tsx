@@ -30,7 +30,7 @@ export function WorkspaceSwitcher({
   const selected = selectedId
     ? workspaces.find((w) => w.id === selectedId)
     : null;
-  const label = selected ? selected.name : "All workspaces";
+  const label = selected ? selected.name : "All Workspaces";
 
   return (
     <SidebarMenu>
@@ -61,7 +61,7 @@ export function WorkspaceSwitcher({
                         "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
                     )}
                   >
-                    <span className="truncate">All workspaces</span>
+                    <span className="truncate">All Workspaces</span>
                   </DropdownMenuItem>
                   {workspaces.map((ws) => (
                     <DropdownMenuItem

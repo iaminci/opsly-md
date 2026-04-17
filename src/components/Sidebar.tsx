@@ -61,7 +61,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Upload, Download, Trash2, FileText, Search as SearchIcon, ClipboardPaste, ChevronRight, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 import { CommandPalette } from "./CommandPalette";
-import { Separator } from "@/components/ui/separator";
 import { cn, getFirstHeading } from "@/lib/utils";
 
 interface SidebarProps {
@@ -521,7 +520,7 @@ export function Sidebar({
                 <Button
                   variant="neutral"
                   size="icon"
-                  className="inline-flex size-9 shrink-0 text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"
+                  className="inline-flex size-9 shrink-0 text-primary hover:text-primary-hover"
                   onClick={handleAddWorkspace}
                   title="New workspace"
                 >
@@ -564,7 +563,7 @@ export function Sidebar({
               variant="neutral"
               size="sm"
               onClick={() => setShowPaste(true)}
-              className="text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"
+              className="text-primary hover:text-primary-hover"
             >
               Paste Markdown
             </Button>
@@ -572,7 +571,7 @@ export function Sidebar({
               <Button
                 variant="neutral"
                 size="sm"
-                className="flex-1 text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"
+                className="flex-1 text-primary hover:text-primary-hover"
               onClick={handleImportWorkspace}
               title="Import workspace"
               >
@@ -582,7 +581,7 @@ export function Sidebar({
               <Button
                 variant="neutral"
                 size="sm"
-                className="flex-1 text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"
+                className="flex-1 text-primary hover:text-primary-hover"
                 onClick={handleExportClick}
                 title={selectedWorkspaceId ? "Export workspace" : "Export all workspaces"}
               >
@@ -680,7 +679,7 @@ export function Sidebar({
             />
           </div>
           <DialogFooter className="gap-2 sm:gap-3">
-            <Button variant="neutral" className="text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"onClick={() => { setShowPaste(false); setPasteValue(""); }}>
+            <Button variant="neutral" className="text-primary hover:text-primary-hover"onClick={() => { setShowPaste(false); setPasteValue(""); }}>
               Cancel
             </Button>
             <Button
@@ -693,7 +692,7 @@ export function Sidebar({
                 setShowPaste(false);
               }}
               disabled={!pasteValue.trim()}
-              className="bg-orange-600 text-white hover:bg-orange-700 dark:[background-color:var(--dm-btn)] dark:hover:[background-color:var(--dm-btn-hover)]"
+              className="bg-main text-background hover:bg-main"
             >
               Add
             </Button>
@@ -702,7 +701,7 @@ export function Sidebar({
       </Dialog>
 
       <AlertDialog open={exportConfirmDialogOpen} onOpenChange={setExportConfirmDialogOpen}>
-        <AlertDialogContent className="ring-orange-500/50 dark:ring-[color:var(--dm-border)]">
+        <AlertDialogContent className="ring-main/20">
           <AlertDialogHeader>
             <AlertDialogTitle>Export workspace</AlertDialogTitle>
             <AlertDialogDescription>
@@ -714,7 +713,7 @@ export function Sidebar({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => void handleExportConfirm()}
-              className="bg-orange-600 text-white hover:bg-orange-700 dark:[background-color:var(--dm-btn)] dark:hover:[background-color:var(--dm-btn-hover)]"
+              className="bg-main text-background hover:bg-main"
             >
               Export
             </AlertDialogAction>
@@ -723,7 +722,7 @@ export function Sidebar({
       </AlertDialog>
 
       <AlertDialog open={deleteAllDialogOpen} onOpenChange={setDeleteAllDialogOpen}>
-        <AlertDialogContent className="ring-orange-500/50 dark:ring-[color:var(--dm-border)]">
+        <AlertDialogContent className="ring-main/20">
           <AlertDialogHeader>
             <AlertDialogTitle>
               {selectedWorkspaceId
@@ -748,7 +747,7 @@ export function Sidebar({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               variant="default"
-              className="bg-orange-600 text-white hover:bg-orange-700 dark:[background-color:var(--dm-btn)] dark:hover:[background-color:var(--dm-btn-hover)]"
+              className="bg-main text-background hover:bg-main"
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 void handleDeleteAllConfirm();
@@ -767,7 +766,7 @@ export function Sidebar({
           if (!open) setDeleteWorkspaceTarget(null);
         }}
       >
-        <AlertDialogContent className="ring-orange-500/50 dark:ring-[color:var(--dm-border)]">
+        <AlertDialogContent className="ring-main/20">
           <AlertDialogHeader>
             <AlertDialogTitle>
               Delete &quot;{deleteWorkspaceTarget?.name}&quot; and all its contents?
@@ -799,7 +798,7 @@ export function Sidebar({
           if (!open) setDeleteFolderTarget(null);
         }}
       >
-        <AlertDialogContent className="ring-orange-500/50 dark:ring-[color:var(--dm-border)]">
+        <AlertDialogContent className="ring-main/20">
           <AlertDialogHeader>
             <AlertDialogTitle>
               Delete folder &quot;{deleteFolderTarget?.name}&quot; and all its contents?
@@ -831,7 +830,7 @@ export function Sidebar({
           if (!open) setDeleteDocTarget(null);
         }}
       >
-        <AlertDialogContent className="ring-orange-500/50 dark:ring-[color:var(--dm-border)]">
+        <AlertDialogContent className="ring-main/20">
           <AlertDialogHeader>
             <AlertDialogTitle>
               Delete file &quot;{deleteDocTarget?.title}&quot;?
@@ -856,19 +855,19 @@ export function Sidebar({
       </AlertDialog>
 
       <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
-        <DialogContent className="sm:max-w-sm dark:ring-[color:var(--dm-border)]" showCloseButton>
+        <DialogContent className="sm:max-w-sm" showCloseButton>
           <DialogHeader>
             <DialogTitle>Export workspaces</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-2 py-2">
-            <label className="flex items-center gap-2 cursor-pointer rounded-lg px-2 py-1.5 hover:bg-orange-200/50 dark:hover:[background-color:var(--dm-bg)]">
+            <label className="flex items-center gap-2 cursor-pointer rounded-lg px-2 py-1.5 hover:bg-main/50">
               <Checkbox
                 checked={
                   sortedWorkspaces.length > 0 &&
                   exportSelectedIds.size === sortedWorkspaces.length
                 }
                 onCheckedChange={toggleExportSelectAll}
-                className="data-checked:border-orange-500 data-checked:bg-orange-600 dark:data-checked:[border-color:var(--dm-btn)] dark:data-checked:[background-color:var(--dm-btn)]"
+                className="data-checked:border-main/20 data-checked:bg-main"
               />
               <span className="text-sm font-medium">Select all</span>
             </label>
@@ -876,12 +875,12 @@ export function Sidebar({
               {sortedWorkspaces.map((ws) => (
                 <label
                   key={ws.id}
-                  className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-orange-200/50 dark:hover:[background-color:var(--dm-bg)]"
+                  className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-main/20"
                 >
                   <Checkbox
                     checked={exportSelectedIds.has(ws.id)}
                     onCheckedChange={() => toggleExportWorkspace(ws.id)}
-                    className="data-checked:border-orange-500 data-checked:bg-orange-600 dark:data-checked:[border-color:var(--dm-btn)] dark:data-checked:[background-color:var(--dm-btn)]"
+                    className="data-checked:border-main/20 data-checked:bg-main"
                   />
                   <span className="text-sm truncate">{ws.name}</span>
                 </label>
@@ -889,13 +888,13 @@ export function Sidebar({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="neutral" className="text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]" onClick={() => setExportDialogOpen(false)}>
+            <Button variant="neutral" className="text-primary hover:text-primary-hover" onClick={() => setExportDialogOpen(false)}>
               Cancel
             </Button>
             <Button
               onClick={() => void handleExportSelected()}
               disabled={exportSelectedIds.size === 0}
-              className="bg-orange-600 text-white hover:bg-orange-700 dark:[background-color:var(--dm-btn)] dark:hover:[background-color:var(--dm-btn-hover)]"
+              className="bg-main text-background hover:bg-main"
             >
               Export {exportSelectedIds.size > 0 ? `(${exportSelectedIds.size})` : ""}
             </Button>
@@ -947,17 +946,17 @@ function PasteInput({
   };
 
   return (
-    <Card className="mt-3 rounded-xl shadow-sm ring-1 ring-orange-500/50 dark:ring-[color:var(--dm-border)]">
+    <Card className="mt-3 rounded-xl shadow-sm ring-1 ring-main/20 ">
       <CardContent className="pt-4">
         <Textarea
           placeholder="Paste markdown here..."
           value={value}
           onChange={(e) => setValue(e.target.value)}
           rows={4}
-          className="mb-2 border-orange-500/50 focus-visible:border-orange-500 focus-visible:ring-orange-500/50 dark:[border-color:var(--dm-border)] dark:focus-visible:[border-color:var(--dm-text)] dark:focus-visible:[--tw-ring-color:var(--dm-focus-ring)]"
+          className="mb-2 border-main focus-visible:border-main focus-visible:ring-main/20"
         />
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="neutral" className="text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]" size="sm" onClick={onClose}>
+          <Button type="button" variant="neutral" className="text-primary hover:text-primary-hover" size="sm" onClick={onClose}>
             Cancel
           </Button>
           <Button
@@ -965,7 +964,7 @@ function PasteInput({
             size="sm"
             onClick={handleSubmit}
             disabled={!value.trim()}
-            className="bg-orange-600 text-white hover:bg-orange-700 dark:[background-color:var(--dm-btn)] dark:hover:[background-color:var(--dm-btn-hover)]"
+            className="bg-main text-background hover:bg-main"
           >
             Add
           </Button>

@@ -195,7 +195,7 @@ body {
   --destructive-foreground: #ffffff;
   --sidebar: #1a1a1a;
   --sidebar-foreground: #f5f5f5;
-  --sidebar-primary: o#ef4400;
+  --sidebar-primary: #ef4400;
   --sidebar-primary-foreground: #141414;
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
