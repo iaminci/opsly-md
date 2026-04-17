@@ -97,9 +97,9 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
               href={`#${id}`}
               onClick={(e) => handleClick(e, id)}
               className={cn(
-                "block rounded-md border-2 px-2 transition-colors scroll-mt-4 border-l-2 -ml-px",
+                "block rounded-md border-2 px-2 py-1 transition-colors scroll-mt-4 border-l -ml-2",
                 activeId === id
-                  ? "border-border text-foreground font-medium bg-main"
+                  ? "border-border text-background font-medium bg-orange-600"
                   : "border-transparent text-foreground hover:text-primary hover:bg-main-500/10"
               )}
             >
