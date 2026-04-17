@@ -164,6 +164,8 @@ body {
   --sidebar-accent-foreground: oklch(0.145 0 0);
   --sidebar-border: oklch(0% 0 0);
   --sidebar-ring: oklch(0% 0 0);
+  /* Tree indent guide (WorkspaceTree); avoid unset var() falling back to black */
+  --sidebar-guide: oklch(72% 0 0);
 }
 
 .dark {
@@ -201,6 +203,7 @@ body {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(100% 0 0);
   --sidebar-ring: oklch(100% 0 0);
+  --sidebar-guide: oklch(48% 0 0);
 }
 
 /* Dark mode accent variables - only affect dark mode, light mode untouched */

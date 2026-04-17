@@ -270,6 +270,8 @@ function WorkspaceSection({
     if (docId) onMoveDocument(docId, workspace.id, null);
   };
 
+  const hasTreeItems = folders.length > 0 || documents.length > 0;
+
   return (
     <AccordionItem value={workspace.id}>
         <AccordionTrigger
@@ -338,7 +340,12 @@ function WorkspaceSection({
             workspaceId={workspace.id}
             folderId={null}
             onDrop={onMoveDocument}
-            className="flex flex-col gap-1 border-l-2 border-[color:var(--sidebar-guide)] ml-2 pb-1.5 pl-2 pt-2"
+            className={cn(
+              "ml-2 flex flex-col gap-1 pl-2",
+              hasTreeItems
+                ? "border-l-2 border-[color:var(--sidebar-guide)] pb-1.5 pt-2"
+                : "min-h-2 py-1"
+            )}
           >
             {folders.length > 0 && (
               <Accordion
@@ -502,6 +509,8 @@ function FolderItem({
     if (docId) onMoveDocument(docId, workspaceId, folder.id);
   };
 
+  const hasNestedItems = subfolders.length > 0 || docs.length > 0;
+
   return (
     <AccordionItem value={folder.id} variant="nested">
       <AccordionTrigger
@@ -568,7 +577,12 @@ function FolderItem({
           workspaceId={workspaceId}
           folderId={folder.id}
           onDrop={onMoveDocument}
-          className="flex flex-col gap-1 border-l-2 border-[color:var(--sidebar-guide)] ml-2 pb-1.5 pl-2 pt-2"
+          className={cn(
+            "ml-2 flex flex-col gap-1 pl-2",
+            hasNestedItems
+              ? "border-l-2 border-[color:var(--sidebar-guide)] pb-1.5 pt-2"
+              : "min-h-2 py-1"
+          )}
         >
           {subfolders.length > 0 && (
             <Accordion
