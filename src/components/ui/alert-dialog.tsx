@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 
 /** Neo-brutalist panel: cream surface, thick black border, hard offset shadow (reference UI). */
 const alertDialogSurface =
-  "border-2 border-black bg-background font-[ui-sans-serif,system-ui,sans-serif] shadow-[4px_4px_0_0_#000] dark:border-white dark:bg-card dark:shadow-[4px_4px_0_0_#fff]"
+  "border-2 border-black bg-background font-[ui-sans-serif,system-ui,sans-serif] shadow-[2px_2px_0_0_#000] dark:border-white dark:bg-card dark:shadow-[2px_2px_0_0_#fff]"
 
 const alertDialogOverlayClasses =
   "fixed inset-0 isolate z-50 bg-black/20 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 dark:bg-black/55"
@@ -151,10 +151,10 @@ AlertDialogDescription.displayName =
   AlertDialogPrimitive.Description.displayName
 
 const alertDialogActionClassName =
-  "border-2 border-black bg-[#FF7000] text-black shadow-[4px_4px_0_0_#000] hover:!bg-[#ff8533] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:border-white dark:bg-[#FF7000] dark:text-black dark:shadow-[4px_4px_0_0_#fff] dark:hover:!bg-[#ff8533] dark:hover:shadow-none"
+  "border-2 border-black bg-destructive text-background shadow-[2px_2px_0_0_#000] hover:!bg-destructive hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
 
 const alertDialogCancelClassName =
-  "border-2 border-black bg-white text-black shadow-[4px_4px_0_0_#000] hover:!bg-white hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:border-white dark:bg-secondary-background dark:text-foreground dark:shadow-[4px_4px_0_0_#fff] dark:hover:!bg-secondary-background dark:hover:shadow-none"
+  "border-2 border-black bg-white text-black shadow-[2px_2px_0_0_#000] hover:!bg-white hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
 
 function AlertDialogAction({
   className,
