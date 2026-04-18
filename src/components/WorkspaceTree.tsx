@@ -26,6 +26,11 @@ import {
   Library,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const DRAG_TYPE = "application/x-md-viewer-document";
 const EXPANDED_WORKSPACES_KEY = "md-viewer-expanded-workspaces";
@@ -648,6 +653,7 @@ function FileItem({
   onMoveDocument: (docId: string, workspaceId: string, folderId: string | null) => void;
 }) {
   const displayName = getFirstHeading(doc.content) ?? doc.title;
+  const nameTruncated = false;
 
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData(DRAG_TYPE, doc.id);
@@ -659,7 +665,7 @@ function FileItem({
       draggable
       onDragStart={handleDragStart}
       className={cn(
-        "group flex cursor-pointer items-center gap-1 py-1 pl-1 pr-1",
+        "group flex cursor-pointer items-center rounded-md gap-1 py-1 pl-1 pr-1",
         isActive
           ? "bg-sidebar-primary/20"
           : "hover:bg-sidebar-primary/20"
@@ -670,24 +676,30 @@ function FileItem({
         }
       }}
     >
-      <button
-        type="button"
-        className={cn(
-          "flex h-auto min-h-7 min-w-0 flex-1 items-center justify-start gap-2 truncate rounded-md border-0 bg-transparent px-1 text-left text-sm font-normal hover:bg-transparent",
-          isActive && "font-medium text-sidebar-foreground",
-          !isActive && "text-sidebar-foreground"
-        )}
-      >
-        <FileIcon
-          className={cn(
-            "size-4 shrink-0 text-sidebar-foreground opacity-100",
-            isActive && "opacity-100"
-          )}
-        />
-        <span className="truncate" title={displayName}>
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            className={cn(
+              "flex h-auto min-h-7 min-w-0 flex-1 items-center justify-start gap-2 truncate rounded-md border-0 bg-transparent px-1 text-left text-sm font-normal hover:bg-transparent",
+              isActive && "font-medium text-sidebar-foreground",
+              !isActive && "text-sidebar-foreground",
+              nameTruncated && "min-w-0"
+            )}
+          >
+            <FileIcon
+              className={cn(
+                "size-4 shrink-0 text-sidebar-foreground opacity-100",
+                isActive && "opacity-100"
+              )}
+            />
+            <span className="min-w-0 flex-1 truncate">{displayName}</span>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="right" align="start" className="max-w-md">
           {displayName}
-        </span>
-      </button>
+        </TooltipContent>
+      </Tooltip>
       <div className="ml-auto shrink-0">
         <DropdownMenu>
           <DropdownMenuTrigger
