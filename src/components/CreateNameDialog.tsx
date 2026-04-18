@@ -87,7 +87,7 @@ export function CreateNameDialog({
             <Button
               type="submit"
               disabled={!value.trim()}
-              className="bg-orange-600 text-white hover:bg-orange-700 dark:[background-color:var(--dm-btn)] dark:hover:[background-color:var(--dm-btn-hover)]"
+              className="bg-main text-background hover:bg-main"
             >
               {submitLabel}
             </Button>

@@ -362,7 +362,7 @@ function AppContent() {
                         type="button"
                         variant="default"
                         size="sm"
-                        className="bg-main text-white hover:bg-orange-700"
+                        className="bg-main text-background"
                         onClick={() => {
                           const blob = new Blob([currentDoc.content], {
                             type: "text/markdown",
@@ -423,7 +423,7 @@ function AppContent() {
             <Button
               onClick={handleEditSave}
               variant="neutral"
-              className="bg-orange-600 text-white hover:bg-orange-700 dark:[background-color:var(--dm-btn)] dark:hover:[background-color:var(--dm-btn-hover)]"
+              className="bg-main text-background"
             >
               Save
             </Button>

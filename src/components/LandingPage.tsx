@@ -173,13 +173,99 @@ function Hero() {
         <div className="mt-10 flex flex-wrap justify-center gap-4">
           <Link
             href="/app?loadSample=1"
-            className={cn(buttonVariants({ size: "lg" }), "bg-orange-600 text-white hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700")}
+            className={cn(buttonVariants({ size: "lg" }), "bg-main text-background hover:bg-main")}
           >
             Open Workspace
           </Link>
         </div>
-        <div className="mt-16 overflow-hidden rounded-xl border border-border/50 bg-card shadow-lg ring-1 ring-border/30 dark:ring-border/50">
-          <LandingPageScreenshot />
+      </div>
+    </section>
+  );
+}
+
+function LocalStorageTransparency() {
+  return (
+    <section className="px-4 py-24 sm:px-6">
+      <div className="mx-auto max-w-2xl">
+        <h2 className="text-center text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+          Your documents are stored locally
+        </h2>
+        <Card className="mt-8 border-amber-500/50 bg-amber-50/50 ring-1 ring-amber-500/30 dark:border-amber-600/50 dark:bg-amber-950/20 dark:ring-amber-500/20">
+          <CardContent className="flex gap-4 pt-6">
+            <AlertTriangleIcon className="size-5 shrink-0 text-amber-600 dark:text-amber-500" />
+            <div>
+              <p className="text-sm text-muted-foreground">
+                Opsly MD stores data directly in your browser using IndexedDB.
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                If browser storage is cleared, documents may be removed.
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Export workspaces regularly to keep backups.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
+  );
+}
+
+function InterfaceOverview() {
+  return (
+    <section className="px-4 py-24 sm:px-6">
+      <div className="mx-auto max-w-5xl">
+        <h2 className="text-center text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+          Interface Overview
+        </h2>
+        <p className="mx-auto mt-3 max-w-2xl text-center text-muted-foreground">
+          A documentation-style layout built for developers.
+        </p>
+        <div className="mt-12 relative">
+          <div className="overflow-hidden rounded-xl border border-border/50 bg-card shadow-lg ring-1 ring-border/30 dark:ring-border/50">
+            <LandingPageScreenshot />
+          </div>
+          <div className="mt-8 grid gap-6 sm:grid-cols-3">
+            <Card className="ring-1 ring-border/50 ring-bg-main/30">
+              <CardHeader className="pb-2">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-main/10">
+                  <FolderTree className="size-5 text-main dark:text-main" />
+                </div>
+                <CardTitle className="text-base">Sidebar</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Organize documents in workspaces and folders.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="ring-1 ring-border/50 ring-bg-main/30">
+              <CardHeader className="pb-2">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-main/10">
+                  <FileText className="size-5 text-main dark:text-main" />
+                </div>
+                <CardTitle className="text-base">Markdown Renderer</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Clean document reading experience.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="ring-1 ring-border/50 ring-bg-main/30">
+              <CardHeader className="pb-2">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-main/10">
+                  <Search className="size-5 text-main dark:text-main" />
+                </div>
+                <CardTitle className="text-base">On-page Navigation</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Auto-generated table of contents for long documents.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </section>
@@ -219,67 +305,6 @@ function LiveMarkdownDemo() {
   );
 }
 
-function InterfaceOverview() {
-  return (
-    <section className="px-4 py-24 sm:px-6">
-      <div className="mx-auto max-w-5xl">
-        <h2 className="text-center text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-          Interface Overview
-        </h2>
-        <p className="mx-auto mt-3 max-w-2xl text-center text-muted-foreground">
-          A documentation-style layout built for developers.
-        </p>
-        <div className="mt-12 relative">
-          <div className="overflow-hidden rounded-xl border border-border/50 bg-card shadow-lg ring-1 ring-border/30 dark:ring-border/50">
-            <LandingPageScreenshot />
-          </div>
-          <div className="mt-8 grid gap-6 sm:grid-cols-3">
-            <Card className="ring-1 ring-border/50 ring-orange-500/30">
-              <CardHeader className="pb-2">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-orange-500/10">
-                  <FolderTree className="size-5 text-orange-600 dark:text-orange-400" />
-                </div>
-                <CardTitle className="text-base">Sidebar</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Organize documents in workspaces and folders.
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="ring-1 ring-border/50 ring-orange-500/30">
-              <CardHeader className="pb-2">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-orange-500/10">
-                  <FileText className="size-5 text-orange-600 dark:text-orange-400" />
-                </div>
-                <CardTitle className="text-base">Markdown Renderer</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Clean document reading experience.
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="ring-1 ring-border/50 ring-orange-500/30">
-              <CardHeader className="pb-2">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-orange-500/10">
-                  <Search className="size-5 text-orange-600 dark:text-orange-400" />
-                </div>
-                <CardTitle className="text-base">On-page Navigation</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Auto-generated table of contents for long documents.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function CorePrinciples() {
   return (
     <section className="px-4 py-24 sm:px-6">
@@ -294,8 +319,8 @@ function CorePrinciples() {
           {CORE_PRINCIPLES.map(({ icon: Icon, title, description }) => (
             <Card key={title} className="ring-1 ring-border/50">
               <CardHeader>
-                <div className="flex size-10 items-center justify-center rounded-lg bg-orange-500/10 dark:bg-orange-500/20">
-                  <Icon className="size-5 text-orange-600 dark:text-orange-400" />
+                <div className="flex size-10 items-center justify-center rounded-lg bg-main/10 dark:bg-main/20">
+                  <Icon className="size-5 text-main dark:text-main" />
                 </div>
                 <CardTitle className="text-lg">{title}</CardTitle>
               </CardHeader>
@@ -337,34 +362,6 @@ function Capabilities() {
   );
 }
 
-function LocalStorageTransparency() {
-  return (
-    <section className="px-4 py-24 sm:px-6">
-      <div className="mx-auto max-w-2xl">
-        <h2 className="text-center text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-          Your documents are stored locally
-        </h2>
-        <Card className="mt-8 border-amber-500/50 bg-amber-50/50 ring-1 ring-amber-500/30 dark:border-amber-600/50 dark:bg-amber-950/20 dark:ring-amber-500/20">
-          <CardContent className="flex gap-4 pt-6">
-            <AlertTriangleIcon className="size-5 shrink-0 text-amber-600 dark:text-amber-500" />
-            <div>
-              <p className="text-sm text-muted-foreground">
-                Opsly MD stores data directly in your browser using IndexedDB.
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                If browser storage is cleared, documents may be removed.
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Export workspaces regularly to keep backups.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </section>
-  );
-}
-
 function Architecture() {
   return (
     <section className="px-4 py-24 sm:px-6">
@@ -384,19 +381,19 @@ function Architecture() {
               <div className="space-y-2 font-mono text-sm text-muted-foreground">
                 <div>Markdown</div>
                 <div className="flex items-center gap-2">
-                  <ArrowRight className="size-4 text-orange-500" />
+                  <ArrowRight className="size-4 text-bg-main" />
                 </div>
                 <div>react-markdown</div>
                 <div className="flex items-center gap-2">
-                  <ArrowRight className="size-4 text-orange-500" />
+                  <ArrowRight className="size-4 text-bg-main" />
                 </div>
                 <div>remark plugins</div>
                 <div className="flex items-center gap-2">
-                  <ArrowRight className="size-4 text-orange-500" />
+                  <ArrowRight className="size-4 text-bg-main" />
                 </div>
                 <div>rehype plugins</div>
                 <div className="flex items-center gap-2">
-                  <ArrowRight className="size-4 text-orange-500" />
+                  <ArrowRight className="size-4 text-bg-main" />
                 </div>
                 <div>rendered document</div>
               </div>
@@ -410,11 +407,11 @@ function Architecture() {
               <div className="space-y-2 font-mono text-sm text-muted-foreground">
                 <div>SQLite (sql.js WASM)</div>
                 <div className="flex items-center gap-2">
-                  <ArrowRight className="size-4 text-orange-500" />
+                  <ArrowRight className="size-4 text-bg-main" />
                 </div>
                 <div>IndexedDB</div>
                 <div className="flex items-center gap-2">
-                  <ArrowRight className="size-4 text-orange-500" />
+                  <ArrowRight className="size-4 text-bg-main" />
                 </div>
                 <div>browser storage</div>
               </div>
@@ -444,11 +441,11 @@ export function LandingPage() {
       <Navbar />
       <main>
         <Hero />
-        <LiveMarkdownDemo />
+        <LocalStorageTransparency />
         <InterfaceOverview />
+        <LiveMarkdownDemo />
         <CorePrinciples />
         <Capabilities />
-        <LocalStorageTransparency />
         <Architecture />
       </main>
       <Footer />
