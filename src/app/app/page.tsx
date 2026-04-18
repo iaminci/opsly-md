@@ -102,19 +102,19 @@ function DocumentRightSidebar({
   contentScrollRef: React.RefObject<HTMLDivElement | null>;
 }) {
   return (
-    <Tabs defaultValue="on-this-page" className="flex flex-col h-full">
-      <TabsList className="w-full justify-start h-11 mb-5">
+    <Tabs defaultValue="on-this-page" className="flex min-h-0 flex-1 flex-col">
+      <TabsList className="mb-5 h-11 w-full shrink-0 justify-start">
         <TabsTrigger value="on-this-page">On This Page</TabsTrigger>
         <TabsTrigger value="info">Info</TabsTrigger>
       </TabsList>
-      <TabsContent value="on-this-page" className="mt-0">
+      <TabsContent value="on-this-page" className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden">
         <TableOfContents
           key={`${doc.id}-${hashContent(content)}`}
           content={content}
           scrollContainerRef={contentScrollRef}
         />
       </TabsContent>
-      <TabsContent value="info" className="mt-0">
+      <TabsContent value="info" className="mt-0 flex min-h-0 flex-1 flex-col overflow-auto">
         <DocumentInfo doc={doc} />
       </TabsContent>
     </Tabs>
@@ -389,7 +389,7 @@ function AppContent() {
           </div>
 
           {currentDoc && (
-            <div className="hidden min-h-0 w-56 shrink-0 overflow-hidden border-l-2 px-4 py-6 lg:block print:hidden">
+            <div className="hidden min-h-0 w-56 shrink-0 overflow-hidden border-l-2 px-4 py-6 lg:flex lg:flex-col print:hidden">
               <DocumentRightSidebar
                 doc={currentDoc}
                 content={currentDoc.content}

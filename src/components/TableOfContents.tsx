@@ -100,22 +100,26 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
   if (headings.length === 0) return null;
 
   return (
-    <nav className="sticky top-8 self-start">
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+    <nav className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
+      <h3 className="mb-2 shrink-0 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         On this page
       </h3>
       <ul
         ref={tocRef}
-        className="space-y-1 border-l-2 pl-2 max-h-[calc(100vh-8rem)] overflow-y-auto overflow-x-hidden no-scrollbar"
+        className="min-h-0 w-full flex-1 space-y-1 overflow-y-auto overflow-x-hidden border-l-2 pl-2 pb-1"
       >
         {headings.map(({ id, text, level }) => (
-          <li key={id} style={{ paddingLeft: `${(level - 1) * 8}px` }} className="text-sm">
+          <li
+            key={id}
+            style={{ paddingLeft: `${(level - 1) * 8}px` }}
+            className="min-w-0 text-sm"
+          >
             <a
               ref={activeId === id ? activeItemRef : null}
               href={`#${id}`}
               onClick={(e) => handleClick(e, id)}
               className={cn(
-                "block rounded-md border-2 border-l-2 px-2 py-1 transition-colors scroll-mt-4",
+                "block w-full min-w-0 break-words rounded-md border-2 border-l-2 px-2 py-1 transition-colors scroll-mt-4",
                 activeId === id
                   ? "border-border text-background font-medium bg-main"
                   : "border-transparent text-foreground hover:text-primary hover:bg-main-500/10"
