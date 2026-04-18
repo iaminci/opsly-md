@@ -42,7 +42,7 @@ import { SAMPLE_MARKDOWN } from "@/lib/sample-document";
 import { EmptyState } from "@/components/EmptyState";
 import { Sidebar } from "@/components/Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { DarkAccentPicker } from "@/components/DarkAccentPicker";
+// import { DarkAccentPicker } from "@/components/DarkAccentPicker";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { TableOfContents } from "@/components/TableOfContents";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -315,7 +315,7 @@ function AppContent() {
             <span className="text-main dark:[color:var(--dm-text)]">MD</span>
           </Link>
           <div className="ml-auto flex items-center gap-3">
-            <DarkAccentPicker />
+            {/* <DarkAccentPicker /> */}
             <ThemeToggle />
           </div>
         </header>
