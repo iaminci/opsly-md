@@ -1,59 +1,29 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-
-interface TocItem {
-  id: string;
-  text: string;
-  level: number;
-}
+import { buildHeadingManifest } from "@/lib/heading-manifest";
 
 interface TableOfContentsProps {
   content: string;
   scrollContainerRef?: React.RefObject<HTMLElement | null>;
 }
 
-function extractHeadings(markdown: string): TocItem[] {
-  const headings: TocItem[] = [];
-  const lines = markdown.split("\n");
-  let inCodeBlock = false;
-
-  for (const line of lines) {
-    if (line.startsWith("```")) {
-      inCodeBlock = !inCodeBlock;
-      continue;
-    }
-    if (inCodeBlock) continue;
-    if (/^\s{4,}/.test(line) || line.startsWith("\t")) continue;
-
-    const match = line.match(/^(#{1,6})\s+(.+)$/);
-    if (match) {
-      const level = match[1].length;
-      const text = match[2].replace(/#+\s*$/, "").trim();
-      const id = text
-        .toLowerCase()
-        .replace(/[^\w\s-]/g, "")
-        .replace(/\s+/g, "-")
-        .replace(/-+/g, "-");
-      if (level <= 3) headings.push({ id, text, level });
-    }
-  }
-
-  return headings;
-}
-
 export function TableOfContents({ content, scrollContainerRef }: TableOfContentsProps) {
-  const headings = useMemo(() => extractHeadings(content), [content]);
-  // Initialize with first heading; component remounts on doc change (key), so this stays correct
-  const [activeId, setActiveId] = useState<string | null>(() => extractHeadings(content)[0]?.id ?? null);
+  const headings = useMemo(
+    () => buildHeadingManifest(content).filter((h) => h.level <= 3),
+    [content]
+  );
+  const [activeId, setActiveId] = useState<string | null>(
+    () => buildHeadingManifest(content).filter((h) => h.level <= 3)[0]?.id ?? null
+  );
   const tocRef = useRef<HTMLUListElement>(null);
   const activeItemRef = useRef<HTMLAnchorElement | null>(null);
   const tickingRef = useRef(false);
   const lastSetIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const heads = extractHeadings(content);
+    const heads = buildHeadingManifest(content).filter((h) => h.level <= 3);
     if (heads.length === 0) return;
     const scrollEl = scrollContainerRef?.current ?? document.documentElement;
     const root = scrollContainerRef?.current ?? null;
@@ -90,8 +60,6 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
       }, 0);
     };
 
-    // No initial setState in effect - avoids update loop. Highlight appears on first scroll.
-
     const onScroll = () => updateActiveId();
     const cleanup = () => {
       cancelled = true;
@@ -101,7 +69,25 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
     if (root) root.addEventListener("scroll", onScroll, { passive: true });
     else window.addEventListener("scroll", onScroll, { passive: true });
     return cleanup;
-  }, [content]);
+  }, [content, scrollContainerRef]);
+
+  useLayoutEffect(() => {
+    if (!activeId) return;
+    const list = tocRef.current;
+    const node = activeItemRef.current;
+    if (!list || !node) return;
+
+    // Only adjust the TOC list’s scrollTop — avoid scrollIntoView(), which can
+    // scroll ancestor panes (tabs/sidebar) and move headings/tabs with it.
+    const pad = 8;
+    const listRect = list.getBoundingClientRect();
+    const nodeRect = node.getBoundingClientRect();
+    if (nodeRect.top < listRect.top + pad) {
+      list.scrollTop += nodeRect.top - listRect.top - pad;
+    } else if (nodeRect.bottom > listRect.bottom - pad) {
+      list.scrollTop += nodeRect.bottom - listRect.bottom + pad;
+    }
+  }, [activeId]);
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
@@ -114,22 +100,29 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
   if (headings.length === 0) return null;
 
   return (
-    <nav className="sticky top-8 self-start">
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+    <nav className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
+      <h3 className="mb-2 shrink-0 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         On this page
       </h3>
-      <ul ref={tocRef} className="space-y-1 border-l border-orange-500/50 dark:[border-color:var(--dm-border)] pl-3 max-h-[calc(100vh-8rem)] overflow-y-auto">
+      <ul
+        ref={tocRef}
+        className="min-h-0 w-full flex-1 space-y-1 overflow-y-auto overflow-x-hidden border-l-2 pl-2 pb-1"
+      >
         {headings.map(({ id, text, level }) => (
-          <li key={id} style={{ paddingLeft: `${(level - 1) * 8}px` }} className="text-sm">
+          <li
+            key={id}
+            style={{ paddingLeft: `${(level - 1) * 8}px` }}
+            className="min-w-0 text-sm"
+          >
             <a
               ref={activeId === id ? activeItemRef : null}
               href={`#${id}`}
               onClick={(e) => handleClick(e, id)}
               className={cn(
-                "block rounded-md px-1 -ml-1 transition-colors scroll-mt-4 border-l-2 -ml-px",
+                "block w-full min-w-0 break-words rounded-md border-2 border-l-2 px-2 py-1 transition-colors scroll-mt-4",
                 activeId === id
-                  ? "border-orange-500 text-orange-600 font-medium bg-orange-500/15 dark:border-orange-400 dark:text-orange-400 dark:[color:var(--dm-text)] dark:bg-orange-500/20 dark:[background-color:var(--dm-bg)] dark:[border-color:var(--dm-text)]"
-                  : "border-transparent text-zinc-700 dark:text-zinc-300 hover:text-orange-600 hover:bg-orange-500/10 dark:hover:text-orange-400 dark:hover:[background-color:var(--dm-bg)]"
+                  ? "border-border text-background font-medium bg-main/75"
+                  : "border-transparent text-foreground hover:text-primary hover:bg-main/10"
               )}
             >
               {text}

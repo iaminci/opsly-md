@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 interface CreateNameDialogProps {
   open: boolean;
@@ -68,7 +69,11 @@ export function CreateNameDialog({
                 setError(null);
               }}
               placeholder={placeholder}
-              className={`h-10 rounded-lg border-input bg-background ${error ? "border-destructive" : ""}`}
+              className={cn(
+                "h-10 rounded-md border-input bg-background",
+                "ring-2 ring-foreground ring-offset-2 ring-offset-background",
+                error && "border-destructive ring-destructive",
+              )}
               autoFocus
             />
             {error && (
@@ -78,15 +83,20 @@ export function CreateNameDialog({
           <DialogFooter>
             <Button
               type="button"
-              variant="outline"
+              variant="neutral"
               onClick={() => onOpenChange(false)}
+              className={cn(
+                "text-primary hover:text-primary-hover"
+              )}
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={!value.trim()}
-              className="bg-orange-600 text-white hover:bg-orange-700 dark:[background-color:var(--dm-btn)] dark:hover:[background-color:var(--dm-btn-hover)]"
+              className={cn(
+                "bg-main text-background hover:bg-main"
+              )}
             >
               {submitLabel}
             </Button>

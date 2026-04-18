@@ -29,44 +29,50 @@ export function WorkspaceSwitcher({
   const selected = selectedId
     ? workspaces.find((w) => w.id === selectedId)
     : null;
-  const label = selected ? selected.name : "All workspaces";
+  const label = selected ? selected.name : "All Workspaces";
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <SidebarMenuButton
-                isActive
-                className="!bg-orange-200/50 dark:![background-color:var(--dm-bg)]"
-              >
-                <span className="truncate">{label}</span>
-                <ChevronDown className="ml-auto size-4 shrink-0" />
-              </SidebarMenuButton>
-            }
-          />
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton
+              isActive
+              className="!h-9 !min-h-9 !rounded-[5px] !border-2 !border-border !bg-sidebar-primary/75 !font-heading !font-bold !text-sidebar-primary-foreground !shadow-shadow !outline-0 transition-[transform,box-shadow] hover:!translate-x-[2px] hover:!translate-y-[2px] hover:!bg-sidebar-primary/75 hover:!text-sidebar-primary-foreground hover:!shadow-shadow hover:!outline-0 focus-visible:!outline-0 focus-visible:!bg-sidebar-primary/75 focus-visible:!shadow-shadow"
+            >
+              <span className="truncate">{label}</span>
+              <ChevronDown className="ml-auto size-4 shrink-0" />
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
           <DropdownMenuContent
             align="start"
-            className="w-[--radix-popper-anchor-width] min-w-48"
+            className="w-[var(--radix-popper-anchor-width)] min-w-0 max-w-[var(--radix-popper-anchor-width)] rounded-[5px] border-2 border-sidebar-border bg-sidebar p-0 font-heading shadow-md"
           >
-            <DropdownMenuItem
-              onClick={() => onSelect(null)}
-              className={cn(!selectedId && "bg-orange-200/50 text-foreground font-bold dark:[background-color:var(--dm-bg)]")}
-            >
-              <span className="truncate">All workspaces</span>
-            </DropdownMenuItem>
-            {workspaces.map((ws) => (
-              <DropdownMenuItem
-                key={ws.id}
-                onClick={() => onSelect(ws.id)}
-                className={cn(
-                  selectedId === ws.id && "bg-orange-200/50 text-foreground font-bold dark:[background-color:var(--dm-bg)]"
-                )}
-              >
-                <span className="truncate">{ws.name}</span>
-              </DropdownMenuItem>
-            ))}
+            <div className="no-scrollbar max-h-[min(50vh,16rem)] w-full overflow-y-auto overflow-x-hidden">
+              <div className="p-1">
+                <DropdownMenuItem
+                  onClick={() => onSelect(null)}
+                  className={cn(
+                    !selectedId &&
+                      "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
+                  )}
+                >
+                  <span className="truncate">All Workspaces</span>
+                </DropdownMenuItem>
+                {workspaces.map((ws) => (
+                  <DropdownMenuItem
+                    key={ws.id}
+                    onClick={() => onSelect(ws.id)}
+                    className={cn(
+                      selectedId === ws.id &&
+                        "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
+                    )}
+                  >
+                    <span className="truncate">{ws.name}</span>
+                  </DropdownMenuItem>
+                ))}
+              </div>
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

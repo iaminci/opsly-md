@@ -13,17 +13,8 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import {
   getWorkspaces,
   getAllFolders,
@@ -70,7 +61,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Upload, Download, Trash2, FileText, Search as SearchIcon, ClipboardPaste, ChevronRight, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 import { CommandPalette } from "./CommandPalette";
-import { Separator } from "@/components/ui/separator";
 import { cn, getFirstHeading } from "@/lib/utils";
 
 interface SidebarProps {
@@ -90,8 +80,7 @@ export function Sidebar({
   onAddDocument,
   onRefresh,
 }: SidebarProps) {
-  const { setOpen, state } = useSidebar();
-  const isCollapsed = state === "collapsed";
+  const { setOpen } = useSidebar();
   const [showPaste, setShowPaste] = useState(false);
   const [pasteValue, setPasteValue] = useState("");
   const [workspaceDialogOpen, setWorkspaceDialogOpen] = useState(false);
@@ -129,13 +118,6 @@ export function Sidebar({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [hoverExpandEnabled, setHoverExpandEnabled] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = localStorage.getItem("md-viewer-hover-expand");
-    setHoverExpandEnabled(stored === "true");
-  }, []);
 
   const WORKSPACE_KEY = "md-viewer-current-workspace";
 
@@ -499,8 +481,7 @@ export function Sidebar({
     : null;
 
   return (
-    <ShadcnSidebar collapsible="icon" className="print:hidden border-r border-orange-500/50 dark:[border-color:var(--dm-border)]">
-      <SidebarRail />
+    <ShadcnSidebar collapsible="offcanvas" className="print:hidden border-r-2 border-sidebar-border">
       <input
         ref={fileInputRef}
         type="file"
@@ -516,132 +497,8 @@ export function Sidebar({
         className="hidden"
       />
       <SidebarContent className="flex flex-col min-h-0 overflow-hidden">
-        {/* Icon bar - visible only when sidebar is collapsed to icon mode */}
-        {isCollapsed && (
-        <div
-          className="flex flex-col flex-1 min-h-0 text-sidebar-foreground"
-          onMouseEnter={() => hoverExpandEnabled && setOpen(true)}
-          onMouseLeave={() => hoverExpandEnabled && setOpen(false)}
-        >
-          {/* 1. Search - matches opened position 1 */}
-          <div className="shrink-0 flex flex-col items-center pt-1.5">
-            <Tooltip>
-              <TooltipTrigger
-                type="button"
-                className={cn(
-                  "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md transition-colors duration-150 hover:bg-muted [&_svg]:[stroke:var(--sidebar-foreground)]",
-                  commandPaletteOpen ? "bg-accent/10 text-accent" : "text-sidebar-foreground"
-                )}
-                onClick={() => setOpen(true)}
-                aria-label="Search Markdown Files"
-              >
-                <SearchIcon className="size-5" />
-              </TooltipTrigger>
-              <TooltipContent side="right">Search Markdown Files</TooltipContent>
-            </Tooltip>
-          </div>
-
-          {/* 2. Workspace switcher + Plus - matches opened position 2 */}
-          <div className="shrink-0 flex flex-col items-center gap-1 mt-1">
-            <Tooltip>
-              <TooltipTrigger
-                type="button"
-                className={cn(
-                  "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md transition-colors duration-150 hover:bg-muted [&_svg]:[stroke:var(--sidebar-foreground)]",
-                  !commandPaletteOpen && currentId ? "bg-accent/10 text-accent" : "text-sidebar-foreground"
-                )}
-                onClick={() => setOpen(true)}
-                aria-label="Documents"
-              >
-                <FileText className="size-5" />
-              </TooltipTrigger>
-              <TooltipContent side="right">Documents</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger
-                type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-sidebar-foreground transition-colors duration-150 hover:bg-muted [&_svg]:[stroke:var(--sidebar-foreground)]"
-                onClick={() => {
-                  setOpen(true);
-                  handleAddWorkspace();
-                }}
-                aria-label="Create Workspace"
-              >
-                <Plus className="size-5" />
-              </TooltipTrigger>
-              <TooltipContent side="right">Create Workspace</TooltipContent>
-            </Tooltip>
-          </div>
-
-          {/* 3. Spacer for workspace tree area - matches opened scrollable middle */}
-          <div className="min-h-0 flex-1" aria-hidden />
-
-          {/* 4-7. Bottom action bar - matches opened: Paste, Import|Export, Delete */}
-          <div className="shrink-0 border-t border-orange-500/50 dark:[border-color:var(--dm-border)] flex flex-col items-center gap-1.5 py-2 px-0">
-            <Tooltip>
-              <TooltipTrigger
-                type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-sidebar-foreground transition-colors duration-150 hover:bg-muted [&_svg]:[stroke:var(--sidebar-foreground)]"
-                onClick={() => {
-                  setOpen(true);
-                  setShowPaste(true);
-                }}
-                aria-label="Paste Markdown"
-              >
-                <ClipboardPaste className="size-5" />
-              </TooltipTrigger>
-              <TooltipContent side="right">Paste Markdown</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger
-                type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-sidebar-foreground transition-colors duration-150 hover:bg-muted [&_svg]:[stroke:var(--sidebar-foreground)]"
-                onClick={() => {
-                  setOpen(true);
-                  handleImportWorkspace();
-                }}
-                aria-label="Import Workspace"
-              >
-                <Upload className="size-5" />
-              </TooltipTrigger>
-              <TooltipContent side="right">Import Workspace</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger
-                type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-sidebar-foreground transition-colors duration-150 hover:bg-muted [&_svg]:[stroke:var(--sidebar-foreground)]"
-                onClick={() => {
-                  setOpen(true);
-                  handleExportClick();
-                }}
-                aria-label="Export Workspace"
-              >
-                <Download className="size-5" />
-              </TooltipTrigger>
-              <TooltipContent side="right">Export Workspace</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger
-                type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-destructive transition-colors duration-150 hover:bg-muted hover:text-destructive [&_svg]:![stroke:var(--destructive)]"
-                onClick={() => {
-                  setOpen(true);
-                  handleDeleteAllClick();
-                }}
-                aria-label="Delete Everything"
-              >
-                <Trash2 className="size-5 text-destructive [&_path]:[stroke:var(--destructive)] [&_line]:[stroke:var(--destructive)]" />
-              </TooltipTrigger>
-              <TooltipContent side="right">Delete Everything</TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
-        )}
-
-        {/* Main content - hidden when sidebar is collapsed to icon mode */}
-        {!isCollapsed && (
         <div className="flex flex-1 min-h-0 flex-col">
-        <div className="shrink-0 flex flex-col">
+        <div className="mb-2 flex shrink-0 flex-col border-b-2 border-sidebar-border pb-3">
           <SidebarGroup>
             <SidebarGroupLabel className="sr-only">Search</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -652,7 +509,7 @@ export function Sidebar({
           <SidebarGroup>
             <SidebarGroupLabel className="sr-only">Workspace</SidebarGroupLabel>
             <SidebarGroupContent>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2.5">
                 <div className="flex-1 min-w-0">
                   <WorkspaceSwitcher
                     workspaces={sortedWorkspaces}
@@ -661,10 +518,9 @@ export function Sidebar({
                   />
                 </div>
                 <Button
-                  type="button"
-                  variant="ghost"
+                  variant="neutral"
                   size="icon"
-                  className="size-7 shrink-0 dark:[color:var(--dm-text)]"
+                  className="inline-flex size-9 shrink-0 text-primary hover:text-primary-hover"
                   onClick={handleAddWorkspace}
                   title="New workspace"
                 >
@@ -675,8 +531,8 @@ export function Sidebar({
           </SidebarGroup>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-          <SidebarGroup className="flex-1">
+        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+          <SidebarGroup className="flex-1 border-b-0">
             <SidebarGroupContent>
               <WorkspaceTree
               workspaces={displayedWorkspaces}
@@ -701,23 +557,21 @@ export function Sidebar({
           </SidebarGroup>
         </div>
 
-        <div className="shrink-0 border-t border-orange-500/50 dark:[border-color:var(--dm-border)] px-2 py-2">
+        <div className="shrink-0 border-t-2 px-2 py-2">
           <div className="flex flex-col gap-1.5">
             <Button
-              type="button"
-              variant="outline"
+              variant="neutral"
               size="sm"
               onClick={() => setShowPaste(true)}
-              className="w-full rounded-lg border-orange-500/50 focus-visible:border-orange-500 focus-visible:ring-orange-500/50 dark:[border-color:var(--dm-border)] dark:focus-visible:[border-color:var(--dm-text)] dark:focus-visible:[--tw-ring-color:var(--dm-focus-ring)]"
+              className="text-primary hover:text-primary-hover"
             >
               Paste Markdown
             </Button>
             <div className="flex gap-1.5">
               <Button
-                type="button"
-                variant="outline"
+                variant="neutral"
                 size="sm"
-                className="flex-1 border-orange-500/50 focus-visible:border-orange-500 focus-visible:ring-orange-500/50 dark:[border-color:var(--dm-border)] dark:focus-visible:[border-color:var(--dm-text)] dark:focus-visible:[--tw-ring-color:var(--dm-focus-ring)]"
+                className="flex-1 text-primary hover:text-primary-hover"
               onClick={handleImportWorkspace}
               title="Import workspace"
               >
@@ -725,10 +579,9 @@ export function Sidebar({
                 Import
               </Button>
               <Button
-                type="button"
-                variant="outline"
+                variant="neutral"
                 size="sm"
-                className="flex-1 border-orange-500/50 focus-visible:border-orange-500 focus-visible:ring-orange-500/50 dark:[border-color:var(--dm-border)] dark:focus-visible:[border-color:var(--dm-text)] dark:focus-visible:[--tw-ring-color:var(--dm-focus-ring)]"
+                className="flex-1 text-primary hover:text-primary-hover"
                 onClick={handleExportClick}
                 title={selectedWorkspaceId ? "Export workspace" : "Export all workspaces"}
               >
@@ -738,9 +591,9 @@ export function Sidebar({
             </div>
             <Button
               type="button"
-              variant="outline"
+              variant="neutral"
               size="sm"
-              className="w-full border-red-500 text-destructive hover:bg-destructive/10 hover:text-destructive dark:border-red-600"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:ring-destructive"
               onClick={handleDeleteAllClick}
               title={
                 selectedWorkspaceId
@@ -748,13 +601,12 @@ export function Sidebar({
                   : "Delete all workspaces, folders, and documents"
               }
             >
-              <Trash2 className="mr-1.5 size-4 shrink-0" />
+              <Trash2 className="h-4 w-4 mr-2" />
               {selectedWorkspaceId ? "Delete Workspace" : "Delete Everything"}
             </Button>
           </div>
         </div>
         </div>
-        )}
       </SidebarContent>
 
       <CreateNameDialog
@@ -827,7 +679,7 @@ export function Sidebar({
             />
           </div>
           <DialogFooter className="gap-2 sm:gap-3">
-            <Button variant="outline" onClick={() => { setShowPaste(false); setPasteValue(""); }}>
+            <Button variant="neutral" className="text-primary hover:text-primary-hover"onClick={() => { setShowPaste(false); setPasteValue(""); }}>
               Cancel
             </Button>
             <Button
@@ -840,7 +692,7 @@ export function Sidebar({
                 setShowPaste(false);
               }}
               disabled={!pasteValue.trim()}
-              className="bg-orange-600 text-white hover:bg-orange-700 dark:[background-color:var(--dm-btn)] dark:hover:[background-color:var(--dm-btn-hover)]"
+              className="bg-main text-background hover:bg-main"
             >
               Add
             </Button>
@@ -849,7 +701,7 @@ export function Sidebar({
       </Dialog>
 
       <AlertDialog open={exportConfirmDialogOpen} onOpenChange={setExportConfirmDialogOpen}>
-        <AlertDialogContent className="ring-orange-500/50 dark:ring-[color:var(--dm-border)]">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Export workspace</AlertDialogTitle>
             <AlertDialogDescription>
@@ -859,10 +711,7 @@ export function Sidebar({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => void handleExportConfirm()}
-              className="bg-orange-600 text-white hover:bg-orange-700 dark:[background-color:var(--dm-btn)] dark:hover:[background-color:var(--dm-btn-hover)]"
-            >
+            <AlertDialogAction onClick={() => void handleExportConfirm()}>
               Export
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -870,7 +719,7 @@ export function Sidebar({
       </AlertDialog>
 
       <AlertDialog open={deleteAllDialogOpen} onOpenChange={setDeleteAllDialogOpen}>
-        <AlertDialogContent className="ring-orange-500/50 dark:ring-[color:var(--dm-border)]">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
               {selectedWorkspaceId
@@ -894,7 +743,6 @@ export function Sidebar({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              variant="destructive"
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 void handleDeleteAllConfirm();
@@ -913,7 +761,7 @@ export function Sidebar({
           if (!open) setDeleteWorkspaceTarget(null);
         }}
       >
-        <AlertDialogContent className="ring-orange-500/50 dark:ring-[color:var(--dm-border)]">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
               Delete &quot;{deleteWorkspaceTarget?.name}&quot; and all its contents?
@@ -926,7 +774,6 @@ export function Sidebar({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              variant="destructive"
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 void handleDeleteWorkspaceConfirm();
@@ -945,7 +792,7 @@ export function Sidebar({
           if (!open) setDeleteFolderTarget(null);
         }}
       >
-        <AlertDialogContent className="ring-orange-500/50 dark:ring-[color:var(--dm-border)]">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
               Delete folder &quot;{deleteFolderTarget?.name}&quot; and all its contents?
@@ -958,7 +805,6 @@ export function Sidebar({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              variant="destructive"
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 void handleDeleteFolderConfirm();
@@ -977,7 +823,7 @@ export function Sidebar({
           if (!open) setDeleteDocTarget(null);
         }}
       >
-        <AlertDialogContent className="ring-orange-500/50 dark:ring-[color:var(--dm-border)]">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
               Delete file &quot;{deleteDocTarget?.title}&quot;?
@@ -989,7 +835,6 @@ export function Sidebar({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              variant="destructive"
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 void handleDeleteDocumentConfirm();
@@ -1002,32 +847,32 @@ export function Sidebar({
       </AlertDialog>
 
       <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
-        <DialogContent className="sm:max-w-sm ring-orange-500/50 dark:ring-[color:var(--dm-border)]" showCloseButton>
+        <DialogContent className="sm:max-w-sm" showCloseButton>
           <DialogHeader>
             <DialogTitle>Export workspaces</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-2 py-2">
-            <label className="flex items-center gap-2 cursor-pointer rounded-lg px-2 py-1.5 hover:bg-orange-200/50 dark:hover:[background-color:var(--dm-bg)]">
+            <label className="flex items-center gap-2 cursor-pointer rounded-lg px-2 py-1.5 hover:bg-main/50">
               <Checkbox
                 checked={
                   sortedWorkspaces.length > 0 &&
                   exportSelectedIds.size === sortedWorkspaces.length
                 }
                 onCheckedChange={toggleExportSelectAll}
-                className="data-checked:border-orange-500 data-checked:bg-orange-600 dark:data-checked:[border-color:var(--dm-btn)] dark:data-checked:[background-color:var(--dm-btn)]"
+                className="data-checked:border-main/20 data-checked:bg-main"
               />
               <span className="text-sm font-medium">Select all</span>
             </label>
-            <div className="max-h-48 overflow-y-auto flex flex-col gap-1 border border-orange-500/50 rounded-lg p-2 dark:[border-color:var(--dm-border)]">
+            <div className="max-h-48 overflow-y-auto flex flex-col gap-1 border border-2 rounded-lg p-2">
               {sortedWorkspaces.map((ws) => (
                 <label
                   key={ws.id}
-                  className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-orange-200/50 dark:hover:[background-color:var(--dm-bg)]"
+                  className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-main/20"
                 >
                   <Checkbox
                     checked={exportSelectedIds.has(ws.id)}
                     onCheckedChange={() => toggleExportWorkspace(ws.id)}
-                    className="data-checked:border-orange-500 data-checked:bg-orange-600 dark:data-checked:[border-color:var(--dm-btn)] dark:data-checked:[background-color:var(--dm-btn)]"
+                    className="data-checked:border-main/20 data-checked:bg-main"
                   />
                   <span className="text-sm truncate">{ws.name}</span>
                 </label>
@@ -1035,13 +880,13 @@ export function Sidebar({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setExportDialogOpen(false)}>
+            <Button variant="neutral" className="text-primary hover:text-primary-hover" onClick={() => setExportDialogOpen(false)}>
               Cancel
             </Button>
             <Button
               onClick={() => void handleExportSelected()}
               disabled={exportSelectedIds.size === 0}
-              className="bg-orange-600 text-white hover:bg-orange-700 dark:[background-color:var(--dm-btn)] dark:hover:[background-color:var(--dm-btn-hover)]"
+              className="bg-main text-background hover:bg-main"
             >
               Export {exportSelectedIds.size > 0 ? `(${exportSelectedIds.size})` : ""}
             </Button>
@@ -1093,17 +938,17 @@ function PasteInput({
   };
 
   return (
-    <Card className="mt-3 rounded-xl shadow-sm ring-1 ring-orange-500/50 dark:ring-[color:var(--dm-border)]">
+    <Card className="mt-3 rounded-xl shadow-sm ring-1 ring-main/20 ">
       <CardContent className="pt-4">
         <Textarea
           placeholder="Paste markdown here..."
           value={value}
           onChange={(e) => setValue(e.target.value)}
           rows={4}
-          className="mb-2 border-orange-500/50 focus-visible:border-orange-500 focus-visible:ring-orange-500/50 dark:[border-color:var(--dm-border)] dark:focus-visible:[border-color:var(--dm-text)] dark:focus-visible:[--tw-ring-color:var(--dm-focus-ring)]"
+          className="mb-2 border-main focus-visible:border-main focus-visible:ring-main/20"
         />
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+          <Button type="button" variant="neutral" className="text-primary hover:text-primary-hover" size="sm" onClick={onClose}>
             Cancel
           </Button>
           <Button
@@ -1111,7 +956,7 @@ function PasteInput({
             size="sm"
             onClick={handleSubmit}
             disabled={!value.trim()}
-            className="bg-orange-600 text-white hover:bg-orange-700 dark:[background-color:var(--dm-btn)] dark:hover:[background-color:var(--dm-btn-hover)]"
+            className="bg-main text-background hover:bg-main"
           >
             Add
           </Button>

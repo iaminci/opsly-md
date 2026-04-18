@@ -29,19 +29,16 @@ export function DarkAccentPicker() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="dark:[color:var(--dm-text)] dark:hover:[background-color:var(--dm-bg)]"
-            aria-label="Choose dark mode accent"
-          >
-            <Palette className="size-5" />
-          </Button>
-        }
-      />
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="neutral"
+          size="icon-sm"
+          className="text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"
+          aria-label="Choose dark mode accent"
+        >
+          <Palette className="size-5" />
+        </Button>
+      </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[180px]">
         {ACCENTS.map(({ value, label, colorClass }) => (
           <DropdownMenuItem

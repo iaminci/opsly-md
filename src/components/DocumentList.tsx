@@ -37,7 +37,7 @@ export function DocumentList({
         <li key={doc.id} className="group flex items-center gap-1">
           <Button
             type="button"
-            variant="ghost"
+            variant="neutral"
             size="sm"
             onClick={() => onSelect(doc)}
             className={cn(
@@ -49,8 +49,8 @@ export function DocumentList({
           </Button>
           <Button
             type="button"
-            variant="ghost"
-            size="icon-xs"
+            variant="neutral"
+            size="sm"
             onClick={(e) => {
               e.stopPropagation();
               onDelete(doc.id);

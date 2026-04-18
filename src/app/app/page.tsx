@@ -42,10 +42,9 @@ import { SAMPLE_MARKDOWN } from "@/lib/sample-document";
 import { EmptyState } from "@/components/EmptyState";
 import { Sidebar } from "@/components/Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { DarkAccentPicker } from "@/components/DarkAccentPicker";
+// import { DarkAccentPicker } from "@/components/DarkAccentPicker";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { TableOfContents } from "@/components/TableOfContents";
-import { ReadingProgressBar } from "@/components/ReadingProgressBar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -103,19 +102,19 @@ function DocumentRightSidebar({
   contentScrollRef: React.RefObject<HTMLDivElement | null>;
 }) {
   return (
-    <Tabs defaultValue="on-this-page" className="flex flex-col h-full">
-      <TabsList variant="line" className="w-full justify-start h-8 mb-2">
+    <Tabs defaultValue="on-this-page" className="flex min-h-0 flex-1 flex-col">
+      <TabsList className="mb-5 h-11 w-full shrink-0 justify-start">
         <TabsTrigger value="on-this-page">On This Page</TabsTrigger>
         <TabsTrigger value="info">Info</TabsTrigger>
       </TabsList>
-      <TabsContent value="on-this-page" className="mt-0">
+      <TabsContent value="on-this-page" className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden">
         <TableOfContents
           key={`${doc.id}-${hashContent(content)}`}
           content={content}
           scrollContainerRef={contentScrollRef}
         />
       </TabsContent>
-      <TabsContent value="info" className="mt-0">
+      <TabsContent value="info" className="mt-0 flex min-h-0 flex-1 flex-col overflow-auto">
         <DocumentInfo doc={doc} />
       </TabsContent>
     </Tabs>
@@ -305,18 +304,18 @@ function AppContent() {
       />
 
       <SidebarInset className="min-h-0 overflow-hidden">
-        <header className="relative flex h-12 shrink-0 items-center gap-2 border-b border-orange-500/50 dark:[border-color:var(--dm-border)] px-4">
-          <SidebarTrigger className="shrink-0" />
+        <header className="relative flex h-14.5 shrink-0 items-center gap-5 border-b-2 px-4">
+          <SidebarTrigger className="shrink-0 text-primary" />
           <Link
             href="/"
             className="text-2xl font-semibold tracking-[-0.02em] text-foreground cursor-pointer hover:opacity-80 transition-opacity shrink-0"
             aria-label="Go to home"
           >
             <span>Opsly </span>
-            <span className="text-orange-500 dark:[color:var(--dm-text)]">MD</span>
+            <span className="text-main dark:[color:var(--dm-text)]">MD</span>
           </Link>
-          <div className="ml-auto flex items-center gap-1">
-            <DarkAccentPicker />
+          <div className="ml-auto flex items-center gap-3">
+            {/* <DarkAccentPicker /> */}
             <ThemeToggle />
           </div>
         </header>
@@ -327,7 +326,6 @@ function AppContent() {
           >
           {currentDoc ? (
             <>
-              <ReadingProgressBar scrollContainerRef={contentScrollRef} />
               <div className="mx-auto max-w-4xl">
                 <div className="mb-6 flex flex-col gap-3 print:mb-4">
                   <div className="flex flex-wrap items-start justify-between gap-4">
@@ -352,9 +350,9 @@ function AppContent() {
                     <div className="flex shrink-0 gap-2">
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="neutral"
                         size="sm"
-                        className="border-orange-500/50 focus-visible:border-orange-500 focus-visible:ring-orange-500/50 dark:[border-color:var(--dm-border)] dark:focus-visible:[border-color:var(--dm-text)] dark:focus-visible:[--tw-ring-color:var(--dm-focus-ring)]"
+                        className="text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"
                         onClick={handleEditOpen}
                       >
                         <Pencil className="mr-1.5 size-4" />
@@ -362,9 +360,9 @@ function AppContent() {
                       </Button>
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="default"
                         size="sm"
-                        className="border-orange-500/50 focus-visible:border-orange-500 focus-visible:ring-orange-500/50 dark:[border-color:var(--dm-border)] dark:focus-visible:[border-color:var(--dm-text)] dark:focus-visible:[--tw-ring-color:var(--dm-focus-ring)]"
+                        className="bg-main text-background"
                         onClick={() => {
                           const blob = new Blob([currentDoc.content], {
                             type: "text/markdown",
@@ -391,7 +389,7 @@ function AppContent() {
           </div>
 
           {currentDoc && (
-            <div className="hidden min-h-0 w-56 shrink-0 overflow-y-auto overflow-x-hidden border-l border-orange-500/50 dark:[border-color:var(--dm-border)] px-4 py-6 lg:block print:hidden">
+            <div className="hidden min-h-0 w-56 shrink-0 overflow-hidden border-l-2 px-4 py-6 lg:flex lg:flex-col print:hidden">
               <DocumentRightSidebar
                 doc={currentDoc}
                 content={currentDoc.content}
@@ -416,12 +414,16 @@ function AppContent() {
             />
           </div>
           <DialogFooter className="gap-2 sm:gap-3">
-            <Button variant="outline" onClick={() => setEditOpen(false)}>
+            <Button
+              variant="neutral" onClick={() => setEditOpen(false)}
+              className="text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"
+            >
               Cancel
             </Button>
             <Button
               onClick={handleEditSave}
-              className="bg-orange-600 text-white hover:bg-orange-700 dark:[background-color:var(--dm-btn)] dark:hover:[background-color:var(--dm-btn-hover)]"
+              variant="neutral"
+              className="bg-main text-background"
             >
               Save
             </Button>
