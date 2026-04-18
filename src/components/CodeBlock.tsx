@@ -21,7 +21,7 @@ export function CodeBlock({ className, children }: CodeBlockProps) {
 
   return (
     <div className="group relative my-4">
-      <pre className="overflow-x-auto rounded-lg bg-[#0d1117] p-4 text-sm font-mono whitespace-pre">
+      <pre className="overflow-x-auto rounded-md bg-[#0d1117] p-4 text-sm font-mono whitespace-pre">
         <code className={cn("font-mono", className)}>{children}</code>
       </pre>
       <button

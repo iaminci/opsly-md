@@ -571,7 +571,7 @@ function FolderItem({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="rounded-lg border border-sidebar-border/80 bg-sidebar font-heading shadow-sm"
+              className="rounded-md border border-sidebar-border/80 bg-sidebar font-heading shadow-sm"
               onClick={(e) => e.stopPropagation()}
             >
               <DropdownMenuItem onClick={() => onAddFolder(workspaceId, folder.id)}>
@@ -699,9 +699,9 @@ function FileItem({
           <button
             type="button"
             className={cn(
-              "flex h-auto min-h-7 min-w-0 flex-1 items-center justify-start gap-2 truncate rounded-md border-0 bg-transparent px-1 text-left text-sm font-normal hover:bg-transparent",
-              isActive && "font-medium text-sidebar-foreground",
-              !isActive && "text-sidebar-foreground",
+              "flex h-auto min-h-7 min-w-0 flex-1 items-center justify-start gap-2 truncate rounded-md border-0 bg-transparent px-1 text-left text-sm font-base hover:bg-transparent",
+              isActive && "font-medium text-muted",
+              !isActive && "text-muted",
               nameTruncated && "min-w-0"
             )}
           >
@@ -731,7 +731,7 @@ function FileItem({
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
-            className="rounded-lg border border-sidebar-border/80 bg-sidebar font-heading shadow-sm"
+            className="rounded-md border border-sidebar-border/80 bg-sidebar font-heading shadow-sm"
           >
             <DropdownMenuItem onClick={onRename}>
               <Pencil className="mr-2 size-4" />

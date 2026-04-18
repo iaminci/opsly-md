@@ -852,7 +852,7 @@ export function Sidebar({
             <DialogTitle>Export workspaces</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-2 py-2">
-            <label className="flex items-center gap-2 cursor-pointer rounded-lg px-2 py-1.5 hover:bg-main/50">
+            <label className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-main/50">
               <Checkbox
                 checked={
                   sortedWorkspaces.length > 0 &&
@@ -863,7 +863,7 @@ export function Sidebar({
               />
               <span className="text-sm font-medium">Select all</span>
             </label>
-            <div className="max-h-48 overflow-y-auto flex flex-col gap-1 border border-2 rounded-lg p-2">
+            <div className="max-h-48 overflow-y-auto flex flex-col gap-1 border border-2 rounded-md p-2">
               {sortedWorkspaces.map((ws) => (
                 <label
                   key={ws.id}

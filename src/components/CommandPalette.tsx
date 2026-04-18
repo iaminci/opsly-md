@@ -63,7 +63,7 @@ export function CommandPalette({
       description="Search for a command to run..."
       showCloseButton
     >
-      <Command className="rounded-lg border-0 shadow-none">
+      <Command className="rounded-md border-0 shadow-none">
         <CommandInput placeholder="Type a command or search..." />
         <CommandList>
           <CommandGroup heading="Actions">
