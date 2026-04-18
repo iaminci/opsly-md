@@ -316,21 +316,18 @@ function WorkspaceSection({
           </div>
           <div className="shrink-0 opacity-0 transition-opacity group-hover/ws:opacity-100" onClick={(e) => e.stopPropagation()}>
             <DropdownMenu>
-              <DropdownMenuTrigger
-                nativeButton={false}
-                render={
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md border border-transparent text-sidebar-foreground transition-opacity hover:border-sidebar-border/40 hover:bg-sidebar-accent/80"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") e.preventDefault();
-                    }}
-                  >
-                    <MoreHorizontal className="size-3.5" />
-                  </div>
-                }
-              />
+              <DropdownMenuTrigger asChild>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md border border-transparent text-sidebar-foreground transition-opacity hover:border-sidebar-border/40 hover:bg-sidebar-accent/80"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") e.preventDefault();
+                  }}
+                >
+                  <MoreHorizontal className="size-3.5" />
+                </div>
+              </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
                 className="rounded-md border-border-2 bg-sidebar"
@@ -560,21 +557,18 @@ function FolderItem({
         </div>
         <div className="shrink-0 opacity-0 transition-opacity group-hover/folder:opacity-100" onClick={(e) => e.stopPropagation()}>
           <DropdownMenu>
-            <DropdownMenuTrigger
-              nativeButton={false}
-              render={
-                <div
-                  role="button"
-                  tabIndex={0}
-                  className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md border border-transparent text-sidebar-foreground transition-opacity hover:border-sidebar-border/40 hover:bg-sidebar-accent/80 group-data-[state=open]/folder:text-sidebar-foreground"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") e.preventDefault();
-                  }}
-                >
-                  <MoreHorizontal className="size-3.5" />
-                </div>
-              }
-            />
+            <DropdownMenuTrigger asChild>
+              <div
+                role="button"
+                tabIndex={0}
+                className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md border border-transparent text-sidebar-foreground transition-opacity hover:border-sidebar-border/40 hover:bg-sidebar-accent/80 group-data-[state=open]/folder:text-sidebar-foreground"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") e.preventDefault();
+                }}
+              >
+                <MoreHorizontal className="size-3.5" />
+              </div>
+            </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
               className="rounded-lg border border-sidebar-border/80 bg-sidebar font-heading shadow-sm"
@@ -726,17 +720,15 @@ function FileItem({
       </Tooltip>
       <div className="ml-auto shrink-0">
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <button
-                type="button"
-                className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md border border-transparent text-sidebar-foreground transition-opacity hover:border-sidebar-border/40 hover:bg-sidebar-accent/80"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <MoreHorizontal className="size-3.5" />
-              </button>
-            }
-          />
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md border border-transparent text-sidebar-foreground transition-opacity hover:border-sidebar-border/40 hover:bg-sidebar-accent/80"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreHorizontal className="size-3.5" />
+            </button>
+          </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
             className="rounded-lg border border-sidebar-border/80 bg-sidebar font-heading shadow-sm"

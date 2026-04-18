@@ -13,40 +13,14 @@ function DropdownMenu({
   return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />
 }
 
-type DropdownMenuTriggerProps = React.ComponentProps<
-  typeof DropdownMenuPrimitive.Trigger
-> & {
-  /** Base UI–style API: single element as trigger (implemented with Radix `asChild`). */
-  render?: React.ReactElement
-  /** Base UI compat — ignored; Radix trigger uses `asChild` only. */
-  nativeButton?: boolean
-}
-
 function DropdownMenuTrigger({
-  render,
-  children,
-  nativeButton: _nativeButton,
   ...props
-}: DropdownMenuTriggerProps) {
-  if (render != null) {
-    return (
-      <DropdownMenuPrimitive.Trigger
-        data-slot="dropdown-menu-trigger"
-        asChild
-        {...props}
-      >
-        {render}
-      </DropdownMenuPrimitive.Trigger>
-    )
-  }
-
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>) {
   return (
     <DropdownMenuPrimitive.Trigger
       data-slot="dropdown-menu-trigger"
       {...props}
-    >
-      {children}
-    </DropdownMenuPrimitive.Trigger>
+    />
   )
 }
 
