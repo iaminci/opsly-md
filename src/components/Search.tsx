@@ -84,7 +84,7 @@ export function Search({ documents, onSelect }: SearchProps) {
               key={doc.id}
               type="button"
               variant="neutral"
-              className="h-auto w-full justify-start rounded-none border-1 px-3 py-2 font-normal shadow-none hover:translate-x-0 hover:translate-y-0 hover:bg-sidebar-accent hover:shadow-none"
+              className="h-auto w-full justify-start rounded-none border-1 px-3 py-2 font-normal shadow-none hover:translate-x-0 hover:translate-y-0 hover:bg-sidebar-primary/75 hover:shadow-none"
               onClick={() => {
                 onSelect(doc);
                 setIsOpen(false);

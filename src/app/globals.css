@@ -146,7 +146,7 @@ body {
   --popover: #ffffff;
   --popover-foreground: #000000;
   --input: #ffffff;
-  --primary: #ea435f;
+  --primary: #ef4400;
   --primary-hover: #d00000;
   --primary-foreground: #ffffff;
   --secondary: #ffda5c;
@@ -164,7 +164,6 @@ body {
   --sidebar-accent-foreground: oklch(0.145 0 0);
   --sidebar-border: oklch(0% 0 0);
   --sidebar-ring: oklch(0% 0 0);
-  /* Tree indent guide (WorkspaceTree); avoid unset var() falling back to black */
   --sidebar-guide: oklch(72% 0 0);
 }
 
@@ -185,7 +184,7 @@ body {
   --popover: #1a1a1a;
   --popover-foreground: #ffffff;
   --input: #2a2a2a;
-  --primary: #f07200;
+  --primary: #ef4400;
   --primary-hover: #ff8011;
   --primary-foreground: #fdead9;
   --secondary: #ef8c27;

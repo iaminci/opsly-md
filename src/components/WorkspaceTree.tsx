@@ -287,7 +287,7 @@ function WorkspaceSection({
         >
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <Library className="size-4 shrink-0" />
-            <span className="min-w-0 truncate text-left font-heading font-bold">
+            <span className="min-w-0 truncate text-left font-heading">
               {workspace.name}
             </span>
           </div>
@@ -299,7 +299,7 @@ function WorkspaceSection({
                   <div
                     role="button"
                     tabIndex={0}
-                    className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md border border-transparent text-sidebar-primary-foreground/90 transition-opacity hover:bg-black/10"
+                    className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md border border-transparent text-sidebar-foreground transition-opacity hover:border-sidebar-border/40 hover:bg-sidebar-accent/80"
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") e.preventDefault();
                     }}
@@ -310,7 +310,7 @@ function WorkspaceSection({
               />
               <DropdownMenuContent
                 align="end"
-                className="rounded-lg border border-sidebar-border/80 bg-sidebar font-heading shadow-sm"
+                className="rounded-md border-border-2 bg-sidebar"
                 onClick={(e) => e.stopPropagation()}
               >
                 <DropdownMenuItem onClick={() => onAddFolder(workspace.id, null)}>
@@ -659,10 +659,10 @@ function FileItem({
       draggable
       onDragStart={handleDragStart}
       className={cn(
-        "group flex cursor-pointer items-center gap-1 rounded-md py-1 pl-1 pr-1 transition-colors",
+        "group flex cursor-pointer items-center gap-1 py-1 pl-1 pr-1",
         isActive
-          ? "bg-sidebar-primary/85 text-sidebar-primary"
-          : "hover:bg-sidebar-accent/60"
+          ? "bg-sidebar-primary/20"
+          : "hover:bg-sidebar-primary/20"
       )}
       onClick={(e) => {
         if (!(e.target as HTMLElement).closest("[data-slot='dropdown-menu-trigger']")) {
@@ -680,7 +680,7 @@ function FileItem({
       >
         <FileIcon
           className={cn(
-            "size-4 shrink-0 text-sidebar-foreground opacity-80",
+            "size-4 shrink-0 text-sidebar-foreground opacity-100",
             isActive && "opacity-100"
           )}
         />
@@ -694,7 +694,7 @@ function FileItem({
             render={
               <button
                 type="button"
-                className="flex size-6 shrink-0 items-center justify-center rounded-md bg-transparent text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md border border-transparent text-sidebar-foreground transition-opacity hover:border-sidebar-border/40 hover:bg-sidebar-accent/80"
                 onClick={(e) => e.stopPropagation()}
               >
                 <MoreHorizontal className="size-3.5" />
