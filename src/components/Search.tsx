@@ -51,10 +51,10 @@ export function Search({ documents, onSelect }: SearchProps) {
   return (
     <div className="relative">
       <div className="relative">
-        <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-sidebar-foreground/50" />
+        <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-foreground" />
         <Input
           type="text"
-          placeholder="Search Markdown Files"
+          placeholder="Search Files"
           value={query}
           onChange={(e) => search(e.target.value)}
           onFocus={() => query && setIsOpen(true)}

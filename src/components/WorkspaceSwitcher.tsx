@@ -54,7 +54,7 @@ export function WorkspaceSwitcher({
                   onClick={() => onSelect(null)}
                   className={cn(
                     !selectedId &&
-                      "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
+                      "bg-primary/35 font-semibold text-sidebar-accent-foreground"
                   )}
                 >
                   <span className="truncate">All Workspaces</span>
@@ -65,7 +65,7 @@ export function WorkspaceSwitcher({
                     onClick={() => onSelect(ws.id)}
                     className={cn(
                       selectedId === ws.id &&
-                        "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
+                        "bg-primary/35 font-semibold text-sidebar-accent-foreground"
                     )}
                   >
                     <span className="truncate">{ws.name}</span>
