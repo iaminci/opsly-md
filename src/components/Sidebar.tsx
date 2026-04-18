@@ -701,7 +701,7 @@ export function Sidebar({
       </Dialog>
 
       <AlertDialog open={exportConfirmDialogOpen} onOpenChange={setExportConfirmDialogOpen}>
-        <AlertDialogContent className="ring-main/20">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Export workspace</AlertDialogTitle>
             <AlertDialogDescription>
@@ -711,10 +711,7 @@ export function Sidebar({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => void handleExportConfirm()}
-              className="bg-main text-background hover:bg-main"
-            >
+            <AlertDialogAction onClick={() => void handleExportConfirm()}>
               Export
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -722,7 +719,7 @@ export function Sidebar({
       </AlertDialog>
 
       <AlertDialog open={deleteAllDialogOpen} onOpenChange={setDeleteAllDialogOpen}>
-        <AlertDialogContent className="ring-main/20">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
               {selectedWorkspaceId
@@ -746,8 +743,6 @@ export function Sidebar({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              variant="default"
-              className="bg-main text-background hover:bg-main"
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 void handleDeleteAllConfirm();
@@ -766,7 +761,7 @@ export function Sidebar({
           if (!open) setDeleteWorkspaceTarget(null);
         }}
       >
-        <AlertDialogContent className="ring-main/20">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
               Delete &quot;{deleteWorkspaceTarget?.name}&quot; and all its contents?
@@ -779,7 +774,6 @@ export function Sidebar({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              variant="default"
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 void handleDeleteWorkspaceConfirm();
@@ -798,7 +792,7 @@ export function Sidebar({
           if (!open) setDeleteFolderTarget(null);
         }}
       >
-        <AlertDialogContent className="ring-main/20">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
               Delete folder &quot;{deleteFolderTarget?.name}&quot; and all its contents?
@@ -811,7 +805,6 @@ export function Sidebar({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              variant="default"
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 void handleDeleteFolderConfirm();
@@ -830,7 +823,7 @@ export function Sidebar({
           if (!open) setDeleteDocTarget(null);
         }}
       >
-        <AlertDialogContent className="ring-main/20">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
               Delete file &quot;{deleteDocTarget?.title}&quot;?
@@ -842,7 +835,6 @@ export function Sidebar({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              variant="default"
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 void handleDeleteDocumentConfirm();
