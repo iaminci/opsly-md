@@ -35,17 +35,15 @@ export function WorkspaceSwitcher({
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <SidebarMenuButton
-                isActive
-                className="!h-9 !min-h-9 !rounded-[5px] !border-2 !border-border !bg-sidebar-primary/75 !font-heading !font-bold !text-sidebar-primary-foreground !shadow-shadow !outline-0 transition-[transform,box-shadow] hover:!translate-x-[2px] hover:!translate-y-[2px] hover:!bg-sidebar-primary/75 hover:!text-sidebar-primary-foreground hover:!shadow-shadow hover:!outline-0 focus-visible:!outline-0 focus-visible:!bg-sidebar-primary/75 focus-visible:!shadow-shadow"
-              >
-                <span className="truncate">{label}</span>
-                <ChevronDown className="ml-auto size-4 shrink-0" />
-              </SidebarMenuButton>
-            }
-          />
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton
+              isActive
+              className="!h-9 !min-h-9 !rounded-[5px] !border-2 !border-border !bg-sidebar-primary/75 !font-heading !font-bold !text-sidebar-primary-foreground !shadow-shadow !outline-0 transition-[transform,box-shadow] hover:!translate-x-[2px] hover:!translate-y-[2px] hover:!bg-sidebar-primary/75 hover:!text-sidebar-primary-foreground hover:!shadow-shadow hover:!outline-0 focus-visible:!outline-0 focus-visible:!bg-sidebar-primary/75 focus-visible:!shadow-shadow"
+            >
+              <span className="truncate">{label}</span>
+              <ChevronDown className="ml-auto size-4 shrink-0" />
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
           <DropdownMenuContent
             align="start"
             className="w-[var(--radix-popper-anchor-width)] min-w-0 max-w-[var(--radix-popper-anchor-width)] rounded-[5px] border-2 border-sidebar-border bg-sidebar p-0 font-heading shadow-md"

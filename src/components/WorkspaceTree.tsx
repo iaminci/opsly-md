@@ -33,6 +33,18 @@ import {
 } from "@/components/ui/tooltip";
 
 const DRAG_TYPE = "application/x-md-viewer-document";
+
+/** Drop-target highlight for workspace / folder headers (paired with content-area drag state). */
+const DRAG_OVER_CLASS =
+  "bg-sidebar-accent/45 ring-1 ring-sidebar-primary/60 ring-inset transition-colors duration-150";
+
+function useClearDragStateOnDragEnd(setDragOver: (v: boolean) => void) {
+  useEffect(() => {
+    const clear = () => setDragOver(false);
+    window.addEventListener("dragend", clear);
+    return () => window.removeEventListener("dragend", clear);
+  }, [setDragOver]);
+}
 const EXPANDED_WORKSPACES_KEY = "md-viewer-expanded-workspaces";
 const EXPANDED_FOLDERS_KEY = "md-viewer-expanded-folders";
 
@@ -253,24 +265,30 @@ function WorkspaceSection({
   onRenameDocument,
 }: WorkspaceSectionProps) {
   const [wsDragOver, setWsDragOver] = useState(false);
+  const [wsContentDragOver, setWsContentDragOver] = useState(false);
+  useClearDragStateOnDragEnd(setWsDragOver);
+  useClearDragStateOnDragEnd(setWsContentDragOver);
   const folderIds = folders.map((f) => f.id);
+
+  const workspaceHighlighted = wsDragOver || wsContentDragOver;
 
   const handleWsDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    e.stopPropagation();
     e.dataTransfer.dropEffect = "move";
     setWsDragOver(true);
   };
 
   const handleWsDragLeave = (e: React.DragEvent) => {
-    e.stopPropagation();
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) setWsDragOver(false);
+    const next = e.relatedTarget;
+    if (next instanceof Node && e.currentTarget.contains(next)) return;
+    setWsDragOver(false);
   };
 
   const handleWsDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setWsDragOver(false);
+    setWsContentDragOver(false);
     const docId = e.dataTransfer.getData(DRAG_TYPE);
     if (docId) onMoveDocument(docId, workspace.id, null);
   };
@@ -284,7 +302,7 @@ function WorkspaceSection({
           isActive={containsActiveDoc(workspace.id, null, currentId, getDocuments, getFolders)}
           className={cn(
             "group/ws hover:no-underline",
-            wsDragOver && "ring-2 ring-sidebar-primary ring-inset"
+            workspaceHighlighted && DRAG_OVER_CLASS
           )}
           onDragOver={handleWsDragOver}
           onDragLeave={handleWsDragLeave}
@@ -345,6 +363,7 @@ function WorkspaceSection({
             workspaceId={workspace.id}
             folderId={null}
             onDrop={onMoveDocument}
+            onDragTargetActiveChange={setWsContentDragOver}
             className={cn(
               "ml-2 flex flex-col gap-1 pl-2",
               hasTreeItems
@@ -404,33 +423,35 @@ function WorkspaceDropArea({
   workspaceId,
   folderId,
   onDrop,
+  onDragTargetActiveChange,
   className,
   children,
 }: {
   workspaceId: string;
   folderId: string | null;
   onDrop: (docId: string, workspaceId: string, folderId: string | null) => void;
+  /** Highlights the workspace/folder header while dragging over this zone (files, subfolders, etc.). */
+  onDragTargetActiveChange?: (active: boolean) => void;
   className?: string;
   children: React.ReactNode;
 }) {
-  const [isDragOver, setIsDragOver] = useState(false);
-
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    e.stopPropagation();
+    // Do not stopPropagation so outer workspace root still receives bubbled drags over nested folders.
     e.dataTransfer.dropEffect = "move";
-    setIsDragOver(true);
+    onDragTargetActiveChange?.(true);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    e.stopPropagation();
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false);
+    const next = e.relatedTarget;
+    if (next instanceof Node && e.currentTarget.contains(next)) return;
+    onDragTargetActiveChange?.(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragOver(false);
+    onDragTargetActiveChange?.(false);
     const docId = e.dataTransfer.getData(DRAG_TYPE);
     if (docId) onDrop(docId, workspaceId, folderId);
   };
@@ -440,11 +461,7 @@ function WorkspaceDropArea({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={cn(
-        "transition-all duration-150",
-        isDragOver && "bg-sidebar-accent/40 ring-2 ring-sidebar-primary ring-inset",
-        className
-      )}
+      className={cn("transition-colors duration-150", className)}
     >
       {children}
     </div>
@@ -493,23 +510,29 @@ function FolderItem({
   const subfolderIds = subfolders.map((f) => f.id);
 
   const [folderDragOver, setFolderDragOver] = useState(false);
+  const [folderContentDragOver, setFolderContentDragOver] = useState(false);
+  useClearDragStateOnDragEnd(setFolderDragOver);
+  useClearDragStateOnDragEnd(setFolderContentDragOver);
+
+  const folderHighlighted = folderDragOver || folderContentDragOver;
 
   const handleFolderDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    e.stopPropagation();
     e.dataTransfer.dropEffect = "move";
     setFolderDragOver(true);
   };
 
   const handleFolderDragLeave = (e: React.DragEvent) => {
-    e.stopPropagation();
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) setFolderDragOver(false);
+    const next = e.relatedTarget;
+    if (next instanceof Node && e.currentTarget.contains(next)) return;
+    setFolderDragOver(false);
   };
 
   const handleFolderDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setFolderDragOver(false);
+    setFolderContentDragOver(false);
     const docId = e.dataTransfer.getData(DRAG_TYPE);
     if (docId) onMoveDocument(docId, workspaceId, folder.id);
   };
@@ -523,7 +546,7 @@ function FolderItem({
         isActive={containsActiveDoc(workspaceId, folder.id, currentId, getDocuments, getFolders)}
         className={cn(
           "group/folder min-h-9 py-1.5 hover:no-underline",
-          folderDragOver && "ring-2 ring-sidebar-primary ring-inset"
+          folderHighlighted && DRAG_OVER_CLASS
         )}
         onDragOver={handleFolderDragOver}
         onDragLeave={handleFolderDragLeave}
@@ -582,6 +605,7 @@ function FolderItem({
           workspaceId={workspaceId}
           folderId={folder.id}
           onDrop={onMoveDocument}
+          onDragTargetActiveChange={setFolderContentDragOver}
           className={cn(
             "ml-2 flex flex-col gap-1 pl-2",
             hasNestedItems
