@@ -616,10 +616,10 @@ export function Sidebar({
                 type="button"
                 variant="neutral"
                 size="sm"
-                className="w-full min-w-0 shrink-0 gap-2 text-background hover:text-primary-hover bg-primary"
+                className="w-full min-w-0 shrink-0 gap-2 text-background hover:text-foreground bg-primary/90"
                 title="Import, export, delete"
               >
-                More Options
+                Advance Options
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="overflow-hidden">
