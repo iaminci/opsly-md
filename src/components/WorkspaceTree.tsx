@@ -492,23 +492,23 @@ function WorkspaceSection({
             <span className="min-w-0 flex-1 truncate text-left font-heading text-lg">
               {workspace.name}
             </span>
-            <div className="group/action relative ml-1 flex size-5 shrink-0 items-center justify-center">
+            <div className="group/action ml-1 flex h-5 shrink-0 items-center justify-end gap-1">
               <ChevronRight
                 aria-hidden
                 className={cn(
-                  "pointer-events-none absolute size-[1.125rem] shrink-0 transition-[opacity,transform] duration-200",
+                  "pointer-events-none size-[1.125rem] shrink-0 transition-transform duration-200",
                   workspaceRowActive
                     ? "text-inherit"
                     : "text-zinc-600 dark:text-zinc-400",
-                  "opacity-100 group-hover/ws:opacity-0 group-focus-within/action:opacity-0",
                   "group-data-[state=open]/ws:rotate-90",
-                  workspaceMenuOpen && "opacity-0"
                 )}
               />
               <div
                 className={cn(
-                  "relative z-10 flex shrink-0 items-center opacity-0 transition-opacity group-hover/ws:opacity-100 group-focus-within/action:opacity-100",
-                  workspaceMenuOpen && "opacity-100"
+                  "flex h-5 w-0 shrink-0 items-center justify-end overflow-hidden opacity-0 transition-[width,opacity] duration-200",
+                  "group-hover/ws:w-5 group-hover/ws:opacity-100",
+                  "group-focus-within/action:w-5 group-focus-within/action:opacity-100",
+                  workspaceMenuOpen && "w-5 opacity-100"
                 )}
                 onClick={(e) => e.stopPropagation()}
               >
@@ -751,20 +751,20 @@ function FolderItem({
           <span className="min-w-0 flex-1 truncate text-left font-heading text-base">
             {folder.name}
           </span>
-          <div className="group/action relative ml-1 flex size-5 shrink-0 items-center justify-center">
+          <div className="group/action ml-1 flex h-5 shrink-0 items-center justify-end gap-1">
             <ChevronRight
               aria-hidden
               className={cn(
-                "pointer-events-none absolute size-[1.125rem] shrink-0 text-inherit transition-[opacity,transform] duration-200",
-                "opacity-100 group-hover/folder:opacity-0 group-focus-within/action:opacity-0",
+                "pointer-events-none size-[1.125rem] shrink-0 text-inherit transition-transform duration-200",
                 "group-data-[state=open]/folder:rotate-90",
-                folderMenuOpen && "opacity-0"
               )}
             />
             <div
               className={cn(
-                "relative z-10 flex shrink-0 items-center opacity-0 transition-opacity group-hover/folder:opacity-100 group-focus-within/action:opacity-100",
-                folderMenuOpen && "opacity-100"
+                "flex h-5 w-0 shrink-0 items-center justify-end overflow-hidden opacity-0 transition-[width,opacity] duration-200",
+                "group-hover/folder:w-5 group-hover/folder:opacity-100",
+                "group-focus-within/action:w-5 group-focus-within/action:opacity-100",
+                folderMenuOpen && "w-5 opacity-100"
               )}
               onClick={(e) => e.stopPropagation()}
             >
