@@ -157,7 +157,7 @@ export function WorkspaceSwitcher({
                 aria-label="Workspace actions"
                 className={cn(
                   workspacePairTabClassName,
-                  "inline-flex w-9 min-w-9 shrink-0 items-center justify-center px-0 hover:!bg-destructive/20 hover:!text-destructive"
+                  "inline-flex w-9 min-w-9 shrink-0 items-center justify-center px-0"
                 )}
               >
                 <MoreHorizontal className="size-4 shrink-0" />

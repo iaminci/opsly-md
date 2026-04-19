@@ -418,6 +418,13 @@ function WorkspaceSection({
           onMoveDocument={onMoveDocument}
         />
       ))}
+      {hideWorkspaceHeader && !hasTreeItems && (
+        <div className="flex min-h-[min(50vh,12rem)] w-full items-center justify-center px-3 py-6">
+          <p className="text-center font-mono text-sm text-muted-foreground" aria-live="polite">
+            Nothing to show
+          </p>
+        </div>
+      )}
     </>
   );
 

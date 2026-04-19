@@ -539,20 +539,11 @@ export function Sidebar({
             setMoreMenuOpen(false);
           }}
         >
-        <div className="flex shrink-0 flex-col border-b-2 border-sidebar-border pb-3">
+        <div className="flex shrink-0 flex-col border-b-0 border-sidebar-border pb-0">
           <SidebarGroup>
             <SidebarGroupLabel className="sr-only">Search</SidebarGroupLabel>
-            <SidebarGroupContent className="flex flex-col gap-5">
+            <SidebarGroupContent>
               <Search documents={searchDocuments} onSelect={onSelectDocument} />
-              <Button
-                type="button"
-                variant="neutral"
-                size="sm"
-                className="w-full justify-center text-primary hover:text-primary-hover"
-                onClick={() => setShowPaste(true)}
-              >
-                Paste Markdown
-              </Button>
             </SidebarGroupContent>
           </SidebarGroup>
         </div>
@@ -600,6 +591,18 @@ export function Sidebar({
             />
             </SidebarGroupContent>
           </SidebarGroup>
+        </div>
+
+        <div className="shrink-0 border-t-0 border-sidebar-border px-2 pt-3 pb-1">
+          <Button
+            type="button"
+            variant="neutral"
+            size="sm"
+            className="w-full justify-center text-primary hover:text-primary-hover"
+            onClick={() => setShowPaste(true)}
+          >
+            Paste Markdown
+          </Button>
         </div>
 
         <div ref={moreMenuRef} className="shrink-0 border-t-0 px-2 py-2">
