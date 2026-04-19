@@ -541,9 +541,22 @@ export function Sidebar({
         >
         <div className="flex shrink-0 flex-col border-b-0 border-sidebar-border pb-0">
           <SidebarGroup>
-            <SidebarGroupLabel className="sr-only">Search</SidebarGroupLabel>
+            <SidebarGroupLabel className="sr-only">Search and paste</SidebarGroupLabel>
             <SidebarGroupContent>
-              <Search documents={searchDocuments} onSelect={onSelectDocument} />
+              <div className="grid min-w-0 grid-cols-2 gap-2 items-center">
+                <div className="min-w-0">
+                  <Search documents={searchDocuments} onSelect={onSelectDocument} />
+                </div>
+                <Button
+                  type="button"
+                  variant="neutral"
+                  size="sm"
+                  className="h-9 w-full min-w-0 justify-center whitespace-nowrap px-3 text-primary hover:text-primary-hover"
+                  onClick={() => setShowPaste(true)}
+                >
+                  Paste
+                </Button>
+              </div>
             </SidebarGroupContent>
           </SidebarGroup>
         </div>
@@ -593,18 +606,6 @@ export function Sidebar({
           </SidebarGroup>
         </div>
 
-        <div className="shrink-0 border-t-0 border-sidebar-border px-2 pt-3 pb-1">
-          <Button
-            type="button"
-            variant="neutral"
-            size="sm"
-            className="w-full justify-center text-primary hover:text-primary-hover"
-            onClick={() => setShowPaste(true)}
-          >
-            Paste Markdown
-          </Button>
-        </div>
-
         <div ref={moreMenuRef} className="shrink-0 border-t-0 px-2 py-2">
           <Collapsible
             open={moreMenuOpen}
@@ -616,7 +617,7 @@ export function Sidebar({
                 type="button"
                 variant="neutral"
                 size="sm"
-                className="w-full min-w-0 shrink-0 gap-2 text-background hover:text-foreground bg-primary/90"
+                className="w-full min-w-0 shrink-0 gap-2 text-background hover:text-foreground bg-primary"
                 title="Import, export, delete"
               >
                 Advance Options

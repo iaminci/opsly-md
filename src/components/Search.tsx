@@ -54,13 +54,13 @@ export function Search({ documents, onSelect }: SearchProps) {
         <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-foreground" />
         <Input
           type="text"
-          placeholder="Search Files"
+          placeholder="Search"
           value={query}
           onChange={(e) => search(e.target.value)}
           onFocus={() => query && setIsOpen(true)}
           onBlur={() => setTimeout(() => setIsOpen(false), 150)}
           className={
-            "!h-10 !border-[2px] !border-sidebar-border !bg-sidebar text-sm font-medium !shadow-none !rounded-[5px] focus-visible:!border-sidebar-ring focus-visible:!ring-1 focus-visible:!ring-sidebar-ring focus-visible:!ring-offset-0 pl-8 " +
+            "!h-9 !border-[px] !border-sidebar-border !bg-sidebar text-sm font-medium !shadow-shadow !rounded-[5px] focus-visible:!border-sidebar-ring focus-visible:!ring-1 focus-visible:!ring-sidebar-ring focus-visible:!ring-offset-0 pl-8 " +
             (showClear ? "pr-9 " : "pr-2.5 ")
           }
           autoComplete="off"
