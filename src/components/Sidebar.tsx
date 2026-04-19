@@ -58,7 +58,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Upload, Download, Trash2 } from "lucide-react";
+import { Upload, Download, Trash2 } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -129,6 +129,7 @@ export function Sidebar({
   >(new Map());
   const [allDocuments, setAllDocuments] = useState<Document[]>([]);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
+  const [workspaceSwitcherMenuOpen, setWorkspaceSwitcherMenuOpen] = useState(false);
   const [uploadTarget, setUploadTarget] = useState<{
     workspaceId: string;
     folderId: string | null;
@@ -543,26 +544,15 @@ export function Sidebar({
             <SidebarGroupLabel className="sr-only">Search</SidebarGroupLabel>
             <SidebarGroupContent className="flex flex-col gap-5">
               <Search documents={searchDocuments} onSelect={onSelectDocument} />
-              <div className="flex min-w-0 items-center gap-2.5">
-                <Button
-                  type="button"
-                  variant="neutral"
-                  size="sm"
-                  className="min-w-0 flex-1 justify-center text-primary hover:text-primary-hover"
-                  onClick={() => setShowPaste(true)}
-                >
-                  Paste Markdown
-                </Button>
-                <Button
-                  variant="neutral"
-                  size="icon"
-                  className="inline-flex size-9 shrink-0 text-primary hover:text-primary-hover"
-                  onClick={handleAddWorkspace}
-                  title="New workspace"
-                >
-                  <Plus className="size-4" />
-                </Button>
-              </div>
+              <Button
+                type="button"
+                variant="neutral"
+                size="sm"
+                className="w-full justify-center text-primary hover:text-primary-hover"
+                onClick={() => setShowPaste(true)}
+              >
+                Paste Markdown
+              </Button>
             </SidebarGroupContent>
           </SidebarGroup>
         </div>
@@ -575,6 +565,11 @@ export function Sidebar({
                 workspaces={sortedWorkspaces}
                 selectedId={selectedWorkspaceId}
                 onSelect={handleWorkspaceSelect}
+                onAddWorkspace={handleAddWorkspace}
+                onWorkspaceMenuOpenChange={setWorkspaceSwitcherMenuOpen}
+                onAddFolder={handleAddFolder}
+                onUploadFile={handleUploadFile}
+                onRenameWorkspace={handleRenameWorkspace}
               />
             </SidebarGroupContent>
           </SidebarGroup>
@@ -582,13 +577,14 @@ export function Sidebar({
 
         <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
           <SidebarGroup className="flex-1 border-b-0">
-            <SidebarGroupContent>
+            <SidebarGroupContent className="-translate-x-[5px]">
               <WorkspaceTree
               workspaces={displayedWorkspaces}
               folders={getFoldersSync}
               documents={getDocumentsSync}
               currentId={currentId}
               selectedWorkspaceId={selectedWorkspaceId}
+              workspaceSwitcherMenuOpen={workspaceSwitcherMenuOpen}
               onSelectDocument={onSelectDocument}
               onDeleteDocument={handleDeleteDocumentRequest}
               onAddWorkspace={handleAddWorkspace}

@@ -37,28 +37,33 @@ function AccordionTrigger({
   children,
   triggerVariant,
   isActive,
+  hideTriggerChevron = false,
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Trigger> & {
   triggerVariant?: "section" | "tree"
   isActive?: boolean
+  /** When true, the default trailing chevron is omitted (e.g. chevron lives inside a custom first control). */
+  hideTriggerChevron?: boolean
 }) {
   return (
     <AccordionPrimitive.Header className="flex">
       <AccordionPrimitive.Trigger
         data-slot="accordion-trigger"
         className={cn(
-          "min-w-0 flex flex-1 items-center justify-between text-left text-base border-border focus-visible:ring-[3px] rounded-base transition-all [&[data-state=open]>svg]:rotate-90 disabled:pointer-events-none disabled:opacity-50",
-          className,
+          "min-w-0 flex flex-1 items-center gap-2.5 text-left text-base border-border focus-visible:ring-[3px] rounded-base transition-all [&[data-state=open]>svg:last-child]:rotate-90 disabled:pointer-events-none disabled:opacity-50",
           triggerVariant === "section" && !isActive && "text-muted p-2 hover:bg-primary/20 font-normal",
           triggerVariant === "section" && isActive && "bg-primary/20 text-primary p-2 border-2 border-border hover:bg-primary/20",
           triggerVariant === "tree" && !isActive && "bg-transparent text-muted font-normal p-1 hover:bg-primary/20",
           triggerVariant === "tree" && isActive && "bg-transparent text-primary p-1 hover:bg-primary/20",
           !triggerVariant && "bg-transparent text-muted font-normal p-1.5 hover:bg-primary/20",
+          className,
         )}
         {...props}
       >
         {children}
-        <ChevronRight className="pointer-events-none size-5 shrink-0 transition-transform duration-200" />
+        {!hideTriggerChevron ? (
+          <ChevronRight className="pointer-events-none size-5 shrink-0 transition-transform duration-200" />
+        ) : null}
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>
   )
