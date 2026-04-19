@@ -169,7 +169,7 @@ body {
 
 .dark {
   --background: oklch(0% 0.0 0);
-  --secondary-background: oklch(23.93% 0 0);
+  --secondary-background: oklch(0% 0 0);
   --foreground: oklch(100% 0 0);
   --main-foreground: oklch(0% 0 0);
   --main: #ef4400;

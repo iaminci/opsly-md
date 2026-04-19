@@ -143,10 +143,9 @@ function Navbar() {
           >
             <Button 
               variant="neutral"
-              size="sm"
+              size="icon-sm"
             >
             <GitHubIcon className="size-4" />
-            GitHub
             </Button>
           </a>
           <ThemeToggle />
