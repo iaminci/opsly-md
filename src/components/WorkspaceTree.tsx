@@ -266,11 +266,15 @@ function WorkspaceSection({
 }: WorkspaceSectionProps) {
   const [wsDragOver, setWsDragOver] = useState(false);
   const [wsContentDragOver, setWsContentDragOver] = useState(false);
+  const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   useClearDragStateOnDragEnd(setWsDragOver);
   useClearDragStateOnDragEnd(setWsContentDragOver);
   const folderIds = folders.map((f) => f.id);
 
   const workspaceHighlighted = wsDragOver || wsContentDragOver;
+  const workspaceRowActive =
+    containsActiveDoc(workspace.id, null, currentId, getDocuments, getFolders) ||
+    workspaceMenuOpen;
 
   const handleWsDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -299,7 +303,7 @@ function WorkspaceSection({
     <AccordionItem value={workspace.id}>
         <AccordionTrigger
           triggerVariant="section"
-          isActive={containsActiveDoc(workspace.id, null, currentId, getDocuments, getFolders)}
+          isActive={workspaceRowActive}
           className={cn(
             "group/ws hover:no-underline",
             workspaceHighlighted && DRAG_OVER_CLASS
@@ -314,8 +318,14 @@ function WorkspaceSection({
               {workspace.name}
             </span>
           </div>
-          <div className="shrink-0 opacity-0 transition-opacity group-hover/ws:opacity-100" onClick={(e) => e.stopPropagation()}>
-            <DropdownMenu>
+          <div
+            className={cn(
+              "shrink-0 opacity-0 transition-opacity group-hover/ws:opacity-100",
+              workspaceMenuOpen && "opacity-100"
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <DropdownMenu open={workspaceMenuOpen} onOpenChange={setWorkspaceMenuOpen}>
               <DropdownMenuTrigger asChild>
                 <div
                   role="button"
@@ -330,7 +340,10 @@ function WorkspaceSection({
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="rounded-md border-border-2 bg-sidebar"
+                alignOffset={-20}
+                sideOffset={8}
+                avoidCollisions={false}
+                className="min-w-0 w-max whitespace-nowrap rounded-md border-border-2 bg-sidebar p-1 -mr-2.5"
                 onClick={(e) => e.stopPropagation()}
               >
                 <DropdownMenuItem onClick={() => onAddFolder(workspace.id, null)}>
@@ -508,10 +521,14 @@ function FolderItem({
 
   const [folderDragOver, setFolderDragOver] = useState(false);
   const [folderContentDragOver, setFolderContentDragOver] = useState(false);
+  const [folderMenuOpen, setFolderMenuOpen] = useState(false);
   useClearDragStateOnDragEnd(setFolderDragOver);
   useClearDragStateOnDragEnd(setFolderContentDragOver);
 
   const folderHighlighted = folderDragOver || folderContentDragOver;
+  const folderRowActive =
+    containsActiveDoc(workspaceId, folder.id, currentId, getDocuments, getFolders) ||
+    folderMenuOpen;
 
   const handleFolderDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -540,7 +557,7 @@ function FolderItem({
     <AccordionItem value={folder.id} variant="nested">
       <AccordionTrigger
         triggerVariant="tree"
-        isActive={containsActiveDoc(workspaceId, folder.id, currentId, getDocuments, getFolders)}
+        isActive={folderRowActive}
         className={cn(
           "group/folder min-h-9 py-1.5 hover:no-underline",
           folderHighlighted && DRAG_OVER_CLASS
@@ -555,8 +572,14 @@ function FolderItem({
             {folder.name}
           </span>
         </div>
-        <div className="shrink-0 opacity-0 transition-opacity group-hover/folder:opacity-100" onClick={(e) => e.stopPropagation()}>
-          <DropdownMenu>
+        <div
+          className={cn(
+            "shrink-0 opacity-0 transition-opacity group-hover/folder:opacity-100",
+            folderMenuOpen && "opacity-100"
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <DropdownMenu open={folderMenuOpen} onOpenChange={setFolderMenuOpen}>
             <DropdownMenuTrigger asChild>
               <div
                 role="button"
@@ -571,7 +594,10 @@ function FolderItem({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="rounded-md border border-sidebar-border/80 bg-sidebar font-heading shadow-sm"
+              alignOffset={-15}
+              sideOffset={4}
+              avoidCollisions={false}
+              className="min-w-0 w-max whitespace-nowrap rounded-md border-border-2 bg-sidebar p-1 font-heading shadow-sm -mr-2.5"
               onClick={(e) => e.stopPropagation()}
             >
               <DropdownMenuItem onClick={() => onAddFolder(workspaceId, folder.id)}>
@@ -672,6 +698,7 @@ function FileItem({
 }) {
   const displayName = getFirstHeading(doc.content) ?? doc.title;
   const nameTruncated = false;
+  const [fileMenuOpen, setFileMenuOpen] = useState(false);
 
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData(DRAG_TYPE, doc.id);
@@ -684,7 +711,7 @@ function FileItem({
       onDragStart={handleDragStart}
       className={cn(
         "group flex cursor-pointer items-center rounded-md gap-1 py-1 pl-1 pr-1",
-        isActive
+        isActive || fileMenuOpen
           ? "bg-sidebar-primary/20"
           : "hover:bg-sidebar-primary/20"
       )}
@@ -719,7 +746,7 @@ function FileItem({
         </TooltipContent>
       </Tooltip>
       <div className="ml-auto shrink-0">
-        <DropdownMenu>
+        <DropdownMenu open={fileMenuOpen} onOpenChange={setFileMenuOpen}>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
@@ -731,7 +758,10 @@ function FileItem({
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
-            className="rounded-md border border-sidebar-border/80 bg-sidebar font-heading shadow-sm"
+            alignOffset={10}
+            sideOffset={4}
+            avoidCollisions={false}
+            className="min-w-0 w-max whitespace-nowrap rounded-md border-border-2 bg-sidebar p-1 font-heading shadow-sm -mr-2.5"
           >
             <DropdownMenuItem onClick={onRename}>
               <Pencil className="mr-2 size-4" />

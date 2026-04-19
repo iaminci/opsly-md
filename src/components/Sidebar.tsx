@@ -58,10 +58,28 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Upload, Download, Trash2, FileText, Search as SearchIcon, ClipboardPaste, ChevronRight, ChevronLeft } from "lucide-react";
+import { Plus, Upload, Download, Trash2 } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import { CommandPalette } from "./CommandPalette";
 import { cn, getFirstHeading } from "@/lib/utils";
+
+/** Outside-click / pointer-dismiss: `contains(target)` misses retargeting; composedPath matches Radix/portals reliably. */
+function isPointerEventInside(container: HTMLElement | null, nativeEvent: Event): boolean {
+  if (!container) return false;
+  if (typeof nativeEvent.composedPath === "function") {
+    for (const n of nativeEvent.composedPath()) {
+      if (n instanceof Node && container.contains(n)) return true;
+    }
+    return false;
+  }
+  const t = nativeEvent.target;
+  return t instanceof Node && container.contains(t);
+}
 
 interface SidebarProps {
   documents: Document[];
@@ -118,8 +136,22 @@ export function Sidebar({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
 
   const WORKSPACE_KEY = "md-viewer-current-workspace";
+
+  useEffect(() => {
+    if (!moreMenuOpen) return;
+    const handlePointerDown = (e: PointerEvent) => {
+      const el = moreMenuRef.current;
+      if (!el || isPointerEventInside(el, e)) return;
+      setMoreMenuOpen(false);
+    };
+    // Capture on window + pointerdown: covers touch/pen and runs before target handlers that stop propagation.
+    window.addEventListener("pointerdown", handlePointerDown, true);
+    return () => window.removeEventListener("pointerdown", handlePointerDown, true);
+  }, [moreMenuOpen]);
 
   const sortedWorkspaces = [...workspaces].sort((a, b) =>
     a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
@@ -497,26 +529,30 @@ export function Sidebar({
         className="hidden"
       />
       <SidebarContent className="flex flex-col min-h-0 overflow-hidden">
-        <div className="flex flex-1 min-h-0 flex-col">
-        <div className="mb-2 flex shrink-0 flex-col border-b-2 border-sidebar-border pb-3">
+        <div
+          className="flex flex-1 min-h-0 flex-col"
+          onPointerDownCapture={(e) => {
+            if (!moreMenuOpen) return;
+            const menu = moreMenuRef.current;
+            if (!menu || isPointerEventInside(menu, e.nativeEvent)) return;
+            setMoreMenuOpen(false);
+          }}
+        >
+        <div className="flex shrink-0 flex-col border-b-2 border-sidebar-border pb-3">
           <SidebarGroup>
             <SidebarGroupLabel className="sr-only">Search</SidebarGroupLabel>
-            <SidebarGroupContent>
+            <SidebarGroupContent className="flex flex-col gap-5">
               <Search documents={searchDocuments} onSelect={onSelectDocument} />
-            </SidebarGroupContent>
-          </SidebarGroup>
-
-          <SidebarGroup>
-            <SidebarGroupLabel className="sr-only">Workspace</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <div className="flex items-center gap-2.5">
-                <div className="flex-1 min-w-0">
-                  <WorkspaceSwitcher
-                    workspaces={sortedWorkspaces}
-                    selectedId={selectedWorkspaceId}
-                    onSelect={handleWorkspaceSelect}
-                  />
-                </div>
+              <div className="flex min-w-0 items-center gap-2.5">
+                <Button
+                  type="button"
+                  variant="neutral"
+                  size="sm"
+                  className="min-w-0 flex-1 justify-center text-primary hover:text-primary-hover"
+                  onClick={() => setShowPaste(true)}
+                >
+                  Paste Markdown
+                </Button>
                 <Button
                   variant="neutral"
                   size="icon"
@@ -527,6 +563,19 @@ export function Sidebar({
                   <Plus className="size-4" />
                 </Button>
               </div>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </div>
+
+        <div className="mb-2 shrink-0 flex flex-col pt-2">
+          <SidebarGroup>
+            <SidebarGroupLabel className="sr-only">Workspace</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <WorkspaceSwitcher
+                workspaces={sortedWorkspaces}
+                selectedId={selectedWorkspaceId}
+                onSelect={handleWorkspaceSelect}
+              />
             </SidebarGroupContent>
           </SidebarGroup>
         </div>
@@ -557,54 +606,76 @@ export function Sidebar({
           </SidebarGroup>
         </div>
 
-        <div className="shrink-0 border-t-2 px-2 py-2">
-          <div className="flex flex-col gap-1.5">
-            <Button
-              variant="neutral"
-              size="sm"
-              onClick={() => setShowPaste(true)}
-              className="text-primary hover:text-primary-hover"
-            >
-              Paste Markdown
-            </Button>
-            <div className="flex gap-1.5">
+        <div ref={moreMenuRef} className="shrink-0 border-t-0 px-2 py-2">
+          <Collapsible
+            open={moreMenuOpen}
+            onOpenChange={setMoreMenuOpen}
+            className="flex w-full min-w-0 flex-col-reverse"
+          >
+            <CollapsibleTrigger asChild>
               <Button
+                type="button"
                 variant="neutral"
                 size="sm"
-                className="flex-1 text-primary hover:text-primary-hover"
-              onClick={handleImportWorkspace}
-              title="Import workspace"
+                className="w-full min-w-0 shrink-0 gap-2 text-primary hover:text-primary-hover"
+                title="Import, export, delete"
               >
-                <Upload className="mr-1.5 size-4 shrink-0" />
-                Import
+                More Options
               </Button>
-              <Button
-                variant="neutral"
-                size="sm"
-                className="flex-1 text-primary hover:text-primary-hover"
-                onClick={handleExportClick}
-                title={selectedWorkspaceId ? "Export workspace" : "Export all workspaces"}
-              >
-                <Download className="mr-1.5 size-4 shrink-0" />
-                Export
-              </Button>
-            </div>
-            <Button
-              type="button"
-              variant="neutral"
-              size="sm"
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:ring-destructive"
-              onClick={handleDeleteAllClick}
-              title={
-                selectedWorkspaceId
-                  ? `Delete workspace and all its contents`
-                  : "Delete all workspaces, folders, and documents"
-              }
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              {selectedWorkspaceId ? "Delete Workspace" : "Delete Everything"}
-            </Button>
-          </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="overflow-hidden">
+              <div className="mb-1.5 box-border w-full min-w-0 rounded-base border-2 border-border bg-sidebar p-1.5 shadow-none">
+                <div className="flex min-w-0 flex-col gap-1.5">
+                  <div className="grid min-w-0 grid-cols-2 gap-1.5">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="min-w-0 justify-center rounded-base border-2 border-foreground text-foreground hover:border-border hover:bg-main/65 hover:text-background"
+                      title="Import workspace"
+                      onClick={() => {
+                        setMoreMenuOpen(false);
+                        window.setTimeout(() => importInputRef.current?.click(), 0);
+                      }}
+                    >
+                      <Upload className="size-4 shrink-0" />
+                      Import
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="min-w-0 justify-center rounded-base border-2 border-foreground text-foreground hover:border-border hover:bg-main/65 hover:text-background"
+                      title={selectedWorkspaceId ? "Export workspace" : "Export all workspaces"}
+                      onClick={() => {
+                        setMoreMenuOpen(false);
+                        handleExportClick();
+                      }}
+                    >
+                      <Download className="size-4 shrink-0" />
+                      Export
+                    </Button>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="w-full min-w-0 justify-center rounded-base border-2 border-foreground text-destructive hover:border-border hover:bg-destructive/65 hover:text-background focus-visible:ring-destructive [&_svg]:text-destructive hover:[&_svg]:text-background"
+                    onClick={() => {
+                      setMoreMenuOpen(false);
+                      handleDeleteAllClick();
+                    }}
+                    title={
+                      selectedWorkspaceId
+                        ? `Delete workspace and all its contents`
+                        : "Delete all workspaces, folders, and documents"
+                    }
+                  >
+                    <Trash2 className="size-4 shrink-0" />
+                    {selectedWorkspaceId ? "Delete Workspace" : "Delete Everything"}
+                  </Button>
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
         </div>
       </SidebarContent>

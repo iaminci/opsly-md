@@ -55,7 +55,7 @@ export function DocumentList({
               e.stopPropagation();
               onDelete(doc.id);
             }}
-            className="opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive hover:bg-destructive/10"
+            className="opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive hover:bg-destructive/65"
             aria-label="Delete document"
           >
             <Trash2 />

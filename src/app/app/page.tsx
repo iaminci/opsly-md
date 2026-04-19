@@ -305,14 +305,14 @@ function AppContent() {
 
       <SidebarInset className="min-h-0 overflow-hidden">
         <header className="relative flex h-14.5 shrink-0 items-center gap-5 border-b-2 px-4">
-          <SidebarTrigger className="shrink-0 text-primary" />
+          <SidebarTrigger className="shrink-0 text-primary hover:text-primary-hover" />
           <Link
             href="/"
             className="text-2xl font-semibold tracking-[-0.02em] text-foreground cursor-pointer hover:opacity-80 transition-opacity shrink-0"
             aria-label="Go to home"
           >
             <span>Opsly </span>
-            <span className="text-main dark:[color:var(--dm-text)]">MD</span>
+            <span className="text-main">MD</span>
           </Link>
           <div className="ml-auto flex items-center gap-3">
             {/* <DarkAccentPicker /> */}
@@ -352,7 +352,7 @@ function AppContent() {
                         type="button"
                         variant="neutral"
                         size="sm"
-                        className="text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"
+                        className="text-primary hover:text-primary-hover"
                         onClick={handleEditOpen}
                       >
                         <Pencil className="mr-1.5 size-4" />
@@ -416,7 +416,7 @@ function AppContent() {
           <DialogFooter className="gap-2 sm:gap-3">
             <Button
               variant="neutral" onClick={() => setEditOpen(false)}
-              className="text-primary dark:[color:var(--dm-text)] hover:text-primary-hover dark:hover:[color:var(--dm-text-hover)]"
+              className="text-primary hover:text-primary-hover"
             >
               Cancel
             </Button>
