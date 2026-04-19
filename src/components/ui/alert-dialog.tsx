@@ -141,7 +141,7 @@ const AlertDialogDescription = React.forwardRef<
     ref={ref}
     data-slot="alert-dialog-description"
     className={cn(
-      "text-sm leading-relaxed text-primary *:[a]:underline *:[a]:underline-offset-2 *:[a]:hover:text-black dark:text-neutral-200 dark:*:[a]:hover:text-white",
+      "text-sm leading-relaxed text-muted-foreground *:[a]:underline *:[a]:underline-offset-2 *:[a]:hover:text-black dark:text-neutral-200 dark:*:[a]:hover:text-white",
       className
     )}
     {...props}
@@ -154,7 +154,7 @@ const alertDialogActionClassName =
   "border-2 border-black bg-destructive text-background shadow-[2px_2px_0_0_#000] hover:!bg-destructive hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
 
 const alertDialogCancelClassName =
-  "border-2 border-black bg-white text-black shadow-[2px_2px_0_0_#000] hover:!bg-white hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+  "border-2 border-black bg-white text-primary shadow-[2px_2px_0_0_#000] hover:!bg-white hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
 
 function AlertDialogAction({
   className,

@@ -10,6 +10,7 @@ import { buildHeadingManifest, slugifyHeadingText } from "@/lib/heading-manifest
 import rehypeKatex from "rehype-katex";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
+import { reactNodeToPlainText } from "@/lib/utils";
 import { CodeBlock } from "./CodeBlock";
 import { MermaidDiagram } from "./MermaidDiagram";
 import type { Components } from "react-markdown";
@@ -25,10 +26,6 @@ function isMermaidCode(lang: string | undefined): boolean {
   return lang?.toLowerCase() === "mermaid";
 }
 
-function childrenToPlainText(children: React.ReactNode): string {
-  return Array.isArray(children) ? children.join("") : String(children ?? "");
-}
-
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   const manifest = useMemo(() => buildHeadingManifest(content), [content]);
   const headingIndexRef = useRef(0);
@@ -39,7 +36,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
       code({ node, className, children, ...props }) {
         const match = /language-(\w+)/.exec(className ?? "");
         const lang = match?.[1];
-        const code = String(children).replace(/\n$/, "");
+        const code = reactNodeToPlainText(children).replace(/\n$/, "");
         // Block: has language class, or contains newlines (fenced block without language)
         const isBlock =
           Boolean(className?.includes("language-")) || /\n/.test(code);
@@ -68,37 +65,37 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
       h1: ({ children }) => {
         const entry = manifest[headingIndexRef.current++];
         const id =
-          entry?.id ?? slugifyHeadingText(childrenToPlainText(children));
+          entry?.id ?? slugifyHeadingText(reactNodeToPlainText(children));
         return <h1 id={id}>{children}</h1>;
       },
       h2: ({ children }) => {
         const entry = manifest[headingIndexRef.current++];
         const id =
-          entry?.id ?? slugifyHeadingText(childrenToPlainText(children));
+          entry?.id ?? slugifyHeadingText(reactNodeToPlainText(children));
         return <h2 id={id}>{children}</h2>;
       },
       h3: ({ children }) => {
         const entry = manifest[headingIndexRef.current++];
         const id =
-          entry?.id ?? slugifyHeadingText(childrenToPlainText(children));
+          entry?.id ?? slugifyHeadingText(reactNodeToPlainText(children));
         return <h3 id={id}>{children}</h3>;
       },
       h4: ({ children }) => {
         const entry = manifest[headingIndexRef.current++];
         const id =
-          entry?.id ?? slugifyHeadingText(childrenToPlainText(children));
+          entry?.id ?? slugifyHeadingText(reactNodeToPlainText(children));
         return <h4 id={id}>{children}</h4>;
       },
       h5: ({ children }) => {
         const entry = manifest[headingIndexRef.current++];
         const id =
-          entry?.id ?? slugifyHeadingText(childrenToPlainText(children));
+          entry?.id ?? slugifyHeadingText(reactNodeToPlainText(children));
         return <h5 id={id}>{children}</h5>;
       },
       h6: ({ children }) => {
         const entry = manifest[headingIndexRef.current++];
         const id =
-          entry?.id ?? slugifyHeadingText(childrenToPlainText(children));
+          entry?.id ?? slugifyHeadingText(reactNodeToPlainText(children));
         return <h6 id={id}>{children}</h6>;
       },
     }),

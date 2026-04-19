@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn, reactNodeToPlainText } from "@/lib/utils";
 
 interface CodeBlockProps {
   className?: string;
@@ -11,7 +11,7 @@ interface CodeBlockProps {
 
 export function CodeBlock({ className, children }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
-  const code = String(children ?? "").replace(/\n$/, "");
+  const code = reactNodeToPlainText(children).replace(/\n$/, "");
 
   const copy = useCallback(async () => {
     await navigator.clipboard.writeText(code);

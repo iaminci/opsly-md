@@ -1,5 +1,19 @@
 import clsx, { type ClassValue } from "clsx";
+import { isValidElement, type ReactNode } from "react";
 import { twMerge, type ClassNameValue } from "tailwind-merge";
+
+/** Plain text from React nodes (e.g. syntax-highlighted `<span>` trees). */
+export function reactNodeToPlainText(node: ReactNode): string {
+  if (node == null || typeof node === "boolean") return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (typeof node === "bigint") return String(node);
+  if (Array.isArray(node)) return node.map(reactNodeToPlainText).join("");
+  if (isValidElement(node)) {
+    const { children } = node.props as { children?: ReactNode };
+    return reactNodeToPlainText(children);
+  }
+  return "";
+}
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
