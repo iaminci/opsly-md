@@ -652,7 +652,7 @@ export function Sidebar({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="min-w-0 justify-center rounded-base border-2 border-foreground text-foreground hover:border-border hover:bg-primary/90/65 hover:text-background"
+                      className="min-w-0 justify-center rounded-base border-2 border-foreground text-foreground hover:border-border hover:bg-primary/90 hover:text-background"
                       title="Import workspace"
                       onClick={() => {
                         setMoreMenuOpen(false);
@@ -665,7 +665,7 @@ export function Sidebar({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="min-w-0 justify-center rounded-base border-2 border-foreground text-foreground hover:border-border hover:bg-primary/90/65 hover:text-background"
+                      className="min-w-0 justify-center rounded-base border-2 border-foreground text-foreground hover:border-border hover:bg-primary/90 hover:text-background"
                       title={selectedWorkspaceId ? "Export workspace" : "Export all workspaces"}
                       onClick={() => {
                         setMoreMenuOpen(false);
@@ -950,7 +950,7 @@ export function Sidebar({
             <DialogTitle>Export workspaces</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-2 py-2">
-            <label className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-primary/90/50">
+            <label className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-primary/90">
               <Checkbox
                 checked={
                   sortedWorkspaces.length > 0 &&
@@ -965,7 +965,7 @@ export function Sidebar({
               {sortedWorkspaces.map((ws) => (
                 <label
                   key={ws.id}
-                  className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-primary/90/20"
+                  className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-primary/90"
                 >
                   <Checkbox
                     checked={exportSelectedIds.has(ws.id)}

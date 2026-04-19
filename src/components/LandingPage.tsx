@@ -225,9 +225,9 @@ function InterfaceOverview() {
             <LandingPageScreenshot />
           </div>
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
-            <Card className="ring-1 ring-border/50 ring-bg-primary/90/30">
+            <Card className="ring-1 ring-border/50 ring-bg-primary/90">
               <CardHeader className="pb-2">
-                <div className="flex size-10 items-center justify-center rounded-md bg-primary/90/10">
+                <div className="flex size-10 items-center justify-center rounded-md bg-primary/90">
                   <FolderTree className="size-5 text-main dark:text-main" />
                 </div>
                 <CardTitle className="text-base">Sidebar</CardTitle>
@@ -238,9 +238,9 @@ function InterfaceOverview() {
                 </p>
               </CardContent>
             </Card>
-            <Card className="ring-1 ring-border/50 ring-bg-primary/90/30">
+            <Card className="ring-1 ring-border/50 ring-bg-primary/90">
               <CardHeader className="pb-2">
-                <div className="flex size-10 items-center justify-center rounded-md bg-primary/90/10">
+                <div className="flex size-10 items-center justify-center rounded-md bg-primary/90">
                   <FileText className="size-5 text-main dark:text-main" />
                 </div>
                 <CardTitle className="text-base">Markdown Renderer</CardTitle>
@@ -251,9 +251,9 @@ function InterfaceOverview() {
                 </p>
               </CardContent>
             </Card>
-            <Card className="ring-1 ring-border/50 ring-bg-primary/90/30">
+            <Card className="ring-1 ring-border/50 ring-bg-primary/90">
               <CardHeader className="pb-2">
-                <div className="flex size-10 items-center justify-center rounded-md bg-primary/90/10">
+                <div className="flex size-10 items-center justify-center rounded-md bg-primary/90">
                   <Search className="size-5 text-main dark:text-main" />
                 </div>
                 <CardTitle className="text-base">On-page Navigation</CardTitle>
@@ -318,7 +318,7 @@ function CorePrinciples() {
           {CORE_PRINCIPLES.map(({ icon: Icon, title, description }) => (
             <Card key={title} className="ring-1 ring-border/50">
               <CardHeader>
-                <div className="flex size-10 items-center justify-center rounded-md bg-primary/90/10 dark:bg-primary/90/20">
+                <div className="flex size-10 items-center justify-center rounded-md bg-primary/90 dark:bg-primary/90">
                   <Icon className="size-5 text-main dark:text-main" />
                 </div>
                 <CardTitle className="text-lg">{title}</CardTitle>

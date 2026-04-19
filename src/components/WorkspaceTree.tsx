@@ -355,6 +355,15 @@ function WorkspaceSection({
     workspaceMenuOpen ||
     (workspaceSwitcherMenuOpen && selectedWorkspaceId === workspace.id);
 
+  /** Open document: highlight only workspace/folder icons on the path — not labels or the file row. */
+  const openFileInTree = Boolean(currentId) && !suppressDocHighlights;
+  const workspaceIconPrimaryOnly =
+    openFileInTree &&
+    docActiveInWorkspace &&
+    !workspaceMenuOpen &&
+    !(workspaceSwitcherMenuOpen && selectedWorkspaceId === workspace.id);
+  const workspaceFullRowAccent = workspaceRowActive && !workspaceIconPrimaryOnly;
+
   const handleWsDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
@@ -482,7 +491,7 @@ function WorkspaceSection({
     <AccordionItem value={workspace.id} className="group">
         <AccordionTrigger
           triggerVariant="section"
-          isActive={workspaceRowActive}
+          isActive={workspaceFullRowAccent}
           hideTriggerChevron
           className={cn(
             "group/ws hover:no-underline !border-0 !bg-transparent !p-0 !pl-1 !pr-0 !shadow-none hover:!bg-transparent",
@@ -494,12 +503,15 @@ function WorkspaceSection({
         >
           <div
             className={
-              workspaceRowActive
-                ? WORKSPACE_TAB_CORAL_PILL
-                : WORKSPACE_TAB_MUTED_PILL
+              workspaceFullRowAccent ? WORKSPACE_TAB_CORAL_PILL : WORKSPACE_TAB_MUTED_PILL
             }
           >
-            <Layers className="size-4 shrink-0 text-inherit" />
+            <Layers
+              className={cn(
+                "size-4 shrink-0",
+                workspaceIconPrimaryOnly ? "text-primary" : "text-inherit"
+              )}
+            />
             <span className="min-w-0 flex-1 truncate text-left font-heading text-lg">
               {workspace.name}
             </span>
@@ -508,7 +520,7 @@ function WorkspaceSection({
                 aria-hidden
                 className={cn(
                   "pointer-events-none size-[1.125rem] shrink-0 transition-transform duration-200",
-                  workspaceRowActive
+                  workspaceFullRowAccent
                     ? "text-inherit"
                     : "text-zinc-600 dark:text-zinc-400",
                   "group-data-[state=open]/ws:rotate-90",
@@ -538,7 +550,7 @@ function WorkspaceSection({
                     aria-label="Workspace actions"
                     className={cn(
                       "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 text-foreground hover:bg-destructive/20 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      !workspaceRowActive && "text-zinc-600 dark:text-zinc-400"
+                      !workspaceFullRowAccent && "text-zinc-600 dark:text-zinc-400"
                     )}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") e.preventDefault();
@@ -715,6 +727,10 @@ function FolderItem({
     containsActiveDoc(workspaceId, folder.id, currentId, getDocuments, getFolders);
   const folderRowActive = docActiveInFolder || folderMenuOpen;
 
+  const openFileInTree = Boolean(currentId) && !suppressDocHighlights;
+  const folderIconPrimaryOnly = openFileInTree && docActiveInFolder && !folderMenuOpen;
+  const folderFullRowAccent = folderRowActive && !folderIconPrimaryOnly;
+
   const handleFolderDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
@@ -753,7 +769,7 @@ function FolderItem({
     <AccordionItem value={folder.id} variant="nested">
       <AccordionTrigger
         triggerVariant="tree"
-        isActive={folderRowActive}
+        isActive={folderFullRowAccent}
         hideTriggerChevron
         className={cn(
           "group/folder min-h-8 hover:no-underline !border-0 !bg-transparent !p-0 !pl-1 !pr-0 !shadow-none hover:!bg-transparent",
@@ -768,13 +784,20 @@ function FolderItem({
           onDragStart={handleFolderDragStart}
           className={cn(
             "flex min-h-8 min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded-[5px] py-0.5 pl-1 pr-0",
-            folderRowActive &&
+            folderFullRowAccent &&
               !folderHighlighted &&
               "text-primary hover:text-destructive",
+            folderIconPrimaryOnly && !folderHighlighted && "text-muted hover:text-destructive",
             !folderRowActive && "text-muted hover:text-destructive"
           )}
         >
-          <FolderIcon className="size-4 shrink-0 text-inherit opacity-90 group-hover/folder:text-destructive" />
+          <FolderIcon
+            className={cn(
+              "size-4 shrink-0 opacity-90 group-hover/folder:text-destructive",
+              folderIconPrimaryOnly && "text-primary",
+              !folderIconPrimaryOnly && "text-inherit"
+            )}
+          />
           <span className="min-w-0 flex-1 truncate text-left font-heading text-base">
             {folder.name}
           </span>
@@ -936,6 +959,7 @@ function FileItem({
   const nameTruncated = false;
   const [fileMenuOpen, setFileMenuOpen] = useState(false);
   const fileLooksSelected = isActive && !suppressDocHighlights;
+  const fileTintPrimary = fileLooksSelected || fileMenuOpen;
 
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData(DRAG_TYPE, doc.id);
@@ -956,7 +980,7 @@ function FileItem({
       <div
         className={cn(
           "flex min-h-6 min-w-0 flex-1 items-center gap-2 rounded-[5px] py-0 pl-1 pr-0 hover:text-destructive",
-          (fileLooksSelected || fileMenuOpen) && "text-primary"
+          fileTintPrimary && "text-primary"
         )}
       >
         <Tooltip delayDuration={2000}>
@@ -966,8 +990,8 @@ function FileItem({
               className={cn(
                 "flex min-h-6 min-w-0 flex-1 items-center justify-start gap-2 truncate border-0 bg-transparent text-left text-base font-base hover:bg-transparent",
                 fileLooksSelected && "font-medium",
-                (fileLooksSelected || fileMenuOpen) && "text-primary",
-                !(fileLooksSelected || fileMenuOpen) && "text-muted",
+                fileTintPrimary && "text-primary",
+                !fileTintPrimary && "text-muted",
                 "group-hover/file:text-destructive",
                 nameTruncated && "min-w-0"
               )}
@@ -975,9 +999,7 @@ function FileItem({
               <FileBraces
                 className={cn(
                   "size-4 shrink-0 opacity-100 group-hover/file:text-destructive",
-                  fileLooksSelected || fileMenuOpen
-                    ? "text-primary"
-                    : "text-sidebar-foreground"
+                  fileTintPrimary ? "text-primary" : "text-sidebar-foreground"
                 )}
               />
               <span className="min-w-0 flex-1 truncate">{displayName}</span>
@@ -1009,7 +1031,7 @@ function FileItem({
                 aria-label="Document actions"
                 className={cn(
                   "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 hover:bg-destructive/20 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  fileLooksSelected || fileMenuOpen ? "text-primary" : "text-muted"
+                  fileTintPrimary ? "text-primary" : "text-muted"
                 )}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") e.preventDefault();
