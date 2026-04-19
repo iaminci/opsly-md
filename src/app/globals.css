@@ -135,7 +135,7 @@ body {
   --foreground: oklch(0% 0 0);
   --main-foreground: oklch(0% 0 0);
   --main: #ef4400;
-  --border: oklch(11.492% 0.00001 271.152);
+  --border: oklch(0% 0 0);
   --ring: oklch(0% 0 0);
   --shadow: 2px 2px 0px 0px var(--border);
   --radius: 0.5rem;
