@@ -19,11 +19,11 @@ import {
 import {
   ChevronRight,
   FolderIcon,
-  FileIcon,
   Trash2,
   MoreHorizontal,
   Pencil,
-  Library,
+  FileBraces,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -242,8 +242,12 @@ export function WorkspaceTree({
     ensureFolderExpanded,
   });
 
-  const treeSections = workspaces.map((ws) => (
-    <WorkspaceSection key={ws.id} {...sectionProps(ws)} />
+  const treeSections = workspaces.map((ws, i) => (
+    <WorkspaceSection
+      key={ws.id}
+      isLastWorkspace={i === workspaces.length - 1}
+      {...sectionProps(ws)}
+    />
   ));
 
   if (selectedWorkspaceId) {
@@ -296,6 +300,8 @@ interface WorkspaceSectionProps {
   onTreeMenuOpenChange: (open: boolean) => void;
   ensureWorkspaceExpanded: (workspaceId: string) => void;
   ensureFolderExpanded: (folderId: string) => void;
+  /** All-workspaces accordion: extra space below expanded sections (skipped for last item). */
+  isLastWorkspace?: boolean;
 }
 
 function WorkspaceSection({
@@ -324,6 +330,7 @@ function WorkspaceSection({
   onRenameFolder,
   onDeleteFolder,
   onRenameDocument,
+  isLastWorkspace = false,
 }: WorkspaceSectionProps) {
   const [wsDragOver, setWsDragOver] = useState(false);
   const [wsContentDragOver, setWsContentDragOver] = useState(false);
@@ -461,7 +468,7 @@ function WorkspaceSection({
   }
 
   return (
-    <AccordionItem value={workspace.id}>
+    <AccordionItem value={workspace.id} className="group">
         <AccordionTrigger
           triggerVariant="section"
           isActive={workspaceRowActive}
@@ -481,8 +488,8 @@ function WorkspaceSection({
                 : WORKSPACE_TAB_MUTED_PILL
             }
           >
-            <Library className="size-4 shrink-0 text-inherit" />
-            <span className="min-w-0 flex-1 truncate text-left font-heading">
+            <Layers className="size-4 shrink-0 text-inherit" />
+            <span className="min-w-0 flex-1 truncate text-left font-heading text-lg">
               {workspace.name}
             </span>
             <div className="group/action relative ml-1 flex size-5 shrink-0 items-center justify-center">
@@ -540,7 +547,7 @@ function WorkspaceSection({
                     Add folder
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onUploadFile(workspace.id, null)}>
-                    <FileIcon className="mr-2 size-4" />
+                    <FileBraces className="mr-2 size-4" />
                     Upload file
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onRenameWorkspace(workspace.id, workspace.name)}>
@@ -559,7 +566,13 @@ function WorkspaceSection({
             </div>
           </div>
         </AccordionTrigger>
-        <AccordionContent className="!p-0">
+        <AccordionContent
+          className={cn(
+            isLastWorkspace
+              ? "!p-0"
+              : "!mt-0 !px-0 !pt-0 group-data-[state=open]:pb-3 group-data-[state=open]:mb-3"
+          )}
+        >
           <WorkspaceDropArea
             workspaceId={workspace.id}
             folderId={null}
@@ -734,8 +747,8 @@ function FolderItem({
             !folderRowActive && "text-muted hover:text-destructive"
           )}
         >
-          <FolderIcon className="size-4 shrink-0 text-sidebar-foreground opacity-90 group-hover/folder:text-destructive" />
-          <span className="min-w-0 flex-1 truncate text-left font-heading font-semibold group-data-[state=open]/folder:font-bold">
+          <FolderIcon className="size-4 shrink-0 text-inherit opacity-90 group-hover/folder:text-destructive" />
+          <span className="min-w-0 flex-1 truncate text-left font-heading text-base">
             {folder.name}
           </span>
           <div className="group/action relative ml-1 flex size-5 shrink-0 items-center justify-center">
@@ -787,7 +800,7 @@ function FolderItem({
                   Add folder
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onUploadFile(workspaceId, folder.id)}>
-                  <FileIcon className="mr-2 size-4" />
+                  <FileBraces className="mr-2 size-4" />
                   Upload file
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onRenameFolder(folder.id, folder.name)}>
@@ -922,7 +935,7 @@ function FileItem({
             <button
               type="button"
               className={cn(
-                "flex min-h-6 min-w-0 flex-1 items-center justify-start gap-2 truncate border-0 bg-transparent text-left text-sm font-base hover:bg-transparent",
+                "flex min-h-6 min-w-0 flex-1 items-center justify-start gap-2 truncate border-0 bg-transparent text-left text-base font-base hover:bg-transparent",
                 fileLooksSelected && "font-medium",
                 (fileLooksSelected || fileMenuOpen) && "text-primary",
                 !(fileLooksSelected || fileMenuOpen) && "text-muted",
@@ -930,7 +943,7 @@ function FileItem({
                 nameTruncated && "min-w-0"
               )}
             >
-              <FileIcon
+              <FileBraces
                 className={cn(
                   "size-4 shrink-0 opacity-100 group-hover/file:text-destructive",
                   fileLooksSelected || fileMenuOpen
