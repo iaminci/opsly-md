@@ -48,6 +48,10 @@ function useClearDragStateOnDragEnd(setDragOver: (v: boolean) => void) {
 const EXPANDED_WORKSPACES_KEY = "md-viewer-expanded-workspaces";
 const EXPANDED_FOLDERS_KEY = "md-viewer-expanded-folders";
 
+function isTreeDocumentDrag(e: React.DragEvent): boolean {
+  return Array.from(e.dataTransfer?.types ?? []).includes(DRAG_TYPE);
+}
+
 function containsActiveDoc(
   workspaceId: string,
   folderId: string | null,
@@ -161,6 +165,18 @@ export function WorkspaceTree({
     []
   );
 
+  const ensureWorkspaceExpanded = useCallback((workspaceId: string) => {
+    setExpandedWorkspaces((prev) =>
+      prev.includes(workspaceId) ? prev : [...prev, workspaceId]
+    );
+  }, []);
+
+  const ensureFolderExpanded = useCallback((folderId: string) => {
+    setExpandedFolders((prev) =>
+      prev.includes(folderId) ? prev : [...prev, folderId]
+    );
+  }, []);
+
   useEffect(() => {
     if (typeof window === "undefined" || workspaceIds.length === 0) return;
     let parsed: string[] = [];
@@ -218,6 +234,8 @@ export function WorkspaceTree({
           onRenameFolder={onRenameFolder}
           onDeleteFolder={onDeleteFolder}
           onRenameDocument={onRenameDocument}
+          ensureWorkspaceExpanded={ensureWorkspaceExpanded}
+          ensureFolderExpanded={ensureFolderExpanded}
         />
       ))}
     </Accordion>
@@ -247,6 +265,8 @@ interface WorkspaceSectionProps {
   onRenameDocument: (id: string, title: string) => void;
   suppressDocHighlights: boolean;
   onTreeMenuOpenChange: (open: boolean) => void;
+  ensureWorkspaceExpanded: (workspaceId: string) => void;
+  ensureFolderExpanded: (folderId: string) => void;
 }
 
 function WorkspaceSection({
@@ -261,6 +281,8 @@ function WorkspaceSection({
   selectedWorkspaceId,
   suppressDocHighlights,
   onTreeMenuOpenChange,
+  ensureWorkspaceExpanded,
+  ensureFolderExpanded,
   onSelectDocument,
   onDeleteDocument,
   onAddFolder,
@@ -289,6 +311,9 @@ function WorkspaceSection({
   const handleWsDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
+    if (isTreeDocumentDrag(e)) {
+      ensureWorkspaceExpanded(workspace.id);
+    }
     setWsDragOver(true);
   };
 
@@ -417,6 +442,8 @@ function WorkspaceSection({
                     currentId={currentId}
                     suppressDocHighlights={suppressDocHighlights}
                     onTreeMenuOpenChange={onTreeMenuOpenChange}
+                    ensureWorkspaceExpanded={ensureWorkspaceExpanded}
+                    ensureFolderExpanded={ensureFolderExpanded}
                     onSelectDocument={onSelectDocument}
                     onDeleteDocument={onDeleteDocument}
                     onAddFolder={onAddFolder}
@@ -517,6 +544,8 @@ interface FolderItemProps {
   onRenameDocument: (id: string, title: string) => void;
   suppressDocHighlights: boolean;
   onTreeMenuOpenChange: (open: boolean) => void;
+  ensureWorkspaceExpanded: (workspaceId: string) => void;
+  ensureFolderExpanded: (folderId: string) => void;
 }
 
 function FolderItem({
@@ -529,6 +558,8 @@ function FolderItem({
   currentId,
   suppressDocHighlights,
   onTreeMenuOpenChange,
+  ensureWorkspaceExpanded,
+  ensureFolderExpanded,
   onSelectDocument,
   onDeleteDocument,
   onAddFolder,
@@ -558,6 +589,10 @@ function FolderItem({
   const handleFolderDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
+    if (isTreeDocumentDrag(e)) {
+      ensureWorkspaceExpanded(workspaceId);
+      ensureFolderExpanded(folder.id);
+    }
     setFolderDragOver(true);
   };
 
@@ -684,6 +719,8 @@ function FolderItem({
                   currentId={currentId}
                   suppressDocHighlights={suppressDocHighlights}
                   onTreeMenuOpenChange={onTreeMenuOpenChange}
+                  ensureWorkspaceExpanded={ensureWorkspaceExpanded}
+                  ensureFolderExpanded={ensureFolderExpanded}
                   onSelectDocument={onSelectDocument}
                   onDeleteDocument={onDeleteDocument}
                   onAddFolder={onAddFolder}
