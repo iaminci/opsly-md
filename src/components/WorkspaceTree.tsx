@@ -182,6 +182,9 @@ export function WorkspaceTree({
 
   const workspaceValue = expandedWorkspaces.filter((id) => workspaceIds.includes(id));
 
+  /** While any workspace/folder/file ⋯ menu is open, hide "active doc" styling elsewhere. */
+  const [treeActionMenuOpen, setTreeActionMenuOpen] = useState(false);
+
   return (
     <Accordion
       type="multiple"
@@ -202,6 +205,8 @@ export function WorkspaceTree({
           getDocuments={documents}
           currentId={currentId}
           selectedWorkspaceId={selectedWorkspaceId}
+          suppressDocHighlights={treeActionMenuOpen}
+          onTreeMenuOpenChange={setTreeActionMenuOpen}
           onSelectDocument={onSelectDocument}
           onDeleteDocument={onDeleteDocument}
           onAddFolder={onAddFolder}
@@ -240,6 +245,8 @@ interface WorkspaceSectionProps {
   onRenameFolder: (id: string, name: string) => void;
   onDeleteFolder: (id: string, name: string) => void;
   onRenameDocument: (id: string, title: string) => void;
+  suppressDocHighlights: boolean;
+  onTreeMenuOpenChange: (open: boolean) => void;
 }
 
 function WorkspaceSection({
@@ -252,6 +259,8 @@ function WorkspaceSection({
   getDocuments,
   currentId,
   selectedWorkspaceId,
+  suppressDocHighlights,
+  onTreeMenuOpenChange,
   onSelectDocument,
   onDeleteDocument,
   onAddFolder,
@@ -272,9 +281,10 @@ function WorkspaceSection({
   const folderIds = folders.map((f) => f.id);
 
   const workspaceHighlighted = wsDragOver || wsContentDragOver;
-  const workspaceRowActive =
-    containsActiveDoc(workspace.id, null, currentId, getDocuments, getFolders) ||
-    workspaceMenuOpen;
+  const docActiveInWorkspace =
+    !suppressDocHighlights &&
+    containsActiveDoc(workspace.id, null, currentId, getDocuments, getFolders);
+  const workspaceRowActive = docActiveInWorkspace || workspaceMenuOpen;
 
   const handleWsDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -325,7 +335,13 @@ function WorkspaceSection({
             )}
             onClick={(e) => e.stopPropagation()}
           >
-            <DropdownMenu open={workspaceMenuOpen} onOpenChange={setWorkspaceMenuOpen}>
+            <DropdownMenu
+              open={workspaceMenuOpen}
+              onOpenChange={(open) => {
+                setWorkspaceMenuOpen(open);
+                onTreeMenuOpenChange(open);
+              }}
+            >
               <DropdownMenuTrigger asChild>
                 <div
                   role="button"
@@ -399,6 +415,8 @@ function WorkspaceSection({
                     getFolders={getFolders}
                     getDocuments={getDocuments}
                     currentId={currentId}
+                    suppressDocHighlights={suppressDocHighlights}
+                    onTreeMenuOpenChange={onTreeMenuOpenChange}
                     onSelectDocument={onSelectDocument}
                     onDeleteDocument={onDeleteDocument}
                     onAddFolder={onAddFolder}
@@ -417,6 +435,8 @@ function WorkspaceSection({
                 key={doc.id}
                 doc={doc}
                 isActive={currentId === doc.id}
+                suppressDocHighlights={suppressDocHighlights}
+                onTreeMenuOpenChange={onTreeMenuOpenChange}
                 onSelect={() => onSelectDocument(doc)}
                 onDelete={() => onDeleteDocument(doc.id, doc.title)}
                 onRename={() => onRenameDocument(doc.id, doc.title)}
@@ -495,6 +515,8 @@ interface FolderItemProps {
   onRenameFolder: (id: string, name: string) => void;
   onDeleteFolder: (id: string, name: string) => void;
   onRenameDocument: (id: string, title: string) => void;
+  suppressDocHighlights: boolean;
+  onTreeMenuOpenChange: (open: boolean) => void;
 }
 
 function FolderItem({
@@ -505,6 +527,8 @@ function FolderItem({
   getFolders,
   getDocuments,
   currentId,
+  suppressDocHighlights,
+  onTreeMenuOpenChange,
   onSelectDocument,
   onDeleteDocument,
   onAddFolder,
@@ -526,9 +550,10 @@ function FolderItem({
   useClearDragStateOnDragEnd(setFolderContentDragOver);
 
   const folderHighlighted = folderDragOver || folderContentDragOver;
-  const folderRowActive =
-    containsActiveDoc(workspaceId, folder.id, currentId, getDocuments, getFolders) ||
-    folderMenuOpen;
+  const docActiveInFolder =
+    !suppressDocHighlights &&
+    containsActiveDoc(workspaceId, folder.id, currentId, getDocuments, getFolders);
+  const folderRowActive = docActiveInFolder || folderMenuOpen;
 
   const handleFolderDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -579,7 +604,13 @@ function FolderItem({
           )}
           onClick={(e) => e.stopPropagation()}
         >
-          <DropdownMenu open={folderMenuOpen} onOpenChange={setFolderMenuOpen}>
+          <DropdownMenu
+            open={folderMenuOpen}
+            onOpenChange={(open) => {
+              setFolderMenuOpen(open);
+              onTreeMenuOpenChange(open);
+            }}
+          >
             <DropdownMenuTrigger asChild>
               <div
                 role="button"
@@ -651,6 +682,8 @@ function FolderItem({
                   getFolders={getFolders}
                   getDocuments={getDocuments}
                   currentId={currentId}
+                  suppressDocHighlights={suppressDocHighlights}
+                  onTreeMenuOpenChange={onTreeMenuOpenChange}
                   onSelectDocument={onSelectDocument}
                   onDeleteDocument={onDeleteDocument}
                   onAddFolder={onAddFolder}
@@ -669,6 +702,8 @@ function FolderItem({
               key={doc.id}
               doc={doc}
               isActive={currentId === doc.id}
+              suppressDocHighlights={suppressDocHighlights}
+              onTreeMenuOpenChange={onTreeMenuOpenChange}
               onSelect={() => onSelectDocument(doc)}
               onDelete={() => onDeleteDocument(doc.id, doc.title)}
               onRename={() => onRenameDocument(doc.id, doc.title)}
@@ -684,6 +719,8 @@ function FolderItem({
 function FileItem({
   doc,
   isActive,
+  suppressDocHighlights,
+  onTreeMenuOpenChange,
   onSelect,
   onDelete,
   onRename,
@@ -691,6 +728,8 @@ function FileItem({
 }: {
   doc: Document;
   isActive: boolean;
+  suppressDocHighlights: boolean;
+  onTreeMenuOpenChange: (open: boolean) => void;
   onSelect: () => void;
   onDelete: () => void;
   onRename: () => void;
@@ -699,6 +738,7 @@ function FileItem({
   const displayName = getFirstHeading(doc.content) ?? doc.title;
   const nameTruncated = false;
   const [fileMenuOpen, setFileMenuOpen] = useState(false);
+  const fileLooksSelected = isActive && !suppressDocHighlights;
 
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData(DRAG_TYPE, doc.id);
@@ -711,7 +751,7 @@ function FileItem({
       onDragStart={handleDragStart}
       className={cn(
         "group flex cursor-pointer items-center rounded-md gap-1 py-1 pl-1 pr-1",
-        isActive || fileMenuOpen
+        fileLooksSelected || fileMenuOpen
           ? "bg-sidebar-primary/20"
           : "hover:bg-sidebar-primary/20"
       )}
@@ -727,15 +767,15 @@ function FileItem({
             type="button"
             className={cn(
               "flex h-auto min-h-7 min-w-0 flex-1 items-center justify-start gap-2 truncate rounded-md border-0 bg-transparent px-1 text-left text-sm font-base hover:bg-transparent",
-              isActive && "font-medium text-muted",
-              !isActive && "text-muted",
+              fileLooksSelected && "font-medium text-muted",
+              !fileLooksSelected && "text-muted",
               nameTruncated && "min-w-0"
             )}
           >
             <FileIcon
               className={cn(
                 "size-4 shrink-0 text-sidebar-foreground opacity-100",
-                isActive && "opacity-100"
+                fileLooksSelected && "opacity-100"
               )}
             />
             <span className="min-w-0 flex-1 truncate">{displayName}</span>
@@ -746,7 +786,13 @@ function FileItem({
         </TooltipContent>
       </Tooltip>
       <div className="ml-auto shrink-0">
-        <DropdownMenu open={fileMenuOpen} onOpenChange={setFileMenuOpen}>
+        <DropdownMenu
+          open={fileMenuOpen}
+          onOpenChange={(open) => {
+            setFileMenuOpen(open);
+            onTreeMenuOpenChange(open);
+          }}
+        >
           <DropdownMenuTrigger asChild>
             <button
               type="button"
