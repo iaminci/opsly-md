@@ -36,7 +36,7 @@ const DRAG_TYPE = "application/x-md-viewer-document";
 
 /** Drop-target highlight for workspace / folder headers (paired with content-area drag state). */
 const DRAG_OVER_CLASS =
-  "bg-sidebar-accent/45 ring-1 ring-sidebar-primary/60 ring-inset transition-colors duration-150";
+  "bg-sidebar-accent/45 ring-1 ring-primary/90/60 ring-inset transition-colors duration-150";
 
 /** Workspace name strip (tree rows) — borderless; same fills/hover as folder rows. */
 const WORKSPACE_TAB_CORAL_PILL = cn(

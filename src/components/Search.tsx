@@ -50,8 +50,8 @@ export function Search({ documents, onSelect }: SearchProps) {
 
   return (
     <div className="relative">
-      <div className="relative">
-        <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-foreground" />
+      <div className="group relative transition-[transform,box-shadow] hover:translate-x-boxShadowX hover:translate-y-boxShadowY">
+        <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 z-10 size-4 -translate-y-1/2 text-foreground" />
         <Input
           type="text"
           placeholder="Search"
@@ -60,7 +60,7 @@ export function Search({ documents, onSelect }: SearchProps) {
           onFocus={() => query && setIsOpen(true)}
           onBlur={() => setTimeout(() => setIsOpen(false), 150)}
           className={
-            "!h-9 !border-[px] !border-sidebar-border !bg-sidebar text-sm font-medium !shadow-shadow !rounded-[5px] focus-visible:!border-sidebar-ring focus-visible:!ring-1 focus-visible:!ring-sidebar-ring focus-visible:!ring-offset-0 pl-8 " +
+            "!h-9 !border-2 !border-sidebar-border !bg-sidebar text-sm font-medium !shadow-shadow !rounded-[5px] group-hover:!shadow-none focus-visible:!border-sidebar-ring focus-visible:!ring-1 focus-visible:!ring-sidebar-ring focus-visible:!ring-offset-0 pl-8 " +
             (showClear ? "pr-9 " : "pr-2.5 ")
           }
           autoComplete="off"
@@ -69,7 +69,7 @@ export function Search({ documents, onSelect }: SearchProps) {
           <button
             type="button"
             aria-label="Clear search"
-            className="absolute right-2 top-1/2 z-10 flex size-7 -translate-y-1/2 items-center justify-center rounded-[4px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-primary"
+            className="absolute right-2 top-1/2 z-10 flex size-7 -translate-y-1/2 items-center justify-center rounded-[4px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-primary"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => clear()}
           >
@@ -84,7 +84,7 @@ export function Search({ documents, onSelect }: SearchProps) {
               key={doc.id}
               type="button"
               variant="neutral"
-              className="h-auto w-full justify-start rounded-none border-1 px-3 py-2 font-normal shadow-none hover:translate-x-0 hover:translate-y-0 hover:bg-sidebar-primary hover:shadow-none"
+              className="h-auto w-full justify-start rounded-none border-1 px-3 py-2 font-normal shadow-none hover:translate-x-0 hover:translate-y-0 hover:bg-primary/90 hover:shadow-none"
               onClick={() => {
                 onSelect(doc);
                 setIsOpen(false);

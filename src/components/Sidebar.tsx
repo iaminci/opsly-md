@@ -551,7 +551,7 @@ export function Sidebar({
                   type="button"
                   variant="neutral"
                   size="sm"
-                  className="h-9 w-full min-w-0 justify-center whitespace-nowrap px-3 text-primary hover:text-primary-hover"
+                  className="h-9 w-full min-w-0 justify-center whitespace-nowrap px-3 text-foreground hover:text-primary-hover"
                   onClick={() => setShowPaste(true)}
                 >
                   Paste
@@ -617,7 +617,7 @@ export function Sidebar({
                 type="button"
                 variant="neutral"
                 size="sm"
-                className="w-full min-w-0 shrink-0 gap-2 text-background hover:text-foreground bg-primary"
+                className="w-full min-w-0 shrink-0 gap-2 text-background hover:text-foreground bg-primary/90"
                 title="Import, export, delete"
               >
                 Advance Options
@@ -630,7 +630,7 @@ export function Sidebar({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="min-w-0 justify-center rounded-base border-2 border-foreground text-foreground hover:border-border hover:bg-primary/65 hover:text-background"
+                      className="min-w-0 justify-center rounded-base border-2 border-foreground text-foreground hover:border-border hover:bg-primary/90/65 hover:text-background"
                       title="Import workspace"
                       onClick={() => {
                         setMoreMenuOpen(false);
@@ -643,7 +643,7 @@ export function Sidebar({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="min-w-0 justify-center rounded-base border-2 border-foreground text-foreground hover:border-border hover:bg-primary/65 hover:text-background"
+                      className="min-w-0 justify-center rounded-base border-2 border-foreground text-foreground hover:border-border hover:bg-primary/90/65 hover:text-background"
                       title={selectedWorkspaceId ? "Export workspace" : "Export all workspaces"}
                       onClick={() => {
                         setMoreMenuOpen(false);
@@ -768,7 +768,7 @@ export function Sidebar({
                 setShowPaste(false);
               }}
               disabled={!pasteValue.trim()}
-              className="bg-primary text-background hover:bg-primary"
+              className="bg-primary/90 text-background hover:bg-primary/90"
             >
               Add
             </Button>
@@ -928,14 +928,14 @@ export function Sidebar({
             <DialogTitle>Export workspaces</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-2 py-2">
-            <label className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-primary/50">
+            <label className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-primary/90/50">
               <Checkbox
                 checked={
                   sortedWorkspaces.length > 0 &&
                   exportSelectedIds.size === sortedWorkspaces.length
                 }
                 onCheckedChange={toggleExportSelectAll}
-                className="data-checked:border-main/20 data-checked:bg-primary"
+                className="data-checked:border-main/20 data-checked:bg-primary/90"
               />
               <span className="text-sm font-medium">Select all</span>
             </label>
@@ -943,12 +943,12 @@ export function Sidebar({
               {sortedWorkspaces.map((ws) => (
                 <label
                   key={ws.id}
-                  className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-primary/20"
+                  className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-primary/90/20"
                 >
                   <Checkbox
                     checked={exportSelectedIds.has(ws.id)}
                     onCheckedChange={() => toggleExportWorkspace(ws.id)}
-                    className="data-checked:border-main/20 data-checked:bg-primary"
+                    className="data-checked:border-main/20 data-checked:bg-primary/90"
                   />
                   <span className="text-sm truncate">{ws.name}</span>
                 </label>
@@ -962,7 +962,7 @@ export function Sidebar({
             <Button
               onClick={() => void handleExportSelected()}
               disabled={exportSelectedIds.size === 0}
-              className="bg-primary text-background hover:bg-primary"
+              className="bg-primary/90 text-background hover:bg-primary/90"
             >
               Export {exportSelectedIds.size > 0 ? `(${exportSelectedIds.size})` : ""}
             </Button>
@@ -1032,7 +1032,7 @@ function PasteInput({
             size="sm"
             onClick={handleSubmit}
             disabled={!value.trim()}
-            className="bg-primary text-background hover:bg-primary"
+            className="bg-primary/90 text-background hover:bg-primary/90"
           >
             Add
           </Button>

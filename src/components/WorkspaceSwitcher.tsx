@@ -27,13 +27,13 @@ const workspaceTabBaseClassName =
 
 const workspaceTabAllClassName = cn(
   workspaceTabBaseClassName,
-  "!bg-sidebar-primary !text-background hover:!bg-sidebar-primary hover:!text-sidebar-primary-foreground focus-visible:!bg-sidebar-primary"
+  "!bg-primary/90 !text-background hover:!bg-primary/90 hover:!text-primary-foreground focus-visible:!bg-primary/90"
 );
 
 /** Single-workspace view: wide name + ⋯ as two matching “cards” (white fill, black border, hard shadow). */
 const workspacePairTabClassName = cn(
   workspaceTabBaseClassName,
-  "!bg-sidebar-primary !text-background hover:!bg-sidebar-primary hover:!text-sidebar-primary-foreground focus-visible:!bg-sidebar-primary"
+  "!bg-primary/90 !text-background hover:!bg-primary/90 hover:!text-primary-foreground focus-visible:!bg-primary/90"
 );
 
 interface WorkspaceSwitcherProps {
@@ -105,7 +105,7 @@ export function WorkspaceSwitcher({
                   onClick={() => onSelect(null)}
                   className={cn(
                     !selectedId &&
-                      "bg-primary/35 font-semibold text-sidebar-accent-foreground"
+                      "bg-primary/90/35 font-semibold text-sidebar-accent-foreground"
                   )}
                 >
                   <span className="truncate">All Workspaces</span>
@@ -116,7 +116,7 @@ export function WorkspaceSwitcher({
                     onClick={() => onSelect(ws.id)}
                     className={cn(
                       selectedId === ws.id &&
-                        "bg-primary/35 font-semibold text-sidebar-accent-foreground"
+                        "bg-primary/90/35 font-semibold text-sidebar-accent-foreground"
                     )}
                   >
                     <span className="truncate">{ws.name}</span>

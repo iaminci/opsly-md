@@ -423,7 +423,7 @@ function AppContent() {
             <Button
               onClick={handleEditSave}
               variant="neutral"
-              className="bg-primary text-background"
+              className="bg-primary/90 text-background"
             >
               Save
             </Button>
