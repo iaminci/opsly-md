@@ -61,7 +61,7 @@ const AlertDialogContent = React.forwardRef<
       data-slot="alert-dialog-content"
       data-size={size}
       className={cn(
-        "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-base p-5 text-black outline-none duration-100 dark:text-white",
+        "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-base p-5 text-black outline-none duration-100 dark:text-background",
         alertDialogSurface,
         "data-[size=default]:max-w-md data-[size=sm]:max-w-xs data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
         className
@@ -125,7 +125,7 @@ const AlertDialogTitle = React.forwardRef<
     ref={ref}
     data-slot="alert-dialog-title"
     className={cn(
-      "text-lg font-bold leading-snug tracking-tight text-black dark:text-white",
+      "text-lg font-bold leading-snug tracking-tight text-black dark:text-background",
       className
     )}
     {...props}
@@ -141,7 +141,7 @@ const AlertDialogDescription = React.forwardRef<
     ref={ref}
     data-slot="alert-dialog-description"
     className={cn(
-      "text-sm leading-relaxed text-muted-foreground *:[a]:underline *:[a]:underline-offset-2 *:[a]:hover:text-black dark:text-neutral-200 dark:*:[a]:hover:text-white",
+      "text-sm leading-relaxed text-muted-foreground *:[a]:underline *:[a]:underline-offset-2 *:[a]:hover:text-black dark:text-neutral-200 dark:*:[a]:hover:text-background",
       className
     )}
     {...props}

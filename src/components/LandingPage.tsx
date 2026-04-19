@@ -172,7 +172,7 @@ function Hero() {
         <div className="mt-10 flex flex-wrap justify-center gap-4">
           <Link
             href="/app?loadSample=1"
-            className={cn(buttonVariants({ size: "lg" }), "bg-main text-white hover:bg-main")}
+            className={cn(buttonVariants({ size: "lg" }), "bg-primary text-background hover:bg-primary")}
           >
             Open Workspace
           </Link>
@@ -225,9 +225,9 @@ function InterfaceOverview() {
             <LandingPageScreenshot />
           </div>
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
-            <Card className="ring-1 ring-border/50 ring-bg-main/30">
+            <Card className="ring-1 ring-border/50 ring-bg-primary/30">
               <CardHeader className="pb-2">
-                <div className="flex size-10 items-center justify-center rounded-md bg-main/10">
+                <div className="flex size-10 items-center justify-center rounded-md bg-primary/10">
                   <FolderTree className="size-5 text-main dark:text-main" />
                 </div>
                 <CardTitle className="text-base">Sidebar</CardTitle>
@@ -238,9 +238,9 @@ function InterfaceOverview() {
                 </p>
               </CardContent>
             </Card>
-            <Card className="ring-1 ring-border/50 ring-bg-main/30">
+            <Card className="ring-1 ring-border/50 ring-bg-primary/30">
               <CardHeader className="pb-2">
-                <div className="flex size-10 items-center justify-center rounded-md bg-main/10">
+                <div className="flex size-10 items-center justify-center rounded-md bg-primary/10">
                   <FileText className="size-5 text-main dark:text-main" />
                 </div>
                 <CardTitle className="text-base">Markdown Renderer</CardTitle>
@@ -251,9 +251,9 @@ function InterfaceOverview() {
                 </p>
               </CardContent>
             </Card>
-            <Card className="ring-1 ring-border/50 ring-bg-main/30">
+            <Card className="ring-1 ring-border/50 ring-bg-primary/30">
               <CardHeader className="pb-2">
-                <div className="flex size-10 items-center justify-center rounded-md bg-main/10">
+                <div className="flex size-10 items-center justify-center rounded-md bg-primary/10">
                   <Search className="size-5 text-main dark:text-main" />
                 </div>
                 <CardTitle className="text-base">On-page Navigation</CardTitle>
@@ -318,7 +318,7 @@ function CorePrinciples() {
           {CORE_PRINCIPLES.map(({ icon: Icon, title, description }) => (
             <Card key={title} className="ring-1 ring-border/50">
               <CardHeader>
-                <div className="flex size-10 items-center justify-center rounded-md bg-main/10 dark:bg-main/20">
+                <div className="flex size-10 items-center justify-center rounded-md bg-primary/10 dark:bg-primary/20">
                   <Icon className="size-5 text-main dark:text-main" />
                 </div>
                 <CardTitle className="text-lg">{title}</CardTitle>
@@ -380,19 +380,19 @@ function Architecture() {
               <div className="space-y-2 font-mono text-sm text-muted-foreground">
                 <div>Markdown</div>
                 <div className="flex items-center gap-2">
-                  <ArrowRight className="size-4 text-bg-main" />
+                  <ArrowRight className="size-4 text-bg-primary" />
                 </div>
                 <div>react-markdown</div>
                 <div className="flex items-center gap-2">
-                  <ArrowRight className="size-4 text-bg-main" />
+                  <ArrowRight className="size-4 text-bg-primary" />
                 </div>
                 <div>remark plugins</div>
                 <div className="flex items-center gap-2">
-                  <ArrowRight className="size-4 text-bg-main" />
+                  <ArrowRight className="size-4 text-bg-primary" />
                 </div>
                 <div>rehype plugins</div>
                 <div className="flex items-center gap-2">
-                  <ArrowRight className="size-4 text-bg-main" />
+                  <ArrowRight className="size-4 text-bg-primary" />
                 </div>
                 <div>rendered document</div>
               </div>
@@ -406,11 +406,11 @@ function Architecture() {
               <div className="space-y-2 font-mono text-sm text-muted-foreground">
                 <div>SQLite (sql.js WASM)</div>
                 <div className="flex items-center gap-2">
-                  <ArrowRight className="size-4 text-bg-main" />
+                  <ArrowRight className="size-4 text-bg-primary" />
                 </div>
                 <div>IndexedDB</div>
                 <div className="flex items-center gap-2">
-                  <ArrowRight className="size-4 text-bg-main" />
+                  <ArrowRight className="size-4 text-bg-primary" />
                 </div>
                 <div>browser storage</div>
               </div>

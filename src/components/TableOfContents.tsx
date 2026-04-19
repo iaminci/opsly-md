@@ -121,8 +121,8 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
               className={cn(
                 "block w-full min-w-0 break-words rounded-md border-2 border-l-2 px-2 py-1 transition-colors scroll-mt-4",
                 activeId === id
-                  ? "border-border text-white font-medium bg-main/75"
-                  : "border-transparent text-muted hover:text-primary hover:bg-main/10"
+                  ? "border-border text-background font-medium bg-primary"
+                  : "border-transparent text-muted hover:text-primary hover:bg-primary/10"
               )}
             >
               {text}

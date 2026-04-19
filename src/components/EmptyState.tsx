@@ -8,7 +8,7 @@ export function EmptyState() {
       <p className="mb-4 text-muted-foreground">
         No documents yet. Use the sidebar to paste markdown or upload a file.
       </p>
-      <div className="flex items-start justify-center gap-3 rounded-md border border-bg-main/50 bg-amber-50 px-4 py-3 text-sm text-foreground text-left">
+      <div className="flex items-start justify-center gap-3 rounded-md border border-bg-primary/50 bg-amber-50 px-4 py-3 text-sm text-foreground text-left">
         <AlertTriangleIcon className="mt-0.5 size-4 shrink-0 text-amber-500" aria-hidden />
         <p className="text-muted-foreground">
           <span className="font-semibold text-foreground">All documents are stored locally in this browser.</span>{" "}

@@ -27,13 +27,13 @@ const workspaceTabBaseClassName =
 
 const workspaceTabAllClassName = cn(
   workspaceTabBaseClassName,
-  "!bg-sidebar-primary/75 !text-white hover:!bg-sidebar-primary/75 hover:!text-sidebar-primary-foreground focus-visible:!bg-sidebar-primary/75"
+  "!bg-sidebar-primary !text-background hover:!bg-sidebar-primary hover:!text-sidebar-primary-foreground focus-visible:!bg-sidebar-primary"
 );
 
 /** Single-workspace view: wide name + ⋯ as two matching “cards” (white fill, black border, hard shadow). */
 const workspacePairTabClassName = cn(
   workspaceTabBaseClassName,
-  "!bg-sidebar-primary/75 !text-white hover:!bg-sidebar-primary/75 hover:!text-sidebar-primary-foreground focus-visible:!bg-sidebar-primary/75"
+  "!bg-sidebar-primary !text-background hover:!bg-sidebar-primary hover:!text-sidebar-primary-foreground focus-visible:!bg-sidebar-primary"
 );
 
 interface WorkspaceSwitcherProps {

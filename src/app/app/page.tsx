@@ -360,9 +360,9 @@ function AppContent() {
                       </Button>
                       <Button
                         type="button"
-                        variant="default"
+                        variant="neutral"
                         size="sm"
-                        className="bg-main text-background"
+                        className="bg-background text-primary"
                         onClick={() => {
                           const blob = new Blob([currentDoc.content], {
                             type: "text/markdown",
@@ -423,7 +423,7 @@ function AppContent() {
             <Button
               onClick={handleEditSave}
               variant="neutral"
-              className="bg-main text-background"
+              className="bg-primary text-background"
             >
               Save
             </Button>
