@@ -685,6 +685,7 @@ export function Sidebar({
         title="New workspace"
         placeholder="Workspace name"
         defaultValue="New Workspace"
+        closeButtonClassName="hover:text-destructive"
         onSubmit={handleWorkspaceSubmit}
       />
       <CreateNameDialog
@@ -696,6 +697,7 @@ export function Sidebar({
         title="New folder"
         placeholder="Folder name"
         defaultValue="New Folder"
+        closeButtonClassName="hover:text-destructive"
         onSubmit={handleFolderSubmit}
       />
       <CreateNameDialog
@@ -708,6 +710,7 @@ export function Sidebar({
         placeholder="Workspace name"
         defaultValue={renameWorkspaceTarget?.name ?? ""}
         submitLabel="Rename"
+        closeButtonClassName="hover:text-destructive"
         onSubmit={handleRenameWorkspaceSubmit}
       />
       <CreateNameDialog
@@ -720,6 +723,7 @@ export function Sidebar({
         placeholder="Folder name"
         defaultValue={renameFolderTarget?.name ?? ""}
         submitLabel="Rename"
+        closeButtonClassName="hover:text-destructive"
         onSubmit={handleRenameFolderSubmit}
       />
       <CreateNameDialog
@@ -732,6 +736,7 @@ export function Sidebar({
         placeholder="Document title"
         defaultValue={renameDocTarget?.title ?? ""}
         submitLabel="Rename"
+        closeButtonClassName="hover:text-destructive"
         onSubmit={handleRenameDocumentSubmit}
       />
 

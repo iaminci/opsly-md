@@ -19,6 +19,8 @@ interface CreateNameDialogProps {
   placeholder?: string;
   defaultValue?: string;
   submitLabel?: string;
+  /** Merged onto the top-right close (X) control. */
+  closeButtonClassName?: string;
   onSubmit: (name: string) => void | Promise<void>;
 }
 
@@ -29,6 +31,7 @@ export function CreateNameDialog({
   placeholder = "Name",
   defaultValue = "",
   submitLabel = "Create",
+  closeButtonClassName,
   onSubmit,
 }: CreateNameDialogProps) {
   const [value, setValue] = useState(defaultValue);
@@ -56,7 +59,10 @@ export function CreateNameDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md shadow-xl ring-1 ring-border/50">
+      <DialogContent
+        className="sm:max-w-md shadow-xl ring-1 ring-border/50"
+        closeButtonClassName={closeButtonClassName}
+      >
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
