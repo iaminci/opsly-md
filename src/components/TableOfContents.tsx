@@ -101,7 +101,7 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
 
   return (
     <nav className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
-      <h3 className="mb-2 shrink-0 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <h3 className="mb-2 shrink-0 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
         On this page
       </h3>
       <ul
@@ -121,8 +121,8 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
               className={cn(
                 "block w-full min-w-0 break-words rounded-md border-2 border-l-2 px-2 py-1 transition-colors scroll-mt-4",
                 activeId === id
-                  ? "border-border text-background font-medium bg-primary/90"
-                  : "border-transparent text-muted hover:text-primary hover:bg-primary/90"
+                  ? "border-border bg-primary/90 font-medium !text-background visited:!text-background"
+                  : "border-transparent text-muted hover:bg-primary/90 hover:!text-background"
               )}
             >
               {text}
