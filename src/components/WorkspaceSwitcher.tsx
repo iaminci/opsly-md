@@ -33,7 +33,7 @@ const workspaceTabAllClassName = cn(
 /** Single-workspace view: wide name + ⋯ as two matching “cards” (white fill, black border, hard shadow). */
 const workspacePairTabClassName = cn(
   workspaceTabBaseClassName,
-  "!bg-background !text-foreground hover:!bg-background hover:!text-foreground focus-visible:!bg-background data-[state=open]:!bg-background"
+  "!bg-sidebar-primary/75 !text-white hover:!bg-sidebar-primary/75 hover:!text-sidebar-primary-foreground focus-visible:!bg-sidebar-primary/75"
 );
 
 interface WorkspaceSwitcherProps {
