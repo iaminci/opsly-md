@@ -106,7 +106,7 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
       </h3>
       <ul
         ref={tocRef}
-        className="min-h-0 w-full flex-1 space-y-1 overflow-y-auto overflow-x-hidden border-l-2 pl-2 pb-1"
+        className="min-h-0 w-full flex-1 space-y-1 overflow-y-auto overflow-x-hidden border-l-2 border-[color:var(--sidebar-guide)] pl-1.5 pb-1"
       >
         {headings.map(({ id, text, level }) => (
           <li

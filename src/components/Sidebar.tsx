@@ -564,7 +564,7 @@ export function Sidebar({
           <SidebarGroup>
             <SidebarGroupLabel className="sr-only">Search and paste</SidebarGroupLabel>
             <SidebarGroupContent>
-              <div className="grid min-w-0 grid-cols-2 gap-2 items-center">
+              <div className="grid min-w-0 grid-cols-[minmax(0,7fr)_minmax(0,3fr)] gap-2 items-center">
                 <div className="min-w-0">
                   <Search documents={searchDocuments} onSelect={onSelectDocument} />
                 </div>
@@ -639,7 +639,7 @@ export function Sidebar({
                 type="button"
                 variant="neutral"
                 size="sm"
-                className="w-full min-w-0 shrink-0 gap-2 text-background hover:text-foreground bg-primary/90"
+                className="w-full min-w-0 shrink-0 gap-2 text-foreground hover:text-background bg-background hover:bg-primary/80"
                 title="Import, export, delete"
               >
                 Advance Options
@@ -652,7 +652,7 @@ export function Sidebar({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="min-w-0 justify-center rounded-base border-2 border-foreground text-foreground hover:border-border hover:bg-primary/90 hover:text-background"
+                      className="min-w-0 justify-center rounded-base border-2 border-foreground text-primary hover:border-border hover:bg-primary/90 hover:text-background"
                       title="Import workspace"
                       onClick={() => {
                         setMoreMenuOpen(false);
@@ -665,7 +665,7 @@ export function Sidebar({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="min-w-0 justify-center rounded-base border-2 border-foreground text-foreground hover:border-border hover:bg-primary/90 hover:text-background"
+                      className="min-w-0 justify-center rounded-base border-2 border-foreground text-primary hover:border-border hover:bg-primary/90 hover:text-background"
                       title={selectedWorkspaceId ? "Export workspace" : "Export all workspaces"}
                       onClick={() => {
                         setMoreMenuOpen(false);
@@ -680,7 +680,7 @@ export function Sidebar({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="w-full min-w-0 justify-center rounded-base border-2 border-foreground text-destructive hover:border-border hover:bg-destructive/65 hover:text-background focus-visible:ring-destructive [&_svg]:text-destructive hover:[&_svg]:text-background"
+                    className="w-full min-w-0 justify-center rounded-base border-2 border-foreground text-foreground bg-background hover:border-border hover:bg-destructive hover:text-background focus-visible:ring-destructive [&_svg]:text-foreground hover:[&_svg]:text-background"
                     onClick={() => {
                       setMoreMenuOpen(false);
                       handleDeleteAllClick();

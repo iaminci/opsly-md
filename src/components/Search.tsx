@@ -50,7 +50,7 @@ export function Search({ documents, onSelect }: SearchProps) {
 
   return (
     <div className="relative">
-      <div className="group relative transition-[transform,box-shadow] hover:translate-x-boxShadowX hover:translate-y-boxShadowY">
+      <div className="group/search relative transition-[transform,box-shadow] hover:translate-x-boxShadowX hover:translate-y-boxShadowY">
         <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 z-10 size-4 -translate-y-1/2 text-foreground" />
         <Input
           type="text"
@@ -60,7 +60,7 @@ export function Search({ documents, onSelect }: SearchProps) {
           onFocus={() => query && setIsOpen(true)}
           onBlur={() => setTimeout(() => setIsOpen(false), 150)}
           className={
-            "!h-9 !border-2 !border-sidebar-border !bg-sidebar text-sm font-medium !shadow-shadow !rounded-[5px] group-hover:!shadow-none focus-visible:!border-sidebar-ring focus-visible:!ring-1 focus-visible:!ring-sidebar-ring focus-visible:!ring-offset-0 pl-8 " +
+            "!h-9 !border-2 !border-sidebar-border !bg-sidebar text-sm font-medium !shadow-shadow !rounded-[5px] group-hover/search:!shadow-none focus-visible:!border-sidebar-ring focus-visible:!ring-1 focus-visible:!ring-sidebar-ring focus-visible:!ring-offset-0 pl-8 " +
             (showClear ? "pr-9 " : "pr-2.5 ")
           }
           autoComplete="off"

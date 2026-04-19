@@ -30,6 +30,12 @@ const workspaceTabAllClassName = cn(
   "!bg-primary/90 !text-background hover:!bg-primary/90 hover:!text-primary-foreground focus-visible:!bg-primary/90"
 );
 
+/** (+) “New workspace” and single-workspace ⋯ — same chrome as tabs, neutral surface. */
+const workspaceNeutralChipClassName = cn(
+  workspaceTabBaseClassName,
+  "!bg-background !text-foreground hover:!bg-background hover:!text-foreground focus-visible:!bg-background focus-visible:!text-foreground"
+);
+
 /** Single-workspace view: wide name + ⋯ as two matching “cards” (white fill, black border, hard shadow). */
 const workspacePairTabClassName = cn(
   workspaceTabBaseClassName,
@@ -135,7 +141,7 @@ export function WorkspaceSwitcher({
             aria-label="New workspace"
             onClick={onAddWorkspace}
             className={cn(
-              workspaceTabAllClassName,
+              workspaceNeutralChipClassName,
               "inline-flex w-9 min-w-9 shrink-0 items-center justify-center px-0"
             )}
           >
@@ -156,7 +162,7 @@ export function WorkspaceSwitcher({
                 title="Workspace actions"
                 aria-label="Workspace actions"
                 className={cn(
-                  workspacePairTabClassName,
+                  workspaceNeutralChipClassName,
                   "inline-flex w-9 min-w-9 shrink-0 items-center justify-center px-0"
                 )}
               >
