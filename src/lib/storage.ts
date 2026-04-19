@@ -336,6 +336,70 @@ async function collectFolderIds(db: Awaited<ReturnType<typeof getSqliteDb>>, par
   return ids;
 }
 
+/** Move a folder (and its subtree) to another workspace root or parent folder. */
+export async function moveFolder(
+  id: string,
+  targetWorkspaceId: string,
+  targetParentFolderId: string | null
+): Promise<Folder | null> {
+  if (typeof window === "undefined") return null;
+  try {
+    const db = await getSqliteDb();
+    const rows = await sqlQuery<Folder>(
+      db,
+      "SELECT id, workspaceId, parentFolderId, name, createdAt FROM folders WHERE id = ?",
+      [id]
+    );
+    const folder = rows[0];
+    if (!folder) return null;
+
+    if (targetParentFolderId === id) return null;
+
+    const subtreeIds = await collectFolderIds(db, id);
+    if (targetParentFolderId && subtreeIds.includes(targetParentFolderId)) return null;
+
+    if (targetParentFolderId) {
+      const parentRows = await sqlQuery<Pick<Folder, "id" | "workspaceId">>(
+        db,
+        "SELECT id, workspaceId FROM folders WHERE id = ?",
+        [targetParentFolderId]
+      );
+      const p = parentRows[0];
+      if (!p || p.workspaceId !== targetWorkspaceId) return null;
+    }
+
+    const siblings = await getFolders(targetWorkspaceId, targetParentFolderId);
+    const nameLower = folder.name.toLowerCase();
+    if (siblings.some((f) => f.id !== id && f.name.toLowerCase() === nameLower)) {
+      throw new DuplicateNameError(`A folder named "${folder.name}" already exists in this location.`);
+    }
+
+    if (folder.workspaceId === targetWorkspaceId && folder.parentFolderId === targetParentFolderId) {
+      return folder;
+    }
+
+    for (const fid of subtreeIds) {
+      db.run("UPDATE folders SET workspaceId = ? WHERE id = ?", [targetWorkspaceId, fid]);
+    }
+    db.run("UPDATE folders SET parentFolderId = ? WHERE id = ?", [targetParentFolderId, id]);
+
+    for (const fid of subtreeIds) {
+      db.run("UPDATE documents SET workspaceId = ? WHERE folderId = ?", [targetWorkspaceId, fid]);
+    }
+
+    await saveSqliteDb(db);
+    const moved = await sqlQuery<Folder>(
+      db,
+      "SELECT id, workspaceId, parentFolderId, name, createdAt FROM folders WHERE id = ?",
+      [id]
+    );
+    return moved[0] ?? null;
+  } catch (e) {
+    if (e instanceof DuplicateNameError) throw e;
+    return null;
+  }
+}
+
 export async function deleteFolder(id: string): Promise<void> {
   const db = await getSqliteDb();
   const ids = await collectFolderIds(db, id);

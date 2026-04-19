@@ -33,10 +33,11 @@ import {
 } from "@/components/ui/tooltip";
 
 const DRAG_TYPE = "application/x-md-viewer-document";
+const DRAG_TYPE_FOLDER = "application/x-md-viewer-folder";
 
 /** Drop-target highlight for workspace / folder headers (paired with content-area drag state). */
 const DRAG_OVER_CLASS =
-  "bg-sidebar-accent/45 ring-1 ring-primary/90/60 ring-inset transition-colors duration-150";
+  "bg-sidebar-accent/45 ring-2 ring-foreground ring-inset transition-colors duration-150";
 
 /** Workspace name strip (tree rows) — borderless; same fills/hover as folder rows. */
 const WORKSPACE_TAB_CORAL_PILL = cn(
@@ -58,8 +59,9 @@ function useClearDragStateOnDragEnd(setDragOver: (v: boolean) => void) {
 const EXPANDED_WORKSPACES_KEY = "md-viewer-expanded-workspaces";
 const EXPANDED_FOLDERS_KEY = "md-viewer-expanded-folders";
 
-function isTreeDocumentDrag(e: React.DragEvent): boolean {
-  return Array.from(e.dataTransfer?.types ?? []).includes(DRAG_TYPE);
+function isTreeDrag(e: React.DragEvent): boolean {
+  const types = Array.from(e.dataTransfer?.types ?? []);
+  return types.includes(DRAG_TYPE) || types.includes(DRAG_TYPE_FOLDER);
 }
 
 function containsActiveDoc(
@@ -98,6 +100,7 @@ interface WorkspaceTreeProps {
   onAddFile: (workspaceId: string, folderId: string | null) => void;
   onUploadFile: (workspaceId: string, folderId: string | null) => void;
   onMoveDocument: (docId: string, workspaceId: string, folderId: string | null) => void;
+  onMoveFolder: (folderId: string, workspaceId: string, parentFolderId: string | null) => void;
   onRenameWorkspace: (id: string, name: string) => void;
   onDeleteWorkspace: (id: string, name: string) => void;
   onRenameFolder: (id: string, name: string) => void;
@@ -119,6 +122,7 @@ export function WorkspaceTree({
   onAddFile,
   onUploadFile,
   onMoveDocument,
+  onMoveFolder,
   onRenameWorkspace,
   onDeleteWorkspace,
   onRenameFolder,
@@ -233,6 +237,7 @@ export function WorkspaceTree({
     onAddFile,
     onUploadFile,
     onMoveDocument,
+    onMoveFolder,
     onRenameWorkspace,
     onDeleteWorkspace,
     onRenameFolder,
@@ -291,6 +296,7 @@ interface WorkspaceSectionProps {
   onAddFile: (workspaceId: string, folderId: string | null) => void;
   onUploadFile: (workspaceId: string, folderId: string | null) => void;
   onMoveDocument: (docId: string, workspaceId: string, folderId: string | null) => void;
+  onMoveFolder: (folderId: string, workspaceId: string, parentFolderId: string | null) => void;
   onRenameWorkspace: (id: string, name: string) => void;
   onDeleteWorkspace: (id: string, name: string) => void;
   onRenameFolder: (id: string, name: string) => void;
@@ -325,6 +331,7 @@ function WorkspaceSection({
   onAddFile,
   onUploadFile,
   onMoveDocument,
+  onMoveFolder,
   onRenameWorkspace,
   onDeleteWorkspace,
   onRenameFolder,
@@ -351,7 +358,7 @@ function WorkspaceSection({
   const handleWsDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    if (isTreeDocumentDrag(e)) {
+    if (isTreeDrag(e)) {
       ensureWorkspaceExpanded(workspace.id);
     }
     setWsDragOver(true);
@@ -369,7 +376,9 @@ function WorkspaceSection({
     setWsDragOver(false);
     setWsContentDragOver(false);
     const docId = e.dataTransfer.getData(DRAG_TYPE);
+    const folderId = e.dataTransfer.getData(DRAG_TYPE_FOLDER);
     if (docId) onMoveDocument(docId, workspace.id, null);
+    else if (folderId) onMoveFolder(folderId, workspace.id, null);
   };
 
   const hasTreeItems = folders.length > 0 || documents.length > 0;
@@ -405,6 +414,7 @@ function WorkspaceSection({
               onAddFile={onAddFile}
               onUploadFile={onUploadFile}
               onMoveDocument={onMoveDocument}
+              onMoveFolder={onMoveFolder}
               onRenameFolder={onRenameFolder}
               onDeleteFolder={onDeleteFolder}
               onRenameDocument={onRenameDocument}
@@ -437,7 +447,7 @@ function WorkspaceSection({
 
   const dropAreaClassName = cn(
     "flex flex-col gap-0.5",
-    !hideWorkspaceHeader && "ml-2 pl-2",
+    !hideWorkspaceHeader && "ml-2.5 pl-1",
     hasTreeItems
       ? "border-l-2 border-[color:var(--sidebar-guide)] pb-0.5 pt-0"
       : "min-h-1 py-0.5"
@@ -457,7 +467,8 @@ function WorkspaceSection({
         <WorkspaceDropArea
           workspaceId={workspace.id}
           folderId={null}
-          onDrop={onMoveDocument}
+          onMoveDocument={onMoveDocument}
+          onMoveFolder={onMoveFolder}
           onDragTargetActiveChange={setWsContentDragOver}
           className={dropAreaClassName}
         >
@@ -576,7 +587,8 @@ function WorkspaceSection({
           <WorkspaceDropArea
             workspaceId={workspace.id}
             folderId={null}
-            onDrop={onMoveDocument}
+            onMoveDocument={onMoveDocument}
+            onMoveFolder={onMoveFolder}
             onDragTargetActiveChange={setWsContentDragOver}
             className={dropAreaClassName}
           >
@@ -590,14 +602,16 @@ function WorkspaceSection({
 function WorkspaceDropArea({
   workspaceId,
   folderId,
-  onDrop,
+  onMoveDocument,
+  onMoveFolder,
   onDragTargetActiveChange,
   className,
   children,
 }: {
   workspaceId: string;
   folderId: string | null;
-  onDrop: (docId: string, workspaceId: string, folderId: string | null) => void;
+  onMoveDocument: (docId: string, workspaceId: string, folderId: string | null) => void;
+  onMoveFolder: (folderId: string, workspaceId: string, parentFolderId: string | null) => void;
   /** Highlights the workspace/folder header while dragging over this zone (files, subfolders, etc.). */
   onDragTargetActiveChange?: (active: boolean) => void;
   className?: string;
@@ -621,7 +635,9 @@ function WorkspaceDropArea({
     e.stopPropagation();
     onDragTargetActiveChange?.(false);
     const docId = e.dataTransfer.getData(DRAG_TYPE);
-    if (docId) onDrop(docId, workspaceId, folderId);
+    const draggedFolderId = e.dataTransfer.getData(DRAG_TYPE_FOLDER);
+    if (docId) onMoveDocument(docId, workspaceId, folderId);
+    else if (draggedFolderId) onMoveFolder(draggedFolderId, workspaceId, folderId);
   };
 
   return (
@@ -650,6 +666,7 @@ interface FolderItemProps {
   onAddFile: (workspaceId: string, folderId: string | null) => void;
   onUploadFile: (workspaceId: string, folderId: string | null) => void;
   onMoveDocument: (docId: string, workspaceId: string, folderId: string | null) => void;
+  onMoveFolder: (folderId: string, workspaceId: string, parentFolderId: string | null) => void;
   onRenameFolder: (id: string, name: string) => void;
   onDeleteFolder: (id: string, name: string) => void;
   onRenameDocument: (id: string, title: string) => void;
@@ -677,6 +694,7 @@ function FolderItem({
   onAddFile,
   onUploadFile,
   onMoveDocument,
+  onMoveFolder,
   onRenameFolder,
   onDeleteFolder,
   onRenameDocument,
@@ -700,7 +718,7 @@ function FolderItem({
   const handleFolderDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    if (isTreeDocumentDrag(e)) {
+    if (isTreeDrag(e)) {
       ensureWorkspaceExpanded(workspaceId);
       ensureFolderExpanded(folder.id);
     }
@@ -719,10 +737,17 @@ function FolderItem({
     setFolderDragOver(false);
     setFolderContentDragOver(false);
     const docId = e.dataTransfer.getData(DRAG_TYPE);
+    const draggedFolderId = e.dataTransfer.getData(DRAG_TYPE_FOLDER);
     if (docId) onMoveDocument(docId, workspaceId, folder.id);
+    else if (draggedFolderId) onMoveFolder(draggedFolderId, workspaceId, folder.id);
   };
 
   const hasNestedItems = subfolders.length > 0 || docs.length > 0;
+
+  const handleFolderDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData(DRAG_TYPE_FOLDER, folder.id);
+    e.dataTransfer.effectAllowed = "move";
+  };
 
   return (
     <AccordionItem value={folder.id} variant="nested">
@@ -739,8 +764,10 @@ function FolderItem({
         onDrop={handleFolderDrop}
       >
         <div
+          draggable
+          onDragStart={handleFolderDragStart}
           className={cn(
-            "flex min-h-8 min-w-0 flex-1 items-center gap-2 rounded-[5px] py-0.5 pl-2 pr-0",
+            "flex min-h-8 min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded-[5px] py-0.5 pl-1 pr-0",
             folderRowActive &&
               !folderHighlighted &&
               "text-primary hover:text-destructive",
@@ -821,10 +848,11 @@ function FolderItem({
         <WorkspaceDropArea
           workspaceId={workspaceId}
           folderId={folder.id}
-          onDrop={onMoveDocument}
+          onMoveDocument={onMoveDocument}
+          onMoveFolder={onMoveFolder}
           onDragTargetActiveChange={setFolderContentDragOver}
           className={cn(
-            "ml-2 flex flex-col gap-0.5 pl-2",
+            "ml-1 flex flex-col gap-0.5 pl-1",
             hasNestedItems
               ? "border-l-2 border-[color:var(--sidebar-guide)] pb-0.5 pt-0"
               : "min-h-1 py-0.5"
@@ -858,6 +886,7 @@ function FolderItem({
                   onAddFile={onAddFile}
                   onUploadFile={onUploadFile}
                   onMoveDocument={onMoveDocument}
+                  onMoveFolder={onMoveFolder}
                   onRenameFolder={onRenameFolder}
                   onDeleteFolder={onDeleteFolder}
                   onRenameDocument={onRenameDocument}

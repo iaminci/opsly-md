@@ -24,7 +24,7 @@ function AccordionItem({
       data-variant={variant}
       className={cn(
         "border-none shadow-none",
-        variant === "nested" && "border-l border-sidebar-border pl-2",
+        variant === "nested" && "border-l border-sidebar-border pl-1",
         className
       )}
       {...props}

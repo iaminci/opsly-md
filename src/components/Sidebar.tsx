@@ -23,6 +23,7 @@ import {
   addFolder,
   addDocument,
   moveDocument,
+  moveFolder,
   updateWorkspace,
   updateFolder,
   updateDocument,
@@ -269,6 +270,26 @@ export function Sidebar({
     await moveDocument(docId, workspaceId, folderId);
     await refreshTreeData();
     onRefresh();
+  };
+
+  const handleMoveFolder = async (
+    folderId: string,
+    workspaceId: string,
+    parentFolderId: string | null
+  ) => {
+    try {
+      const result = await moveFolder(folderId, workspaceId, parentFolderId);
+      if (result) {
+        await refreshTreeData();
+        onRefresh();
+      }
+    } catch (err) {
+      if (err instanceof DuplicateNameError) {
+        toast.error(err.message);
+      } else {
+        toast.error("Failed to move folder.");
+      }
+    }
   };
 
   const handleAddFile = async (workspaceId: string, folderId: string | null) => {
@@ -596,6 +617,7 @@ export function Sidebar({
               onAddFile={handleAddFile}
               onUploadFile={handleUploadFile}
               onMoveDocument={handleMoveDocument}
+              onMoveFolder={handleMoveFolder}
               onRenameWorkspace={handleRenameWorkspace}
               onDeleteWorkspace={handleDeleteWorkspaceRequest}
               onRenameFolder={handleRenameFolder}
