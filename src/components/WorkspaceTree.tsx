@@ -107,6 +107,10 @@ interface WorkspaceTreeProps {
   onRenameFolder: (id: string, name: string) => void;
   onDeleteFolder: (id: string, name: string) => void;
   onRenameDocument: (id: string, title: string) => void;
+  /** Full document list so the tree can expand folders to the active document. */
+  flatDocuments: Document[];
+  /** All folders in a workspace (for walking ancestors of `folderId`). */
+  getFoldersFlat: (workspaceId: string) => Folder[];
 }
 
 export function WorkspaceTree({
@@ -129,6 +133,8 @@ export function WorkspaceTree({
   onRenameFolder,
   onDeleteFolder,
   onRenameDocument,
+  flatDocuments,
+  getFoldersFlat,
 }: WorkspaceTreeProps) {
   const workspaceIds = workspaces.map((w) => w.id);
 
@@ -194,6 +200,27 @@ export function WorkspaceTree({
       prev.includes(folderId) ? prev : [...prev, folderId]
     );
   }, []);
+
+  /** When the selected document lives inside a folder, expand the workspace and folder path so it is visible. */
+  useEffect(() => {
+    if (!currentId) return;
+    const doc = flatDocuments.find((d) => d.id === currentId);
+    if (!doc) return;
+    ensureWorkspaceExpanded(doc.workspaceId);
+    if (!doc.folderId) return;
+    const folderList = getFoldersFlat(doc.workspaceId);
+    const idsToExpand: string[] = [];
+    let fid: string | null = doc.folderId;
+    while (fid) {
+      idsToExpand.push(fid);
+      const f = folderList.find((x) => x.id === fid);
+      fid = f?.parentFolderId ?? null;
+    }
+    setExpandedFolders((prev) => {
+      const next = new Set([...prev, ...idsToExpand]);
+      return Array.from(next);
+    });
+  }, [currentId, flatDocuments, getFoldersFlat, ensureWorkspaceExpanded]);
 
   useEffect(() => {
     if (typeof window === "undefined" || workspaceIds.length === 0) return;

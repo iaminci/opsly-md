@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import type { Document } from "@/types/document";
+import type { Folder } from "@/types/workspace";
 import { WorkspaceTree } from "./WorkspaceTree";
 import { Search } from "./Search";
 import { Button } from "@/components/ui/button";
@@ -210,6 +211,11 @@ export function Sidebar({
         (folderId === null ? d.folderId === null : d.folderId === folderId)
     );
   };
+
+  const getFoldersFlat = useCallback(
+    (workspaceId: string): Folder[] => foldersByWorkspace.get(workspaceId) ?? [],
+    [foldersByWorkspace]
+  );
 
   useEffect(() => {
     refreshTreeData();
@@ -572,24 +578,10 @@ export function Sidebar({
         >
         <div className="flex shrink-0 flex-col border-b-0 border-sidebar-border pb-0">
           <SidebarGroup>
-            <SidebarGroupLabel className="sr-only">Search and paste</SidebarGroupLabel>
+            <SidebarGroupLabel className="sr-only">Search</SidebarGroupLabel>
             <SidebarGroupContent>
-              <div className="grid min-w-0 grid-cols-[minmax(0,7fr)_minmax(0,3fr)] gap-2 items-center">
-                <div className="min-w-0">
-                  <Search documents={searchDocuments} onSelect={onSelectDocument} />
-                </div>
-                <Button
-                  type="button"
-                  variant="neutral"
-                  size="sm"
-                  className="h-9 w-full min-w-0 justify-center whitespace-nowrap px-3 text-foreground hover:text-primary-hover"
-                  onClick={() => {
-                    setPasteTarget(null);
-                    setShowPaste(true);
-                  }}
-                >
-                  Create
-                </Button>
+              <div className="min-w-0">
+                <Search documents={searchDocuments} onSelect={onSelectDocument} />
               </div>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -621,6 +613,8 @@ export function Sidebar({
               workspaces={displayedWorkspaces}
               folders={getFoldersSync}
               documents={getDocumentsSync}
+              flatDocuments={documents}
+              getFoldersFlat={getFoldersFlat}
               currentId={currentId}
               selectedWorkspaceId={selectedWorkspaceId}
               workspaceSwitcherMenuOpen={workspaceSwitcherMenuOpen}
