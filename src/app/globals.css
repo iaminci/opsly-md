@@ -331,5 +331,32 @@ body {
   }
   html {
     @apply font-sans;
+    view-transition-name: root;
+  }
+}
+
+/* Theme toggle: circular reveal from click (View Transitions API) */
+::view-transition-old(root) {
+  animation: none;
+}
+
+::view-transition-new(root) {
+  animation: theme-toggle-circle 0.85s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes theme-toggle-circle {
+  from {
+    clip-path: circle(0px at var(--theme-toggle-x) var(--theme-toggle-y));
+  }
+  to {
+    clip-path: circle(var(--theme-toggle-r) at var(--theme-toggle-x) var(--theme-toggle-y));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }

@@ -7,6 +7,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { flushSync } from "react-dom";
 
 type Theme = "light" | "dark";
 
@@ -19,9 +20,11 @@ export type DarkAccent =
   | "indigo"
   | "orange";
 
+export type ThemeToggleOrigin = { clientX: number; clientY: number };
+
 interface ThemeContextValue {
   theme: Theme;
-  setTheme: (theme: Theme) => void;
+  setTheme: (theme: Theme, origin?: ThemeToggleOrigin) => void;
   darkAccent: DarkAccent;
   setDarkAccent: (accent: DarkAccent) => void;
 }
@@ -81,17 +84,54 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const setTheme = useCallback((newTheme: Theme) => {
-    setThemeState(newTheme);
-    localStorage.setItem("md-viewer-theme", newTheme);
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
-    if (newTheme === "dark") {
-      const stored = localStorage.getItem(DARK_ACCENT_KEY) as DarkAccent | null;
-      const validAccent = stored && VALID_ACCENTS.includes(stored) ? stored : DEFAULT_ACCENT;
-      document.documentElement.setAttribute("data-dark-accent", validAccent);
-    } else {
-      document.documentElement.removeAttribute("data-dark-accent");
+  const setTheme = useCallback((newTheme: Theme, origin?: ThemeToggleOrigin) => {
+    const syncDocument = (theme: Theme) => {
+      localStorage.setItem("md-viewer-theme", theme);
+      document.documentElement.classList.toggle("dark", theme === "dark");
+      if (theme === "dark") {
+        const stored = localStorage.getItem(DARK_ACCENT_KEY) as DarkAccent | null;
+        const validAccent = stored && VALID_ACCENTS.includes(stored) ? stored : DEFAULT_ACCENT;
+        document.documentElement.setAttribute("data-dark-accent", validAccent);
+      } else {
+        document.documentElement.removeAttribute("data-dark-accent");
+      }
+    };
+
+    const apply = () => {
+      setThemeState(newTheme);
+      syncDocument(newTheme);
+    };
+
+    if (typeof document === "undefined") return;
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const startVT = document.startViewTransition?.bind(document) as
+      | ((cb: () => void) => { finished: Promise<void> })
+      | undefined;
+
+    if (!origin || reducedMotion || !startVT) {
+      apply();
+      return;
     }
+
+    const corners: [number, number][] = [
+      [0, 0],
+      [window.innerWidth, 0],
+      [0, window.innerHeight],
+      [window.innerWidth, window.innerHeight],
+    ];
+    const r =
+      Math.max(...corners.map(([x, y]) => Math.hypot(x - origin.clientX, y - origin.clientY))) + 4;
+    document.documentElement.style.setProperty("--theme-toggle-x", `${origin.clientX}px`);
+    document.documentElement.style.setProperty("--theme-toggle-y", `${origin.clientY}px`);
+    document.documentElement.style.setProperty("--theme-toggle-r", `${r}px`);
+
+    startVT(() => {
+      flushSync(() => {
+        setThemeState(newTheme);
+      });
+      syncDocument(newTheme);
+    });
   }, []);
 
   const setDarkAccent = useCallback((accent: DarkAccent) => {

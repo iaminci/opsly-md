@@ -12,8 +12,8 @@ export function EmptyState({ hasDocuments = false }: { hasDocuments?: boolean })
       </p>
       <div className="flex items-start justify-center gap-3 rounded-md border-2 border-border bg-amber-50 px-4 py-3 text-sm text-foreground text-left">
         <AlertTriangleIcon className="mt-0.5 size-4 shrink-0 text-amber-500" aria-hidden />
-        <p className="text-muted-foreground">
-          <span className="font-semibold text-foreground">All documents are stored locally in this browser.</span>{" "}
+        <p className="text-black">
+          <span className="font-semibold text-destructive">All documents are stored locally in this browser.</span>{" "}
           Clearing browser data may remove your documents. Export your workspace regularly to keep a backup.
         </p>
       </div>
