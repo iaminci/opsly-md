@@ -766,13 +766,13 @@ export function Sidebar({
       <Dialog open={showPaste} onOpenChange={(open) => { setShowPaste(open); if (!open) setPasteValue(""); }}>
         <DialogContent className="sm:max-w-3xl max-h-[85vh] flex flex-col shadow-xl ring-1 ring-border/50">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">Paste Markdown</DialogTitle>
+            <DialogTitle className="text-lg font-semibold">Create Markdown</DialogTitle>
           </DialogHeader>
           <div className="min-h-0 flex-1 py-2">
             <Textarea
               value={pasteValue}
               onChange={(e) => setPasteValue(e.target.value)}
-              placeholder="Paste markdown here..."
+              placeholder="Enter markdown here..."
               className="field-sizing-fixed min-h-[50vh] max-h-[60vh] w-full resize-y overflow-y-auto font-mono text-sm"
             />
           </div>
@@ -1039,7 +1039,7 @@ function PasteInput({
     <Card className="mt-3 rounded-xl shadow-sm ring-1 ring-main/20 ">
       <CardContent className="pt-4">
         <Textarea
-          placeholder="Paste markdown here..."
+          placeholder="Enter markdown here..."
           value={value}
           onChange={(e) => setValue(e.target.value)}
           rows={4}
