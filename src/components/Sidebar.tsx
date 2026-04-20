@@ -575,7 +575,7 @@ export function Sidebar({
                   className="h-9 w-full min-w-0 justify-center whitespace-nowrap px-3 text-foreground hover:text-primary-hover"
                   onClick={() => setShowPaste(true)}
                 >
-                  Paste
+                  Create
                 </Button>
               </div>
             </SidebarGroupContent>
@@ -642,7 +642,7 @@ export function Sidebar({
                 className="w-full min-w-0 shrink-0 gap-2 text-foreground hover:text-background bg-background hover:bg-primary/80"
                 title="Import, export, delete"
               >
-                Advance Options
+                Advanced Options
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="overflow-hidden">
