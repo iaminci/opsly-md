@@ -465,7 +465,12 @@ function AppContent() {
                 <button
                   type="button"
                   aria-label="Close document and return to overview"
-                  className="absolute top-[-20] right-[-50] z-10 flex size-7 items-center justify-center rounded-[4px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-primary print:hidden"
+                  className={cn(
+                    "flex size-7 items-center justify-center rounded-[4px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-primary print:hidden",
+                    rightTocOpen
+                      ? "absolute top-[-20] right-[-50] z-10"
+                      : "z-30 max-lg:absolute max-lg:top-[-20] max-lg:right-[-50] max-lg:z-10 lg:fixed lg:right-4 lg:top-[calc(3.625rem+0.5rem)]"
+                  )}
                   onClick={handleCloseDocument}
                 >
                   <X className="size-4 shrink-0" strokeWidth={2.5} aria-hidden />
@@ -551,11 +556,9 @@ function AppContent() {
                 title={rightTocOpen ? "Hide outline" : "Show outline"}
                 onClick={() => setRightTocOpen((o) => !o)}
                 className={cn(
-                  "fixed h-15 w-6 shadow-shadow-2 border-2 border-border bg-background top-[calc(50%-1rem)] z-30 hidden shrink-0 text-primary transition-[right,color] duration-150 ease-linear hover:text-primary-hover",
+                  "fixed h-15 w-6 shadow-shadow-2 border-2 border-border bg-background top-[calc(50%-1rem)] z-30 hidden shrink-0 text-primary transition-[right] duration-150 ease-linear hover:text-primary-hover",
                   "print:hidden lg:inline-flex",
-                  rightTocOpen
-                    ? "right-[13.3rem]"
-                    : "right-0"
+                  rightTocOpen ? "right-[13.3rem]" : "right-0"
                 )}
               >
                 {rightTocOpen ? (

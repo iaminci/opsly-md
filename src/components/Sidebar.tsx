@@ -667,9 +667,9 @@ export function Sidebar({
           {!moreMenuOpen && (
             <label
               className="mb-2 flex w-full cursor-pointer items-center justify-between gap-2 rounded-base border-2 border-border bg-background px-3 py-1.5 text-muted-foreground"
-              title="When on, closing a document shows the one you viewed before it (in-memory)."
+              title="Stack Docs"
             >
-              <span className="min-w-0 text-sm">Stack Docs</span>
+              <span className="min-w-0 text-m">Stack Docs</span>
               <Switch
                 size="sm"
                 checked={documentStackEnabled}
