@@ -56,10 +56,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { Pencil } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 const CURRENT_DOC_KEY = "md-viewer-current-doc";
+const RIGHT_TOC_OPEN_KEY = "md-viewer-right-toc-open";
 
 function formatDate(ts: number): string {
   return new Date(ts).toLocaleDateString(undefined, {
@@ -134,7 +136,19 @@ function AppContent() {
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [editContent, setEditContent] = useState("");
+  const [rightTocOpen, setRightTocOpen] = useState(true);
   const contentScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const v = localStorage.getItem(RIGHT_TOC_OPEN_KEY);
+    if (v === "0") setRightTocOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(RIGHT_TOC_OPEN_KEY, rightTocOpen ? "1" : "0");
+  }, [rightTocOpen]);
   const refresh = useCallback(async () => {
     const docs = await getDocuments();
     setDocuments(docs);
@@ -389,13 +403,52 @@ function AppContent() {
           </div>
 
           {currentDoc && (
-            <div className="hidden min-h-0 w-56 shrink-0 overflow-hidden border-l-2 px-4 py-6 lg:flex lg:flex-col print:hidden">
-              <DocumentRightSidebar
-                doc={currentDoc}
-                content={currentDoc.content}
-                contentScrollRef={contentScrollRef}
-              />
-            </div>
+            <>
+              <div
+                id="document-outline-panel"
+                aria-hidden={!rightTocOpen}
+                className={cn(
+                  "hidden min-h-0 min-w-0 shrink-0 overflow-hidden lg:flex lg:flex-col print:hidden",
+                  "transition-[width,padding-left,padding-right,padding-top,padding-bottom,border-left-width] duration-150 ease-linear",
+                  rightTocOpen
+                    ? "w-56 border-l-2 border-border px-4 py-6"
+                    : "w-0 border-l-0 px-0 py-0"
+                )}
+              >
+                <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col">
+                  <DocumentRightSidebar
+                    doc={currentDoc}
+                    content={currentDoc.content}
+                    contentScrollRef={contentScrollRef}
+                  />
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-expanded={rightTocOpen}
+                aria-controls="document-outline-panel"
+                title={rightTocOpen ? "Hide outline" : "Show outline"}
+                onClick={() => setRightTocOpen((o) => !o)}
+                className={cn(
+                  "fixed h-15 w-6 shadow-shadow-2 border-2 border-border bg-background top-[calc(50%-1rem)] z-30 hidden shrink-0 text-primary transition-[right,color] duration-150 ease-linear hover:text-primary-hover",
+                  "print:hidden lg:inline-flex",
+                  rightTocOpen
+                    ? "right-[13.3rem]"
+                    : "right-0"
+                )}
+              >
+                {rightTocOpen ? (
+                  <ChevronRight aria-hidden />
+                ) : (
+                  <ChevronLeft aria-hidden />
+                )}
+                <span className="sr-only">
+                  {rightTocOpen ? "Hide outline" : "Show outline"}
+                </span>
+              </Button>
+            </>
           )}
         </div>
       </SidebarInset>
