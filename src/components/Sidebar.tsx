@@ -6,6 +6,7 @@ import type { Folder } from "@/types/workspace";
 import { WorkspaceTree } from "./WorkspaceTree";
 import { Search } from "./Search";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -19,6 +20,7 @@ import {
 import {
   getWorkspaces,
   getAllFolders,
+  getDocument,
   getDocuments,
   addWorkspace,
   addFolder,
@@ -68,7 +70,7 @@ import {
 } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import { CommandPalette } from "./CommandPalette";
-import { cn, getFirstHeading } from "@/lib/utils";
+import { cn, getFirstHeading, replaceFirstHeading } from "@/lib/utils";
 
 /** Outside-click / pointer-dismiss: `contains(target)` misses retargeting; composedPath matches Radix/portals reliably. */
 function isPointerEventInside(container: HTMLElement | null, nativeEvent: Event): boolean {
@@ -108,6 +110,7 @@ export function Sidebar({
     folderId: string | null;
   } | null>(null);
   const [pasteValue, setPasteValue] = useState("");
+  const [pasteTitle, setPasteTitle] = useState("");
   const [workspaceDialogOpen, setWorkspaceDialogOpen] = useState(false);
   const [folderDialogOpen, setFolderDialogOpen] = useState(false);
   const [folderDialogTarget, setFolderDialogTarget] = useState<{
@@ -239,7 +242,12 @@ export function Sidebar({
       reader.onerror = () => reject(reader.error);
       reader.readAsText(file);
     });
-    const title = file.name.replace(/\.(md|markdown)$/i, "") || "Untitled";
+    const stem = file.name.replace(/\.(md|markdown)$/i, "").trim();
+    const isReadmeName = stem.toLowerCase() === "readme";
+    const trimmed = content.trim();
+    const titleFromBody =
+      getFirstHeading(trimmed) || trimmed.split("\n").find((l) => l.trim().length > 0)?.trim() || "Untitled";
+    const title = isReadmeName ? titleFromBody : stem || "Untitled";
     await onAddDocument(title, content, target.workspaceId, target.folderId);
     setUploadTarget(null);
     e.target.value = "";
@@ -540,7 +548,21 @@ export function Sidebar({
 
   const handleRenameDocumentSubmit = async (title: string) => {
     if (!renameDocTarget) return;
-    await updateDocument(renameDocTarget.id, { title });
+    const newTitle = title.trim();
+    if (!newTitle) return;
+    try {
+      const doc = await getDocument(renameDocTarget.id);
+      if (!doc) return;
+      const content = replaceFirstHeading(doc.content, newTitle);
+      await updateDocument(renameDocTarget.id, { title: newTitle, content });
+    } catch (err) {
+      if (err instanceof DuplicateNameError) {
+        toast.error(err.message);
+      } else {
+        toast.error("Failed to rename document.");
+      }
+      return;
+    }
     setRenameDocTarget(null);
     await refreshTreeData();
     onRefresh();
@@ -777,6 +799,7 @@ export function Sidebar({
           setShowPaste(open);
           if (!open) {
             setPasteValue("");
+            setPasteTitle("");
             setPasteTarget(null);
           }
         }}
@@ -785,27 +808,60 @@ export function Sidebar({
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold">Create Markdown</DialogTitle>
           </DialogHeader>
-          <div className="min-h-0 flex-1 py-2">
-            <Textarea
-              value={pasteValue}
-              onChange={(e) => setPasteValue(e.target.value)}
-              placeholder="Enter markdown here..."
-              className="field-sizing-fixed min-h-[50vh] max-h-[60vh] w-full resize-y overflow-y-auto font-mono text-sm"
-            />
+          <div className="min-h-0 flex-1 space-y-3 py-2">
+            <div className="space-y-1.5">
+              <label htmlFor="create-markdown-title" className="text-sm font-medium text-foreground">
+                Title or filename
+              </label>
+              <Input
+                id="create-markdown-title"
+                value={pasteTitle}
+                onChange={(e) => setPasteTitle(e.target.value)}
+                placeholder="e.g. Notes or README.md"
+                className="font-mono text-sm"
+                autoComplete="off"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="create-markdown-body" className="text-sm font-medium text-foreground">
+                Markdown
+              </label>
+              <Textarea
+                id="create-markdown-body"
+                value={pasteValue}
+                onChange={(e) => setPasteValue(e.target.value)}
+                placeholder="Enter markdown here..."
+                className="field-sizing-fixed min-h-[50vh] max-h-[60vh] w-full resize-y overflow-y-auto font-mono text-sm"
+              />
+            </div>
           </div>
           <DialogFooter className="gap-2 sm:gap-3">
-            <Button variant="neutral" className="text-primary hover:text-primary-hover"onClick={() => { setShowPaste(false); setPasteValue(""); }}>
+            <Button
+              variant="neutral"
+              className="text-primary hover:text-primary-hover"
+              onClick={() => {
+                setShowPaste(false);
+                setPasteValue("");
+                setPasteTitle("");
+              }}
+            >
               Cancel
             </Button>
             <Button
               onClick={async () => {
                 const trimmed = pasteValue.trim();
                 if (!trimmed) return;
-                const title = getFirstHeading(trimmed) ?? (trimmed.split("\n")[0]?.trim() || "Untitled");
+                const explicit = pasteTitle.trim().replace(/\.md$/i, "");
+                const title =
+                  explicit ||
+                  getFirstHeading(trimmed) ||
+                  trimmed.split("\n")[0]?.trim() ||
+                  "Untitled";
                 const wsId = pasteTarget?.workspaceId ?? selectedWorkspaceId ?? undefined;
                 const folderId = pasteTarget?.folderId ?? null;
                 await onAddDocument(title, trimmed, wsId, folderId);
                 setPasteValue("");
+                setPasteTitle("");
                 setPasteTarget(null);
                 setShowPaste(false);
               }}

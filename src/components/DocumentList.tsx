@@ -45,7 +45,7 @@ export function DocumentList({
               currentId === doc.id && "bg-accent font-medium"
             )}
           >
-            {getFirstHeading(doc.content) ?? doc.title}
+            {doc.title.trim() || getFirstHeading(doc.content) || "Untitled"}
           </Button>
           <Button
             type="button"

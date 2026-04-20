@@ -1014,7 +1014,7 @@ function FileItem({
   onRename: () => void;
   onMoveDocument: (docId: string, workspaceId: string, folderId: string | null) => void;
 }) {
-  const displayName = getFirstHeading(doc.content) ?? doc.title;
+  const displayName = doc.title.trim() || getFirstHeading(doc.content) || "Untitled";
   const nameTruncated = false;
   const [fileMenuOpen, setFileMenuOpen] = useState(false);
   const fileLooksSelected = isActive && !suppressDocHighlights;

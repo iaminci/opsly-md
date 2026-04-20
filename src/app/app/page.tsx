@@ -37,7 +37,7 @@ import {
   deleteDocument,
   DuplicateNameError,
 } from "@/lib/storage";
-import { getFirstHeading } from "@/lib/utils";
+import { getFirstHeading, toMarkdownDownloadFilename } from "@/lib/utils";
 import { SAMPLE_MARKDOWN } from "@/lib/sample-document";
 import { EmptyState } from "@/components/EmptyState";
 import { Sidebar } from "@/components/Sidebar";
@@ -49,6 +49,16 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Dialog,
   DialogContent,
   DialogFooter,
@@ -57,7 +67,7 @@ import {
 } from "@/components/ui/dialog";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 
 const CURRENT_DOC_KEY = "md-viewer-current-doc";
@@ -137,6 +147,7 @@ function AppContent() {
   const [editOpen, setEditOpen] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [rightTocOpen, setRightTocOpen] = useState(true);
+  const [downloadConfirmOpen, setDownloadConfirmOpen] = useState(false);
   const contentScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -152,6 +163,10 @@ function AppContent() {
   const refresh = useCallback(async () => {
     const docs = await getDocuments();
     setDocuments(docs);
+    setCurrentDoc((prev) => {
+      if (!prev) return prev;
+      return docs.find((d) => d.id === prev.id) ?? prev;
+    });
   }, []);
 
   const loadSampleHandledRef = useRef(false);
@@ -273,6 +288,41 @@ function AppContent() {
     }
   }, [currentDoc, editContent, refresh]);
 
+  const performDownload = useCallback(() => {
+    if (!currentDoc) return;
+    const blob = new Blob([currentDoc.content], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = toMarkdownDownloadFilename(currentDoc.title);
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [currentDoc]);
+
+  const handleCloseDocument = useCallback(() => {
+    navigatingToHomeRef.current = true;
+    setCurrentDoc(null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(CURRENT_DOC_KEY);
+    }
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("doc");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [router, pathname, searchParams]);
+
+  useEffect(() => {
+    if (!currentDoc) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (editOpen || downloadConfirmOpen) return;
+      e.preventDefault();
+      handleCloseDocument();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [currentDoc, editOpen, downloadConfirmOpen, handleCloseDocument]);
+
   useEffect(() => {
     const loadSample = searchParams.get("loadSample");
     if (
@@ -340,8 +390,16 @@ function AppContent() {
           >
           {currentDoc ? (
             <>
-              <div className="mx-auto max-w-4xl">
-                <div className="mb-6 flex flex-col gap-3 print:mb-4">
+              <div className="relative mx-auto max-w-4xl">
+                <button
+                  type="button"
+                  aria-label="Close document and return to overview"
+                  className="absolute top-[-20] right-[-50] z-10 flex size-7 items-center justify-center rounded-[4px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-primary print:hidden"
+                  onClick={handleCloseDocument}
+                >
+                  <X className="size-4 shrink-0" strokeWidth={2.5} aria-hidden />
+                </button>
+                <div className="mb-6 flex flex-col gap-3 pr-9 print:mb-4">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
                       {(() => {
@@ -361,7 +419,7 @@ function AppContent() {
                         </p>
                       )}
                     </div>
-                    <div className="flex shrink-0 gap-2">
+                    <div className="flex shrink-0 flex-wrap gap-2">
                       <Button
                         type="button"
                         variant="neutral"
@@ -377,17 +435,7 @@ function AppContent() {
                         variant="neutral"
                         size="sm"
                         className="bg-background text-primary"
-                        onClick={() => {
-                          const blob = new Blob([currentDoc.content], {
-                            type: "text/markdown",
-                          });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement("a");
-                          a.href = url;
-                          a.download = `${currentDoc.title.replace(/\.md$/i, "")}.md`;
-                          a.click();
-                          URL.revokeObjectURL(url);
-                        }}
+                        onClick={() => setDownloadConfirmOpen(true)}
                       >
                         Download
                       </Button>
@@ -398,7 +446,7 @@ function AppContent() {
               </div>
             </>
           ) : (
-            <EmptyState />
+            <EmptyState hasDocuments={documents.length > 0} />
           )}
           </div>
 
@@ -452,6 +500,35 @@ function AppContent() {
           )}
         </div>
       </SidebarInset>
+
+      <AlertDialog
+        open={downloadConfirmOpen && !!currentDoc}
+        onOpenChange={(open) => {
+          setDownloadConfirmOpen(open);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Download document?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Save this document as{" "}
+              <span className="font-mono font-medium text-foreground">
+                {currentDoc ? toMarkdownDownloadFilename(currentDoc.title) : ""}
+              </span>
+              .
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="!bg-primary/90 hover:!bg-primary/90 !text-background border-2 border-black shadow-[2px_2px_0_0_#000] hover:!translate-x-0.5 hover:!translate-y-0.5 hover:!shadow-none"
+              onClick={() => performDownload()}
+            >
+              Download
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="sm:max-w-3xl max-h-[85vh] flex flex-col shadow-xl ring-1 ring-border/50">

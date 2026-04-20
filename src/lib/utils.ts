@@ -43,3 +43,23 @@ export function getFirstHeading(content: string): string | null {
   const match = content.match(/^#{1,6}\s+(.+)$/m);
   return match ? match[1].replace(/#+\s*$/, "").trim() : null;
 }
+
+/** Safe `.md` download name: strip extension, whitespace → underscores, lowercase stem. */
+export function toMarkdownDownloadFilename(title: string): string {
+  const base = title.replace(/\.md$/i, "").trim();
+  const stem = (base.replace(/\s+/g, "_") || "document").toLowerCase();
+  return `${stem}.md`;
+}
+
+/** Updates the first ATX heading to match the title, or prepends `# title` if none. */
+export function replaceFirstHeading(content: string, newTitle: string): string {
+  const trimmed = newTitle.trim();
+  if (!trimmed) return content;
+  const re = /^(#{1,6})\s+.+$/m;
+  const match = content.match(re);
+  if (match) {
+    const level = match[1];
+    return content.replace(re, `${level} ${trimmed}`);
+  }
+  return `# ${trimmed}\n\n${content}`;
+}

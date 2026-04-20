@@ -93,7 +93,7 @@ export function Search({ documents, onSelect }: SearchProps) {
             >
               <span className="flex flex-col items-start text-left">
                 <span className="font-medium truncate w-full">
-                  {getFirstHeading(doc.content) ?? doc.title}
+                  {doc.title.trim() || getFirstHeading(doc.content) || "Untitled"}
                 </span>
                 <span className="truncate w-full text-muted-foreground text-xs">
                   {doc.content.slice(0, 80).replace(/\n/g, " ")}...
