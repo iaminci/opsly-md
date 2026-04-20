@@ -1,6 +1,13 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
@@ -72,6 +79,7 @@ import { toast } from "sonner";
 
 const CURRENT_DOC_KEY = "md-viewer-current-doc";
 const RIGHT_TOC_OPEN_KEY = "md-viewer-right-toc-open";
+const DOC_STACK_ENABLED_KEY = "md-viewer-doc-stack-enabled";
 
 function formatDate(ts: number): string {
   return new Date(ts).toLocaleDateString(undefined, {
@@ -146,15 +154,28 @@ function AppContent() {
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [editContent, setEditContent] = useState("");
-  const [rightTocOpen, setRightTocOpen] = useState(true);
+  const [rightTocOpen, setRightTocOpen] = useState(false);
   const [downloadConfirmOpen, setDownloadConfirmOpen] = useState(false);
+  const [documentStackEnabled, setDocumentStackEnabled] = useState(false);
+  const [docStackIds, setDocStackIds] = useState<string[]>([]);
   const contentScrollRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    const v = localStorage.getItem(RIGHT_TOC_OPEN_KEY);
+    setRightTocOpen(v === "1");
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const v = localStorage.getItem(RIGHT_TOC_OPEN_KEY);
-    if (v === "0") setRightTocOpen(false);
+    const v = localStorage.getItem(DOC_STACK_ENABLED_KEY);
+    if (v === "1") setDocumentStackEnabled(true);
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(DOC_STACK_ENABLED_KEY, documentStackEnabled ? "1" : "0");
+  }, [documentStackEnabled]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -174,6 +195,12 @@ function AppContent() {
   useEffect(() => {
     refresh().finally(() => setLoading(false));
   }, [refresh]);
+
+  /** Seed stack when a doc is shown from URL/storage but stack is still empty. */
+  useEffect(() => {
+    if (!documentStackEnabled || !currentDoc) return;
+    setDocStackIds((prev) => (prev.length === 0 ? [currentDoc.id] : prev));
+  }, [documentStackEnabled, currentDoc?.id]);
 
   useEffect(() => {
     if (documents.length === 0) {
@@ -238,6 +265,9 @@ function AppContent() {
         currentDocIdRef.current = doc.id;
         setDocuments(updated);
         setCurrentDoc(doc);
+        if (documentStackEnabled) {
+          setDocStackIds((prev) => [...prev.filter((i) => i !== doc.id), doc.id]);
+        }
         const params = new URLSearchParams(searchParams.toString());
         params.set("doc", doc.id);
         router.replace(`${pathname}?${params.toString()}`, { scroll: false });
@@ -249,15 +279,27 @@ function AppContent() {
         }
       }
     },
-    [router, pathname, searchParams]
+    [router, pathname, searchParams, documentStackEnabled]
   );
 
-  const handleDeleteDocument = useCallback(async (id: string) => {
-    await deleteDocument(id);
-    const updated = await getDocuments();
-    setDocuments(updated);
-    setCurrentDoc((prev) => (prev?.id === id ? updated[0] ?? null : prev));
-  }, []);
+  const handleDeleteDocument = useCallback(
+    async (id: string) => {
+      await deleteDocument(id);
+      const updated = await getDocuments();
+      setDocuments(updated);
+      const nextStack = docStackIds.filter((x) => x !== id);
+      setDocStackIds(nextStack);
+      setCurrentDoc((prev) => {
+        if (prev?.id !== id) return prev;
+        if (documentStackEnabled && nextStack.length > 0) {
+          const topId = nextStack[nextStack.length - 1];
+          return updated.find((d) => d.id === topId) ?? null;
+        }
+        return updated[0] ?? null;
+      });
+    },
+    [documentStackEnabled, docStackIds]
+  );
 
   const handleEditOpen = useCallback(() => {
     if (currentDoc) {
@@ -299,7 +341,25 @@ function AppContent() {
     URL.revokeObjectURL(url);
   }, [currentDoc]);
 
-  const handleCloseDocument = useCallback(() => {
+  const handleCloseDocument = useCallback(async () => {
+    if (documentStackEnabled && docStackIds.length > 1) {
+      const nextStack = docStackIds.slice(0, -1);
+      const topId = nextStack[nextStack.length - 1];
+      setDocStackIds(nextStack);
+      navigatingToHomeRef.current = false;
+      const fresh = await getDocument(topId);
+      setCurrentDoc(fresh ?? null);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(CURRENT_DOC_KEY, topId);
+      }
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("doc", topId);
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      return;
+    }
+    if (documentStackEnabled) {
+      setDocStackIds([]);
+    }
     navigatingToHomeRef.current = true;
     setCurrentDoc(null);
     if (typeof window !== "undefined") {
@@ -309,7 +369,7 @@ function AppContent() {
     params.delete("doc");
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [router, pathname, searchParams]);
+  }, [documentStackEnabled, docStackIds, router, pathname, searchParams]);
 
   useEffect(() => {
     if (!currentDoc) return;
@@ -353,11 +413,23 @@ function AppContent() {
       <Sidebar
         documents={documents}
         currentId={currentDoc?.id ?? null}
+        documentStackEnabled={documentStackEnabled}
+        onDocumentStackEnabledChange={(checked) => {
+          setDocumentStackEnabled(checked);
+          if (!checked) {
+            setDocStackIds([]);
+          } else if (currentDoc) {
+            setDocStackIds([currentDoc.id]);
+          }
+        }}
         onSelectDocument={async (doc) => {
           navigatingToHomeRef.current = false;
           justSelectedDocIdRef.current = doc.id;
           const fresh = await getDocument(doc.id);
           setCurrentDoc(fresh ?? doc);
+          if (documentStackEnabled) {
+            setDocStackIds((prev) => [...prev.filter((i) => i !== doc.id), doc.id]);
+          }
           const params = new URLSearchParams(searchParams.toString());
           params.set("doc", doc.id);
           router.replace(`${pathname}?${params.toString()}`, { scroll: false });
@@ -379,7 +451,6 @@ function AppContent() {
             <span className="text-main">MD</span>
           </Link>
           <div className="ml-auto flex items-center gap-3">
-            {/* <DarkAccentPicker /> */}
             <ThemeToggle />
           </div>
         </header>

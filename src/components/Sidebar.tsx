@@ -62,6 +62,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Upload, Download, Trash2 } from "lucide-react";
 import {
   Collapsible,
@@ -92,6 +93,8 @@ interface SidebarProps {
   onDeleteDocument: (id: string) => void;
   onAddDocument: (title: string, content: string, workspaceId?: string, folderId?: string | null) => void;
   onRefresh: () => void;
+  documentStackEnabled: boolean;
+  onDocumentStackEnabledChange: (enabled: boolean) => void;
 }
 
 export function Sidebar({
@@ -101,6 +104,8 @@ export function Sidebar({
   onDeleteDocument,
   onAddDocument,
   onRefresh,
+  documentStackEnabled,
+  onDocumentStackEnabledChange,
 }: SidebarProps) {
   const { setOpen } = useSidebar();
   const [showPaste, setShowPaste] = useState(false);
@@ -659,6 +664,20 @@ export function Sidebar({
         </div>
 
         <div ref={moreMenuRef} className="shrink-0 border-t-0 px-2 py-2">
+          {!moreMenuOpen && (
+            <label
+              className="mb-2 flex w-full cursor-pointer items-center justify-between gap-2 rounded-base border-2 border-border bg-background px-3 py-1.5 text-muted-foreground"
+              title="When on, closing a document shows the one you viewed before it (in-memory)."
+            >
+              <span className="min-w-0 text-sm">Stack Docs</span>
+              <Switch
+                size="sm"
+                checked={documentStackEnabled}
+                onCheckedChange={onDocumentStackEnabledChange}
+                aria-label="Stack viewed documents when closing"
+              />
+            </label>
+          )}
           <Collapsible
             open={moreMenuOpen}
             onOpenChange={setMoreMenuOpen}
