@@ -27,7 +27,9 @@ function getSubtitle(content: string): string | null {
     const para: string[] = [];
     for (const line of afterHeading) {
       if (/^\s*$/.test(line)) break;
-      if (/^#{1,6}\s+/.test(line)) break; // stop at next heading, don't include raw markdown
+      // Next ATX line: valid (`## words`) or mistaken (`###oops` — CommonMark needs a space).
+      // Otherwise mistaken hashes get merged into the subtitle and duplicate/stray text appears under the title.
+      if (/^\s*#{1,6}/.test(line)) break;
       para.push(line.trim());
     }
     return para.join(" ").trim() || null;
@@ -156,7 +158,7 @@ function AppContent() {
   const [editContent, setEditContent] = useState("");
   const [rightTocOpen, setRightTocOpen] = useState(false);
   const [downloadConfirmOpen, setDownloadConfirmOpen] = useState(false);
-  const [documentStackEnabled, setDocumentStackEnabled] = useState(false);
+  const [documentStackEnabled, setDocumentStackEnabled] = useState(true);
   const [docStackIds, setDocStackIds] = useState<string[]>([]);
   const contentScrollRef = useRef<HTMLDivElement>(null);
 
@@ -166,10 +168,10 @@ function AppContent() {
     setRightTocOpen(v === "1");
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof window === "undefined") return;
     const v = localStorage.getItem(DOC_STACK_ENABLED_KEY);
-    if (v === "1") setDocumentStackEnabled(true);
+    if (v === "0") setDocumentStackEnabled(false);
   }, []);
 
   useEffect(() => {

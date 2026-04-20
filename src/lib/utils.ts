@@ -44,6 +44,29 @@ export function getFirstHeading(content: string): string | null {
   return match ? match[1].replace(/#+\s*$/, "").trim() : null;
 }
 
+/** ATX heading requires a space after the # run; otherwise the next line soft-joins into one paragraph. */
+const INVALID_ATX_LINE = /^\s{0,3}#{1,6}(?=\S)/;
+
+/**
+ * Insert a blank line after invalid ATX-looking lines when the following line is non-empty prose,
+ * so CommonMark does not merge them into a single paragraph.
+ */
+export function normalizeInvalidAtxParagraphBreaks(content: string): string {
+  const lines = content.split(/\r?\n/);
+  const out: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (
+      i > 0 &&
+      INVALID_ATX_LINE.test(lines[i - 1]!) &&
+      lines[i]!.trim() !== ""
+    ) {
+      out.push("");
+    }
+    out.push(lines[i]!);
+  }
+  return out.join("\n");
+}
+
 /** Safe `.md` download name: strip extension, whitespace → underscores, lowercase stem. */
 export function toMarkdownDownloadFilename(title: string): string {
   const base = title.replace(/\.md$/i, "").trim();

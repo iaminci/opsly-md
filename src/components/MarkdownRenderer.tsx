@@ -10,7 +10,7 @@ import { buildHeadingManifest, slugifyHeadingText } from "@/lib/heading-manifest
 import rehypeKatex from "rehype-katex";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
-import { reactNodeToPlainText } from "@/lib/utils";
+import { normalizeInvalidAtxParagraphBreaks, reactNodeToPlainText } from "@/lib/utils";
 import { CodeBlock } from "./CodeBlock";
 import { MermaidDiagram } from "./MermaidDiagram";
 import type { Components } from "react-markdown";
@@ -27,7 +27,14 @@ function isMermaidCode(lang: string | undefined): boolean {
 }
 
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
-  const manifest = useMemo(() => buildHeadingManifest(content), [content]);
+  const normalizedContent = useMemo(
+    () => normalizeInvalidAtxParagraphBreaks(content),
+    [content]
+  );
+  const manifest = useMemo(
+    () => buildHeadingManifest(normalizedContent),
+    [normalizedContent]
+  );
   const headingIndexRef = useRef(0);
   headingIndexRef.current = 0;
 
@@ -113,7 +120,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         ]}
         components={components}
       >
-        {content}
+        {normalizedContent}
       </ReactMarkdown>
     </article>
   );

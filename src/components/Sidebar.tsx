@@ -828,21 +828,27 @@ export function Sidebar({
             <DialogTitle className="text-lg font-semibold">Create Markdown</DialogTitle>
           </DialogHeader>
           <div className="min-h-0 flex-1 space-y-3 py-2">
-            <div className="space-y-1.5">
-              <label htmlFor="create-markdown-title" className="text-sm font-medium text-foreground">
-                Title or filename
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="create-markdown-title"
+                className="block text-sm font-medium text-foreground"
+              >
+                File Name
               </label>
               <Input
                 id="create-markdown-title"
                 value={pasteTitle}
                 onChange={(e) => setPasteTitle(e.target.value)}
-                placeholder="e.g. Notes or README.md"
+                placeholder="Enter filename...  "
                 className="font-mono text-sm"
                 autoComplete="off"
               />
             </div>
-            <div className="space-y-1.5">
-              <label htmlFor="create-markdown-body" className="text-sm font-medium text-foreground">
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="create-markdown-body"
+                className="block text-sm font-medium text-foreground"
+              >
                 Markdown
               </label>
               <Textarea
