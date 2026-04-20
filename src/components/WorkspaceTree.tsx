@@ -23,6 +23,7 @@ import {
   MoreHorizontal,
   Pencil,
   FileBraces,
+  FilePlus,
   Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -576,13 +577,17 @@ function WorkspaceSection({
                   className="min-w-0 w-max whitespace-nowrap rounded-md border-border-2 bg-sidebar p-1 font-heading shadow-sm"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <DropdownMenuItem onClick={() => onAddFolder(workspace.id, null)}>
-                    <FolderIcon className="mr-2 size-4 text-muted" />
-                    Add folder
+                  <DropdownMenuItem onClick={() => onAddFile(workspace.id, null)}>
+                    <FilePlus className="mr-2 size-4 text-muted" />
+                    Create File
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onUploadFile(workspace.id, null)}>
                     <FileBraces className="mr-2 size-4 text-muted" />
-                    Upload file
+                    Upload File
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onAddFolder(workspace.id, null)}>
+                    <FolderIcon className="mr-2 size-4 text-muted" />
+                    Create Folder
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onRenameWorkspace(workspace.id, workspace.name)}>
                     <Pencil className="mr-2 size-4" />
@@ -868,13 +873,17 @@ function FolderItem({
                 className="min-w-0 w-max whitespace-nowrap rounded-md border-border-2 bg-sidebar p-1 font-heading shadow-sm"
                 onClick={(e) => e.stopPropagation()}
               >
-                <DropdownMenuItem onClick={() => onAddFolder(workspaceId, folder.id)}>
-                  <FolderIcon className="mr-2 size-4 text-muted" />
-                  Add folder
+                <DropdownMenuItem onClick={() => onAddFile(workspaceId, folder.id)}>
+                  <FilePlus className="mr-2 size-4 text-muted" />
+                  Create File
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onUploadFile(workspaceId, folder.id)}>
                   <FileBraces className="mr-2 size-4 text-muted" />
-                  Upload file
+                  Upload File
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onAddFolder(workspaceId, folder.id)}>
+                  <FolderIcon className="mr-2 size-4 text-muted" />
+                  Create Folder
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onRenameFolder(folder.id, folder.name)}>
                   <Pencil className="mr-2 size-4" />

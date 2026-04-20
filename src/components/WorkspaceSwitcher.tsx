@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   ChevronDown,
-  FileIcon,
+  FileBraces,
+  FilePlus,
   FolderIcon,
   MoreHorizontal,
   Pencil,
@@ -51,6 +52,7 @@ interface WorkspaceSwitcherProps {
   onWorkspaceMenuOpenChange?: (open: boolean) => void;
   onAddFolder?: (workspaceId: string, parentFolderId: string | null) => void;
   onUploadFile?: (workspaceId: string, folderId: string | null) => void;
+  onCreateFile?: (workspaceId: string, folderId: string | null) => void;
   onRenameWorkspace?: (id: string, name: string) => void;
 }
 
@@ -62,6 +64,7 @@ export function WorkspaceSwitcher({
   onWorkspaceMenuOpenChange,
   onAddFolder,
   onUploadFile,
+  onCreateFile,
   onRenameWorkspace,
 }: WorkspaceSwitcherProps) {
   const selected = selectedId
@@ -70,7 +73,11 @@ export function WorkspaceSwitcher({
   const label = selected ? selected.name : "All Workspaces";
   const isAllWorkspaces = selectedId === null;
   const workspaceActionsAvailable =
-    Boolean(selected) && onAddFolder && onUploadFile && onRenameWorkspace;
+    Boolean(selected) &&
+    onAddFolder &&
+    onUploadFile &&
+    onCreateFile &&
+    onRenameWorkspace;
 
   return (
     <SidebarMenu
@@ -176,16 +183,22 @@ export function WorkspaceSwitcher({
               onClick={(e) => e.stopPropagation()}
             >
               <DropdownMenuItem
-                onClick={() => onAddFolder(selectedId, null)}
+                onClick={() => onCreateFile(selectedId, null)}
               >
-                <FolderIcon className="mr-2 size-4" />
-                Add folder
+                <FilePlus className="mr-2 size-4" />
+                Create File
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onUploadFile(selectedId, null)}
               >
-                <FileIcon className="mr-2 size-4" />
-                Upload file
+                <FileBraces className="mr-2 size-4" />
+                Upload File
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onAddFolder(selectedId, null)}
+              >
+                <FolderIcon className="mr-2 size-4" />
+                Create Folder
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onRenameWorkspace(selectedId, selected.name)}

@@ -101,6 +101,11 @@ export function Sidebar({
 }: SidebarProps) {
   const { setOpen } = useSidebar();
   const [showPaste, setShowPaste] = useState(false);
+  /** When set, Create Markdown saves into this workspace/folder; when null, uses sidebar workspace filter + root. */
+  const [pasteTarget, setPasteTarget] = useState<{
+    workspaceId: string;
+    folderId: string | null;
+  } | null>(null);
   const [pasteValue, setPasteValue] = useState("");
   const [workspaceDialogOpen, setWorkspaceDialogOpen] = useState(false);
   const [folderDialogOpen, setFolderDialogOpen] = useState(false);
@@ -308,6 +313,11 @@ export function Sidebar({
         toast.error("Failed to create file.");
       }
     }
+  };
+
+  const handleOpenCreateMarkdown = (workspaceId: string, folderId: string | null) => {
+    setPasteTarget({ workspaceId, folderId });
+    setShowPaste(true);
   };
 
   const handleRenameWorkspace = (id: string, name: string) => {
@@ -573,7 +583,10 @@ export function Sidebar({
                   variant="neutral"
                   size="sm"
                   className="h-9 w-full min-w-0 justify-center whitespace-nowrap px-3 text-foreground hover:text-primary-hover"
-                  onClick={() => setShowPaste(true)}
+                  onClick={() => {
+                    setPasteTarget(null);
+                    setShowPaste(true);
+                  }}
                 >
                   Create
                 </Button>
@@ -594,6 +607,7 @@ export function Sidebar({
                 onWorkspaceMenuOpenChange={setWorkspaceSwitcherMenuOpen}
                 onAddFolder={handleAddFolder}
                 onUploadFile={handleUploadFile}
+                onCreateFile={handleOpenCreateMarkdown}
                 onRenameWorkspace={handleRenameWorkspace}
               />
             </SidebarGroupContent>
@@ -614,7 +628,7 @@ export function Sidebar({
               onDeleteDocument={handleDeleteDocumentRequest}
               onAddWorkspace={handleAddWorkspace}
               onAddFolder={handleAddFolder}
-              onAddFile={handleAddFile}
+              onAddFile={handleOpenCreateMarkdown}
               onUploadFile={handleUploadFile}
               onMoveDocument={handleMoveDocument}
               onMoveFolder={handleMoveFolder}
@@ -763,7 +777,16 @@ export function Sidebar({
         onSubmit={handleRenameDocumentSubmit}
       />
 
-      <Dialog open={showPaste} onOpenChange={(open) => { setShowPaste(open); if (!open) setPasteValue(""); }}>
+      <Dialog
+        open={showPaste}
+        onOpenChange={(open) => {
+          setShowPaste(open);
+          if (!open) {
+            setPasteValue("");
+            setPasteTarget(null);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-3xl max-h-[85vh] flex flex-col shadow-xl ring-1 ring-border/50">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold">Create Markdown</DialogTitle>
@@ -785,8 +808,11 @@ export function Sidebar({
                 const trimmed = pasteValue.trim();
                 if (!trimmed) return;
                 const title = getFirstHeading(trimmed) ?? (trimmed.split("\n")[0]?.trim() || "Untitled");
-                await onAddDocument(title, trimmed, selectedWorkspaceId ?? undefined, null);
+                const wsId = pasteTarget?.workspaceId ?? selectedWorkspaceId ?? undefined;
+                const folderId = pasteTarget?.folderId ?? null;
+                await onAddDocument(title, trimmed, wsId, folderId);
                 setPasteValue("");
+                setPasteTarget(null);
                 setShowPaste(false);
               }}
               disabled={!pasteValue.trim()}
