@@ -205,6 +205,34 @@ body {
   --sidebar-guide: oklch(48% 0 0 / 0.35);
 }
 
+/* Unlayered: in-app ::selection must not live only in @layer base (Tailwind v4 can cascade it below preflight
+   or parse color-mix() inconsistently for ::selection). */
+::selection,
+::-moz-selection {
+  color: var(--primary-foreground);
+  /* #ef4400 at ~90% — works even when color-mix is ignored on ::selection */
+  background-color: rgb(239 68 0 / 0.9);
+}
+@supports (background-color: color-mix(in srgb, red, blue)) {
+  ::selection,
+  ::-moz-selection {
+    background-color: color-mix(in srgb, var(--primary) 80%, transparent);
+  }
+}
+
+/* Grey selection when window/tab is unfocused (see `WindowInactiveAttribute` on <html>).
+   `html … ::selection` is invalid: ::selection must be attached to an element; use *::selection. */
+html[data-window-inactive] *::selection,
+html[data-window-inactive] *::-moz-selection {
+  color: var(--foreground);
+  background-color: #c8c8c8;
+}
+html[data-window-inactive].dark *::selection,
+html[data-window-inactive].dark *::-moz-selection {
+  color: var(--foreground);
+  background-color: #5a5a5a;
+}
+
 /* Dark mode accent variables - only affect dark mode, light mode untouched */
 .dark[data-dark-accent="sky"] {
   --dm-text: #38bdf8;

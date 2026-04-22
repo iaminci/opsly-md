@@ -88,6 +88,23 @@ const CURRENT_DOC_KEY = "md-viewer-current-doc";
 const RIGHT_TOC_OPEN_KEY = "md-viewer-right-toc-open";
 const DOC_STACK_ENABLED_KEY = "md-viewer-doc-stack-enabled";
 
+/**
+ * Open Radix overlays that handle Escape. Used in the capture phase so we still see
+ * [data-state=open] before Radix dismisses a dialog (in the bubble phase, React may
+ * already have unmounted the dialog and `editOpen` can be false — causing a second Esc effect).
+ */
+const ESCAPE_BLOCKING_OVERLAY_SELECTOR = [
+  '[data-state="open"][data-slot="dialog-content"]',
+  '[data-state="open"][data-slot="alert-dialog-content"]',
+  '[data-state="open"][data-slot="sheet-content"]',
+  '[data-state="open"][data-slot="dropdown-menu-content"]',
+].join(",");
+
+function hasOpenEscapeBlockingOverlay(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.querySelector(ESCAPE_BLOCKING_OVERLAY_SELECTOR) !== null;
+}
+
 function formatDate(ts: number): string {
   return new Date(ts).toLocaleDateString(undefined, {
     year: "numeric",
@@ -431,12 +448,19 @@ function AppContent() {
     if (!currentDoc) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      if (editOpen || downloadConfirmOpen) return;
+      if (
+        editOpen ||
+        downloadConfirmOpen ||
+        hasOpenEscapeBlockingOverlay()
+      ) {
+        return;
+      }
       e.preventDefault();
       handleCloseDocument();
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    // Capture: run before Radix dismiss-on-Escape unmounts the dialog, so we don’t also close the doc.
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
   }, [currentDoc, editOpen, downloadConfirmOpen, handleCloseDocument]);
 
   useEffect(() => {
@@ -519,8 +543,8 @@ function AppContent() {
             <>
               <DocumentColumn rightTocOpen={rightTocOpen}>
                 <div className="mb-6 flex flex-col gap-3 print:mb-4">
-                  <div className="flex w-full min-w-0 flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-start lg:gap-4">
-                    <div className="min-w-0 w-full min-h-0 lg:min-w-0 lg:flex-1 lg:basis-0">
+                  <div className="flex w-full min-w-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between lg:gap-4">
+                    <div className="min-h-0 min-w-0 w-full lg:w-auto lg:min-w-0 lg:flex-1 lg:basis-0">
                       {(() => {
                         const firstHeading = getFirstHeading(currentDoc.content);
                         // When content has a heading, it will be rendered by MarkdownRenderer—don't duplicate.
@@ -538,7 +562,12 @@ function AppContent() {
                         </p>
                       )}
                     </div>
-                    <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-3 md:gap-4 lg:ml-auto lg:w-auto lg:shrink-0">
+                    <div
+                      className={cn(
+                        "flex w-full min-w-0 shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3 md:gap-5 lg:w-auto",
+                        rightTocOpen ? "lg:mr-0" : "lg:-mr-30"
+                      )}
+                    >
                       <Button
                         type="button"
                         variant="neutral"
@@ -546,7 +575,7 @@ function AppContent() {
                         className="text-primary hover:text-primary-hover"
                         onClick={handleEditOpen}
                       >
-                        <Pencil className="mr-1.5 size-4" />
+                        <Pencil className="size-4" />
                         Edit
                       </Button>
                       <Button

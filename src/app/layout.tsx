@@ -3,6 +3,7 @@ import { Fira_Code } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { WindowInactiveAttribute } from "@/components/WindowInactiveAttribute";
 import "./globals.css";
 
 const firaCode = Fira_Code({
@@ -48,6 +49,7 @@ export default function RootLayout({
           }}
         />
         <ThemeProvider>
+          <WindowInactiveAttribute />
           <TooltipProvider>{children}</TooltipProvider>
           <Toaster />
         </ThemeProvider>
