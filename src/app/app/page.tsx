@@ -74,7 +74,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
@@ -110,6 +115,55 @@ function DocumentInfo({ doc }: { doc: Document }) {
         <span className="font-medium text-foreground">Reading time</span>
         <p>~{readingMinutes} min</p>
       </div>
+    </div>
+  );
+}
+
+function useLgAndUp() {
+  const [lg, setLg] = useState(
+    () =>
+      typeof globalThis !== "undefined" &&
+      "matchMedia" in globalThis &&
+      globalThis.matchMedia("(min-width: 1024px)").matches
+  );
+  useEffect(() => {
+    const mq = globalThis.matchMedia("(min-width: 1024px)");
+    const on = () => setLg(mq.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  return lg;
+}
+
+/** Wider reading column when the left sidebar or right TOC (or both) is collapsed. */
+function DocumentColumn({
+  rightTocOpen,
+  children,
+}: {
+  rightTocOpen: boolean;
+  children: React.ReactNode;
+}) {
+  const { open, isMobile } = useSidebar();
+  const isLg = useLgAndUp();
+  const leftSidebarExpanded = !isMobile && open;
+  const rightTocTakesSpace = isLg && rightTocOpen;
+  const tightPanels =
+    (leftSidebarExpanded ? 1 : 0) + (rightTocTakesSpace ? 1 : 0);
+  const maxClass =
+    tightPanels >= 2
+      ? "max-w-4xl"
+      : tightPanels === 1
+        ? "max-w-6xl"
+        : "max-w-7xl";
+
+  return (
+    <div
+      className={cn(
+        "relative mx-auto w-full min-w-0 transition-[max-width] duration-200 ease-linear",
+        maxClass
+      )}
+    >
+      {children}
     </div>
   );
 }
@@ -459,27 +513,14 @@ function AppContent() {
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <div
             ref={contentScrollRef}
-            className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-8 py-8 print:px-0"
+            className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden py-8 pl-8 pr-8 print:px-0 lg:pl-8 lg:pr-12"
           >
           {currentDoc ? (
             <>
-              <div className="relative mx-auto max-w-4xl">
-                <button
-                  type="button"
-                  aria-label="Close document and return to overview"
-                  className={cn(
-                    "flex size-7 items-center justify-center rounded-[4px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-primary print:hidden",
-                    rightTocOpen
-                      ? "absolute top-[-20] right-[-50] z-10"
-                      : "z-30 max-lg:absolute max-lg:top-[-20] max-lg:right-[-50] max-lg:z-10 lg:fixed lg:right-4 lg:top-[calc(3.625rem+0.5rem)]"
-                  )}
-                  onClick={handleCloseDocument}
-                >
-                  <X className="size-4 shrink-0" strokeWidth={2.5} aria-hidden />
-                </button>
-                <div className="mb-6 flex flex-col gap-3 pr-9 print:mb-4">
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
+              <DocumentColumn rightTocOpen={rightTocOpen}>
+                <div className="mb-6 flex flex-col gap-3 print:mb-4">
+                  <div className="flex w-full min-w-0 flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-start lg:gap-4">
+                    <div className="min-w-0 w-full min-h-0 lg:min-w-0 lg:flex-1 lg:basis-0">
                       {(() => {
                         const firstHeading = getFirstHeading(currentDoc.content);
                         // When content has a heading, it will be rendered by MarkdownRenderer—don't duplicate.
@@ -497,7 +538,7 @@ function AppContent() {
                         </p>
                       )}
                     </div>
-                    <div className="flex shrink-0 flex-wrap gap-2">
+                    <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-3 md:gap-4 lg:ml-auto lg:w-auto lg:shrink-0">
                       <Button
                         type="button"
                         variant="neutral"
@@ -517,11 +558,19 @@ function AppContent() {
                       >
                         Download
                       </Button>
+                      <button
+                        type="button"
+                        aria-label="Close document and return to overview"
+                        className="flex size-7 shrink-0 items-center justify-center rounded-[4px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-primary print:hidden"
+                        onClick={handleCloseDocument}
+                      >
+                        <X className="size-4 shrink-0" strokeWidth={2.5} aria-hidden />
+                      </button>
                     </div>
                   </div>
                 </div>
                 <MarkdownRenderer content={currentDoc.content} />
-              </div>
+              </DocumentColumn>
             </>
           ) : (
             <EmptyState hasDocuments={documents.length > 0} />
