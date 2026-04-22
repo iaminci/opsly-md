@@ -10,7 +10,7 @@ import { buildHeadingManifest, slugifyHeadingText } from "@/lib/heading-manifest
 import rehypeKatex from "rehype-katex";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
-import { normalizeInvalidAtxParagraphBreaks, reactNodeToPlainText } from "@/lib/utils";
+import { cn, normalizeInvalidAtxParagraphBreaks, reactNodeToPlainText } from "@/lib/utils";
 import { CodeBlock } from "./CodeBlock";
 import { MermaidDiagram } from "./MermaidDiagram";
 import type { Components } from "react-markdown";
@@ -110,7 +110,17 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   );
 
   return (
-    <article className="prose prose-zinc dark:prose-invert max-w-none">
+    <article
+      className={cn(
+        "prose prose-zinc dark:prose-invert max-w-none",
+        "[&_h1]:!text-foreground [&_h2]:!text-foreground [&_h3]:!text-foreground",
+        "[&_h4]:!text-foreground [&_h5]:!text-foreground [&_h6]:!text-foreground",
+        "[&_p]:!text-foreground [&_ul]:!text-foreground [&_ol]:!text-foreground [&_li]:!text-foreground",
+        "[&_blockquote]:!text-foreground [&_strong]:!text-foreground [&_em]:!text-foreground",
+        "[&_figcaption]:!text-foreground [&_th]:!text-foreground [&_td]:!text-muted-foreground",
+        "[&_a]:!text-primary"
+      )}
+    >
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath, remarkCodeBlockLang, remarkTreeStructure]}
         rehypePlugins={[

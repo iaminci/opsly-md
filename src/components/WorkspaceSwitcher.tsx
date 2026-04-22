@@ -22,6 +22,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { Button } from "./ui/button";
 
 const workspaceTabBaseClassName =
   "!h-9 !min-h-9 !rounded-[5px] !border-2 !border-border !font-heading !font-bold !shadow-shadow !outline-0 transition-[transform,box-shadow] hover:!translate-x-[2px] hover:!translate-y-[2px] hover:!shadow-shadow hover:!outline-0 focus-visible:!outline-0 focus-visible:!shadow-shadow";
@@ -142,8 +143,8 @@ export function WorkspaceSwitcher({
       </SidebarMenuItem>
       {onAddWorkspace && selectedId === null ? (
         <SidebarMenuItem className="w-auto shrink-0">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
             title="New workspace"
             aria-label="New workspace"
             onClick={onAddWorkspace}
@@ -152,8 +153,8 @@ export function WorkspaceSwitcher({
               "inline-flex w-9 min-w-9 shrink-0 items-center justify-center px-0"
             )}
           >
-            <Plus className="size-4 shrink-0" />
-          </button>
+            <Plus className="size-4 shrink-0 text-primary" />
+          </Button>
         </SidebarMenuItem>
       ) : null}
       {workspaceActionsAvailable && selected && selectedId ? (
@@ -164,8 +165,8 @@ export function WorkspaceSwitcher({
             }}
           >
             <DropdownMenuTrigger asChild>
-              <button
-                type="button"
+              <Button
+                variant="ghost"
                 title="Workspace actions"
                 aria-label="Workspace actions"
                 className={cn(
@@ -173,8 +174,8 @@ export function WorkspaceSwitcher({
                   "inline-flex w-9 min-w-9 shrink-0 items-center justify-center px-0"
                 )}
               >
-                <MoreHorizontal className="size-4 shrink-0" />
-              </button>
+                <MoreHorizontal className="size-4 shrink-0 text-primary" />
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"

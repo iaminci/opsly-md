@@ -21,13 +21,20 @@ export function CodeBlock({ className, children }: CodeBlockProps) {
 
   return (
     <div className="group relative my-4">
-      <pre className="overflow-x-auto rounded-md bg-[#0d1117] p-4 text-sm font-mono whitespace-pre">
-        <code className={cn("font-mono", className)}>{children}</code>
+      <pre className="overflow-x-auto rounded-md border border-border p-0">
+        <code
+          className={cn(
+            "block w-full p-4 text-sm font-mono whitespace-pre",
+            className
+          )}
+        >
+          {children}
+        </code>
       </pre>
       <button
         type="button"
         onClick={copy}
-        className="absolute right-2 top-2 rounded border border-zinc-600 bg-zinc-800 px-2 py-1 text-xs text-zinc-300 opacity-0 transition-opacity hover:bg-zinc-700 group-hover:opacity-100 dark:border-zinc-500 dark:bg-zinc-700 dark:text-zinc-200"
+        className="absolute right-4 top-4 z-10 rounded border border-zinc-600 bg-zinc-800 px-2 py-1 text-xs text-zinc-300 opacity-0 transition-opacity hover:bg-zinc-700 group-hover:opacity-100 dark:border-zinc-500 dark:bg-zinc-700 dark:text-zinc-200"
       >
         {copied ? "Copied!" : "Copy"}
       </button>
