@@ -236,7 +236,7 @@ function AppContent() {
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
     const v = localStorage.getItem(RIGHT_TOC_OPEN_KEY);
-    setRightTocOpen(v === "1");
+    setRightTocOpen(v !== "0");
   }, []);
 
   useLayoutEffect(() => {
