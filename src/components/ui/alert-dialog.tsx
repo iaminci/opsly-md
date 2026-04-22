@@ -8,10 +8,10 @@ import { cn } from "@/lib/utils"
 
 /** Neo-brutalist panel: cream surface, thick black border, hard offset shadow (reference UI). */
 const alertDialogSurface =
-  "border-2 border-black bg-background font-[ui-sans-serif,system-ui,sans-serif] shadow-[2px_2px_0_0_#000] dark:border-white dark:bg-card dark:shadow-[2px_2px_0_0_#fff]"
+  "border-2 border-foreground bg-background font-[ui-sans-serif,system-ui,sans-serif] shadow-[2px_2px_0_0_#000]"
 
 const alertDialogOverlayClasses =
-  "fixed inset-0 isolate z-50 bg-black/20 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 dark:bg-black/55"
+  "fixed inset-0 isolate z-50 bg-black/20 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
 
 function AlertDialog({
   ...props
@@ -61,7 +61,7 @@ const AlertDialogContent = React.forwardRef<
       data-slot="alert-dialog-content"
       data-size={size}
       className={cn(
-        "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-base p-5 text-black outline-none duration-100 dark:text-background",
+        "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-base p-5 text-foreground outline-none duration-100",
         alertDialogSurface,
         "data-[size=default]:max-w-md data-[size=sm]:max-w-xs data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
         className
@@ -109,7 +109,7 @@ function AlertDialogMedia({
     <div
       data-slot="alert-dialog-media"
       className={cn(
-        "mb-2 inline-flex size-10 items-center justify-center rounded-md bg-black/5 dark:bg-white/10 *:[svg:not([class*='size-'])]:size-6",
+        "mb-2 inline-flex size-10 items-center justify-center rounded-md bg-foreground *:[svg:not([class*='size-'])]:size-6",
         className
       )}
       {...props}
@@ -151,10 +151,10 @@ AlertDialogDescription.displayName =
   AlertDialogPrimitive.Description.displayName
 
 const alertDialogActionClassName =
-  "border-2 border-black bg-destructive text-background shadow-[2px_2px_0_0_#000] hover:!bg-destructive hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+  "border-2 border-foreground bg-destructive text-background shadow-[2px_2px_0_0_#000] hover:!bg-destructive hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
 
 const alertDialogCancelClassName =
-  "border-2 border-black bg-white text-primary shadow-[2px_2px_0_0_#000] hover:!bg-white hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+  "border-2 border-foreground bg-background text-primary shadow-[2px_2px_0_0_#000] hover:!bg-background hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
 
 function AlertDialogAction({
   className,

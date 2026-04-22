@@ -675,7 +675,7 @@ function AppContent() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="!bg-primary/90 hover:!bg-primary/90 !text-background border-2 border-black shadow-[2px_2px_0_0_#000] hover:!translate-x-0.5 hover:!translate-y-0.5 hover:!shadow-none"
+              className="!bg-primary/90 hover:!bg-primary/90 !text-background border-2 border-foreground shadow-[2px_2px_0_0_#000] hover:!translate-x-0.5 hover:!translate-y-0.5 hover:!shadow-none"
               onClick={() => performDownload()}
             >
               Download

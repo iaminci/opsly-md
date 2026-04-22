@@ -168,40 +168,40 @@ body {
 }
 
 .dark {
-  --background: oklch(0% 0.0 0);
-  --secondary-background: oklch(0% 0 0);
-  --foreground: oklch(100% 0 0);
-  --main-foreground: oklch(0% 0 0);
-  --main: #ef4400;
-  --border: oklch(100% 0 0);
-  --ring: oklch(100% 0 0);
+  --background: #0f0f0f;
+  --secondary-background: #0f0f0f;
+  --foreground: oklch(85% 0 0);
+  --main-foreground: #0f0f0f;
+  --main: #f97316;
+  --border: #959595;
+  --ring: #959595;
   --shadow: 1px 1px 0px 0px var(--border);
   --radius: 0.5rem;
   --muted: #a6a5a5;
-  --muted-foreground: #ffb679;
+  --muted-foreground: #a42439;
   --card: #1a1a1a;
-  --card-foreground: #ffffff;
+  --card-foreground: #959595;
   --popover: #1a1a1a;
-  --popover-foreground: #ffffff;
+  --popover-foreground: #959595;
   --input: #2a2a2a;
-  --primary: #ef4400;
-  --primary-hover: #ff8011;
+  --primary: #f97316;
+  --primary-hover: #ff6a1a;
   --primary-foreground: #fdead9;
-  --secondary: #ef8c27;
+  --secondary: #2a2a2a;
   --secondary-hover: #d97820;
   --secondary-foreground: #000000;
-  --accent: #ff6b6b;
+  --accent: #2a2a2a;
   --accent-foreground: #000000;
-  --destructive: #fe3b3b;
-  --destructive-foreground: #ffffff;
+  --destructive: #d00000;
+  --destructive-foreground: #959595;
   --sidebar: #1a1a1a;
-  --sidebar-foreground: #f5f5f5;
-  --sidebar-primary: #ef4400;
+  --sidebar-foreground: #959595;
+  --sidebar-primary: #f97316;
   --sidebar-primary-foreground: #141414;
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(100% 0 0);
-  --sidebar-ring: oklch(100% 0 0);
+  --sidebar-border: #959595;
+  --sidebar-ring: #959595;
   --sidebar-guide: oklch(48% 0 0 / 0.35);
 }
 
@@ -216,7 +216,7 @@ body {
 @supports (background-color: color-mix(in srgb, red, blue)) {
   ::selection,
   ::-moz-selection {
-    background-color: color-mix(in srgb, var(--primary) 80%, transparent);
+    background-color: color-mix(in srgb, var(--primary) 70%, transparent);
   }
 }
 
@@ -354,8 +354,8 @@ html[data-window-inactive].dark *::-moz-selection {
   body {
     @apply text-foreground font-base bg-background;
   }
-  h1, h2, h3, h4, h5, h6{
-    @apply font-heading;
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading text-foreground;
   }
   html {
     @apply font-sans;
@@ -387,4 +387,36 @@ html[data-window-inactive].dark *::-moz-selection {
   ::view-transition-new(*) {
     animation: none !important;
   }
+}
+
+/*
+ * Markdown / Typography: @tailwindcss/typography + dark:prose-invert set colors that
+ * load late. Keep this block last; use !important so copy uses theme tokens.
+ */
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6,
+.prose p,
+.prose ul,
+.prose ol,
+.prose li,
+.prose blockquote,
+.prose strong,
+.prose em,
+.prose dd,
+.prose dt,
+.prose figcaption,
+.prose th {
+  color: var(--foreground) !important;
+}
+
+.prose td {
+  color: var(--muted-foreground) !important;
+}
+
+.prose a {
+  color: var(--primary) !important;
 }
