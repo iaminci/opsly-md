@@ -125,7 +125,7 @@ const AlertDialogTitle = React.forwardRef<
     ref={ref}
     data-slot="alert-dialog-title"
     className={cn(
-      "text-lg font-bold leading-snug tracking-tight text-black dark:text-background",
+      "text-lg font-bold leading-snug tracking-tight text-foreground",
       className
     )}
     {...props}
@@ -141,7 +141,7 @@ const AlertDialogDescription = React.forwardRef<
     ref={ref}
     data-slot="alert-dialog-description"
     className={cn(
-      "text-sm leading-relaxed text-muted-foreground *:[a]:underline *:[a]:underline-offset-2 *:[a]:hover:text-black dark:text-neutral-200 dark:*:[a]:hover:text-background",
+      "text-sm leading-relaxed text-destructive *:[a]:underline *:[a]:underline-offset-2 *:[a]:hover:text-black",
       className
     )}
     {...props}

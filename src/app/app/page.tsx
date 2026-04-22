@@ -210,7 +210,7 @@ function AppContent() {
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [editContent, setEditContent] = useState("");
-  const [rightTocOpen, setRightTocOpen] = useState(false);
+  const [rightTocOpen, setRightTocOpen] = useState(true);
   const [downloadConfirmOpen, setDownloadConfirmOpen] = useState(false);
   const [documentStackEnabled, setDocumentStackEnabled] = useState(true);
   const [docStackIds, setDocStackIds] = useState<string[]>([]);

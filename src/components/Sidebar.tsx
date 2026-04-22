@@ -1087,7 +1087,7 @@ export function Sidebar({
               disabled={exportSelectedIds.size === 0}
               className="bg-primary/90 text-background hover:bg-primary/90"
             >
-              Export {exportSelectedIds.size > 0 ? `(${exportSelectedIds.size})` : ""}
+              Export
             </Button>
           </DialogFooter>
         </DialogContent>

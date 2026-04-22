@@ -24,7 +24,7 @@ function Checkbox({
         data-slot="checkbox-indicator"
         className={cn("flex items-center justify-center text-current")}
       >
-        <Check className="size-4 text-main-foreground" />
+        <Check className="size-4 text-white" />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )
