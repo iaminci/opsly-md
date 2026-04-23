@@ -1050,7 +1050,7 @@ function FileItem({
                 "flex min-h-6 min-w-0 flex-1 items-center justify-start gap-2 truncate border-0 bg-transparent text-left text-base font-base transition-colors hover:bg-transparent",
                 fileTintPrimary ? "opacity-100" : "opacity-[0.85]",
                 fileLooksSelected && "font-medium",
-                fileTintPrimary && "text-foreground bg-primary/20 hover:bg-transparent rounded-base",
+                fileTintPrimary && "text-foreground bg-primary/20 hover:bg-transparent border-1 hover:border-0 rounded-base",
                 !fileTintPrimary && "text-muted",
                 "group-hover/file:!text-primary",
                 nameTruncated && "min-w-0"
