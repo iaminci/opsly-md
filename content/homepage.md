@@ -1,6 +1,6 @@
 <h1 class="site-logo-heading" id="opsly-md">
-  <img class="site-logo-light" src="/light-md.png" alt="Opsly MD" width="1592" height="988" loading="eager" decoding="async" />
-  <img class="site-logo-dark" src="/dark-md.png" alt="Opsly MD" width="1592" height="988" loading="eager" decoding="async" />
+  <img class="site-logo-light" src="/light-md.png" alt="Opsly MD" width="1592" height="988" loading="eager" decoding="async" style="width: 5.25em" />
+  <img class="site-logo-dark" src="/dark-md.png" alt="Opsly MD" width="1592" height="988" loading="eager" decoding="async" style="width: 5.25em" />
 </h1>
 
 A local-first Markdown workspace. Runs entirely in your browser — no accounts, no servers, no tracking.
