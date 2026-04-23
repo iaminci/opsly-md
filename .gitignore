@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# generated at build (scripts/write-deployment-id.mjs)
+public/deployment-id.txt
+
 # production
 /build
 

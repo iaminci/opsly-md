@@ -3,6 +3,7 @@ import { Fira_Code } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { DeploymentReloadGuardProvider } from "@/components/DeploymentReloadGuard";
 import { DeploymentRefreshWatcher } from "@/components/DeploymentRefreshWatcher";
 import { WindowInactiveAttribute } from "@/components/WindowInactiveAttribute";
 import "./globals.css";
@@ -50,10 +51,12 @@ export default function RootLayout({
           }}
         />
         <ThemeProvider>
-          <DeploymentRefreshWatcher />
-          <WindowInactiveAttribute />
-          <TooltipProvider>{children}</TooltipProvider>
-          <Toaster />
+          <DeploymentReloadGuardProvider>
+            <DeploymentRefreshWatcher />
+            <WindowInactiveAttribute />
+            <TooltipProvider>{children}</TooltipProvider>
+            <Toaster />
+          </DeploymentReloadGuardProvider>
         </ThemeProvider>
       </body>
     </html>

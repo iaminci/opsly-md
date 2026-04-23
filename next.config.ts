@@ -8,6 +8,12 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/deployment-id.txt",
+        headers: [
+          { key: "Cache-Control", value: "no-store, max-age=0" },
+        ],
+      },
+      {
         source: "/sql-wasm-browser.wasm",
         headers: [
           { key: "Content-Type", value: "application/wasm" },

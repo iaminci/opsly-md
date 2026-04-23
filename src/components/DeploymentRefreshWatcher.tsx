@@ -1,50 +1,184 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { flushPendingSqliteSave } from "@/lib/sqlite-db";
+import {
+  useDeploymentReloadBlockCount,
+} from "@/components/DeploymentReloadGuard";
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
-const POLL_MS = 60_000;
+/** One hour between idle checks; focus/visibility still trigger checks immediately. */
+const POLL_MS = 3_600_000;
 
 /** Inlined at build from VERCEL_DEPLOYMENT_ID via next.config `env`. */
 const clientDeploymentId = process.env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_ID ?? "";
 
+/** Build-time static file; see `scripts/write-deployment-id.mjs`. */
+const DEPLOYMENT_ID_URL = "/deployment-id.txt";
+
+/** Set `NEXT_PUBLIC_DEBUG_DEPLOYMENT_PROMPT=1` in `.env.local` to preview the update card (dev only). */
+const debugDeploymentPrompt =
+  process.env.NEXT_PUBLIC_DEBUG_DEPLOYMENT_PROMPT === "1" ||
+  process.env.NEXT_PUBLIC_DEBUG_DEPLOYMENT_PROMPT === "true";
+
+function remindAfterLabel(ms: number): string {
+  const m = Math.round(ms / 60_000);
+  if (m >= 60 && m % 60 === 0) return `${m / 60} hour${m === 60 ? "" : "s"}`;
+  if (m >= 60) return `${Math.round(m / 60)} hours`;
+  return `${m} min`;
+}
+
 export function DeploymentRefreshWatcher() {
-  useEffect(() => {
+  const blockCount = useDeploymentReloadBlockCount();
+  const blockCountRef = useRef(blockCount);
+  blockCountRef.current = blockCount;
+
+  const [promptOpen, setPromptOpen] = useState(false);
+  const snoozeUntilRef = useRef(0);
+
+  const check = useCallback(async () => {
+    if (debugDeploymentPrompt) {
+      if (Date.now() < snoozeUntilRef.current) {
+        setPromptOpen(false);
+        return;
+      }
+      if (blockCountRef.current > 0) {
+        setPromptOpen(false);
+        return;
+      }
+      setPromptOpen(true);
+      return;
+    }
+
     if (!clientDeploymentId) return;
+
+    try {
+      const res = await fetch(DEPLOYMENT_ID_URL, { cache: "no-store" });
+      if (!res.ok) return;
+      const deploymentId = (await res.text()).trim();
+      const mismatch =
+        !!deploymentId && deploymentId !== clientDeploymentId;
+
+      if (!mismatch) {
+        setPromptOpen(false);
+        snoozeUntilRef.current = 0;
+        return;
+      }
+
+      if (Date.now() < snoozeUntilRef.current) {
+        setPromptOpen(false);
+        return;
+      }
+
+      if (blockCountRef.current > 0) {
+        setPromptOpen(false);
+        return;
+      }
+
+      setPromptOpen(true);
+    } catch {
+      // ignore network errors
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!clientDeploymentId && !debugDeploymentPrompt) return;
 
     let cancelled = false;
 
-    const check = async () => {
-      try {
-        const res = await fetch("/api/version", { cache: "no-store" });
-        if (!res.ok || cancelled) return;
-        const data = (await res.json()) as { deploymentId?: string };
-        if (
-          data.deploymentId &&
-          data.deploymentId !== clientDeploymentId
-        ) {
-          window.location.reload();
-        }
-      } catch {
-        // ignore network errors
-      }
+    const run = () => {
+      if (cancelled) return;
+      void check();
     };
 
-    const interval = window.setInterval(() => void check(), POLL_MS);
+    const interval = window.setInterval(run, POLL_MS);
     const onVisible = () => {
-      if (document.visibilityState === "visible") void check();
+      if (document.visibilityState === "visible") run();
     };
 
-    window.addEventListener("focus", check);
+    window.addEventListener("focus", run);
     document.addEventListener("visibilitychange", onVisible);
-    void check();
+    run();
 
     return () => {
       cancelled = true;
       window.clearInterval(interval);
-      window.removeEventListener("focus", check);
+      window.removeEventListener("focus", run);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, []);
+  }, [check]);
 
-  return null;
+  useEffect(() => {
+    void check();
+  }, [blockCount, check]);
+
+  const handleUpdate = async () => {
+    if (blockCountRef.current > 0) return;
+    try {
+      await flushPendingSqliteSave();
+    } catch {
+      // best-effort
+    }
+    window.location.reload();
+  };
+
+  const handleRemindLater = () => {
+    snoozeUntilRef.current = Date.now() + POLL_MS;
+    setPromptOpen(false);
+  };
+
+  if (!clientDeploymentId && !debugDeploymentPrompt) return null;
+
+  return (
+    <>
+      {promptOpen && (
+        <div
+          className="pointer-events-none fixed bottom-4 right-4 z-[200] flex max-w-[min(100vw-2rem,22rem)] flex-col items-end"
+          role="dialog"
+          aria-labelledby="opsly-new-version-title"
+          aria-describedby="opsly-new-version-desc"
+        >
+          <Card className="pointer-events-auto w-full gap-4 py-4 shadow-xl ring-1 ring-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle id="opsly-new-version-title" className="text-base">
+                New Version Available
+              </CardTitle>
+              <CardDescription id="opsly-new-version-desc" className="text-xs">
+                Update reloads the page now.
+                Remind me later hides this until the next check.
+              </CardDescription>
+            </CardHeader>
+            <CardFooter className="flex flex-wrap justify-end gap-2 border-t-0 pt-0">
+              <Button
+                type="button"
+                variant="neutral"
+                size="sm"
+                className="text-primary hover:text-primary-hover"
+                onClick={handleRemindLater}
+              >
+                Remind me later
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="neutral"
+                disabled={blockCount > 0}
+                className="bg-primary/90 text-background hover:bg-primary/90 disabled:opacity-50"
+                onClick={() => void handleUpdate()}
+              >
+                Update Now
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
+      )}
+    </>
+  );
 }

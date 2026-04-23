@@ -133,3 +133,15 @@ export async function sqlQuery<T>(
 export async function saveSqliteDb(db: import("sql.js").Database): Promise<void> {
   await saveToIndexedDB(db);
 }
+
+/** Flush debounced IndexedDB write immediately (e.g. before a full page reload). */
+export async function flushPendingSqliteSave(): Promise<void> {
+  if (typeof window === "undefined") return;
+  if (saveTimeout) {
+    clearTimeout(saveTimeout);
+    saveTimeout = null;
+  }
+  if (!dbPromise) return;
+  const db = await dbPromise;
+  await saveToIndexedDB(db);
+}
