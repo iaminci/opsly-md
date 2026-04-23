@@ -6,7 +6,11 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import { remarkTreeStructure } from "@/lib/remark-tree-structure";
 import { remarkCodeBlockLang } from "@/lib/remark-code-block-lang";
-import { buildHeadingManifest, slugifyHeadingText } from "@/lib/heading-manifest";
+import {
+  buildHeadingIdQueueMap,
+  buildHeadingManifest,
+  takeNextHeadingId,
+} from "@/lib/heading-manifest";
 import rehypeKatex from "rehype-katex";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
@@ -20,13 +24,29 @@ import "highlight.js/styles/github-dark.min.css";
 
 interface MarkdownRendererProps {
   content: string;
+  /**
+   * When true, links are classified into CTA buttons by `href`:
+   * - `/app*` → primary button
+   * - any `github.com` URL → secondary button
+   * Used on the homepage only so user document rendering is unaffected.
+   */
+  ctaLinks?: boolean;
 }
 
 function isMermaidCode(lang: string | undefined): boolean {
   return lang?.toLowerCase() === "mermaid";
 }
 
-export function MarkdownRenderer({ content }: MarkdownRendererProps) {
+function classifyCtaLink(href: string | undefined): string | undefined {
+  if (!href) return undefined;
+  if (href.startsWith("/app")) return "cta cta-primary text-background";
+  if (/(^https?:)?\/\/([^/]+\.)?github\.com\//i.test(href)) {
+    return "cta cta-secondary";
+  }
+  return undefined;
+}
+
+export function MarkdownRenderer({ content, ctaLinks = false }: MarkdownRendererProps) {
   const normalizedContent = useMemo(
     () => normalizeInvalidAtxParagraphBreaks(content),
     [content]
@@ -35,11 +55,25 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
     () => buildHeadingManifest(normalizedContent),
     [normalizedContent]
   );
-  const headingIndexRef = useRef(0);
-  headingIndexRef.current = 0;
+  const idQueueMap = useMemo(() => buildHeadingIdQueueMap(manifest), [manifest]);
+  /** Fresh each render so heading id assignment never reuses counts from a prior render. */
+  const consumedIdsRef = useRef(new Map<string, number>());
+  consumedIdsRef.current = new Map();
 
   const components: Components = useMemo(
     () => ({
+      a({ href, className, children, ...props }) {
+        const ctaClass = ctaLinks ? classifyCtaLink(href) : undefined;
+        return (
+          <a
+            href={href}
+            className={cn(className, ctaClass)}
+            {...props}
+          >
+            {children}
+          </a>
+        );
+      },
       code({ node, className, children, ...props }) {
         const match = /language-(\w+)/.exec(className ?? "");
         const lang = match?.[1];
@@ -69,44 +103,68 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
       pre({ children }) {
         return <>{children}</>;
       },
-      h1: ({ children }) => {
-        const entry = manifest[headingIndexRef.current++];
+      h1: ({ id: idProp, children, node: _node, ...rest }) => {
         const id =
-          entry?.id ?? slugifyHeadingText(reactNodeToPlainText(children));
-        return <h1 id={id}>{children}</h1>;
+          (typeof idProp === "string" && idProp) ||
+          takeNextHeadingId(
+            1,
+            reactNodeToPlainText(children),
+            idQueueMap,
+            consumedIdsRef.current
+          );
+        return (
+          <h1 id={id} {...rest}>
+            {children}
+          </h1>
+        );
       },
       h2: ({ children }) => {
-        const entry = manifest[headingIndexRef.current++];
-        const id =
-          entry?.id ?? slugifyHeadingText(reactNodeToPlainText(children));
+        const id = takeNextHeadingId(
+          2,
+          reactNodeToPlainText(children),
+          idQueueMap,
+          consumedIdsRef.current
+        );
         return <h2 id={id}>{children}</h2>;
       },
       h3: ({ children }) => {
-        const entry = manifest[headingIndexRef.current++];
-        const id =
-          entry?.id ?? slugifyHeadingText(reactNodeToPlainText(children));
+        const id = takeNextHeadingId(
+          3,
+          reactNodeToPlainText(children),
+          idQueueMap,
+          consumedIdsRef.current
+        );
         return <h3 id={id}>{children}</h3>;
       },
       h4: ({ children }) => {
-        const entry = manifest[headingIndexRef.current++];
-        const id =
-          entry?.id ?? slugifyHeadingText(reactNodeToPlainText(children));
+        const id = takeNextHeadingId(
+          4,
+          reactNodeToPlainText(children),
+          idQueueMap,
+          consumedIdsRef.current
+        );
         return <h4 id={id}>{children}</h4>;
       },
       h5: ({ children }) => {
-        const entry = manifest[headingIndexRef.current++];
-        const id =
-          entry?.id ?? slugifyHeadingText(reactNodeToPlainText(children));
+        const id = takeNextHeadingId(
+          5,
+          reactNodeToPlainText(children),
+          idQueueMap,
+          consumedIdsRef.current
+        );
         return <h5 id={id}>{children}</h5>;
       },
       h6: ({ children }) => {
-        const entry = manifest[headingIndexRef.current++];
-        const id =
-          entry?.id ?? slugifyHeadingText(reactNodeToPlainText(children));
+        const id = takeNextHeadingId(
+          6,
+          reactNodeToPlainText(children),
+          idQueueMap,
+          consumedIdsRef.current
+        );
         return <h6 id={id}>{children}</h6>;
       },
     }),
-    [manifest]
+    [idQueueMap, ctaLinks]
   );
 
   return (
@@ -118,7 +176,8 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         "[&_p]:!text-foreground [&_ul]:!text-foreground [&_ol]:!text-foreground [&_li]:!text-foreground",
         "[&_blockquote]:!text-foreground [&_strong]:!text-foreground [&_em]:!text-foreground",
         "[&_figcaption]:!text-foreground [&_th]:!text-foreground [&_td]:!text-muted-foreground",
-        "[&_a]:!text-primary"
+        /* Links default to primary; exclude `.cta` so homepage CTAs can use cta-primary / cta-secondary colors */
+        "[&_a:not(.cta)]:!text-primary"
       )}
     >
       <ReactMarkdown
