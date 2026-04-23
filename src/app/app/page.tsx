@@ -543,7 +543,7 @@ function AppContent() {
             <>
               <DocumentColumn rightTocOpen={rightTocOpen}>
                 <div className="mb-6 flex flex-col gap-3 print:mb-4">
-                  <div className="flex w-full min-w-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between lg:gap-4">
+                  <div className="flex w-full min-w-0 flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-start lg:justify-between lg:gap-x-4 lg:gap-y-3">
                     <div className="min-h-0 min-w-0 w-full lg:w-auto lg:min-w-0 lg:flex-1 lg:basis-0">
                       {(() => {
                         const firstHeading = getFirstHeading(currentDoc.content);
@@ -562,12 +562,7 @@ function AppContent() {
                         </p>
                       )}
                     </div>
-                    <div
-                      className={cn(
-                        "flex w-full min-w-0 shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3 md:gap-5 lg:w-auto",
-                        rightTocOpen ? "lg:mr-0" : "lg:-mr-30"
-                      )}
-                    >
+                    <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3 md:gap-5 lg:w-auto lg:max-w-full">
                       <Button
                         type="button"
                         variant="neutral"
