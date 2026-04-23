@@ -83,6 +83,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
+import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
 
 const CURRENT_DOC_KEY = "md-viewer-current-doc";
 const RIGHT_TOC_OPEN_KEY = "md-viewer-right-toc-open";
@@ -232,6 +233,20 @@ function AppContent() {
   const [documentStackEnabled, setDocumentStackEnabled] = useState(true);
   const [docStackIds, setDocStackIds] = useState<string[]>([]);
   const contentScrollRef = useRef<HTMLDivElement>(null);
+
+  const editDirty =
+    editOpen &&
+    !!currentDoc &&
+    editContent !== currentDoc.content;
+  useDeploymentReloadBlock(editOpen);
+  useEffect(() => {
+    if (!editDirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [editDirty]);
 
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;

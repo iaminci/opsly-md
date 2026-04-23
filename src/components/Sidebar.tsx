@@ -71,6 +71,7 @@ import {
 } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import { CommandPalette } from "./CommandPalette";
+import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
 import { cn, getFirstHeading, replaceFirstHeading } from "@/lib/utils";
 
 /** Outside-click / pointer-dismiss: `contains(target)` misses retargeting; composedPath matches Radix/portals reliably. */
@@ -154,6 +155,35 @@ export function Sidebar({
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  const sidebarBlocksDeployReload =
+    showPaste ||
+    workspaceDialogOpen ||
+    folderDialogOpen ||
+    renameWorkspaceOpen ||
+    renameFolderOpen ||
+    renameDocOpen ||
+    deleteAllDialogOpen ||
+    deleteWorkspaceDialogOpen ||
+    deleteFolderDialogOpen ||
+    deleteDocDialogOpen ||
+    exportDialogOpen ||
+    exportConfirmDialogOpen ||
+    commandPaletteOpen;
+
+  useDeploymentReloadBlock(sidebarBlocksDeployReload);
+
+  const pasteDirty =
+    showPaste &&
+    (pasteTitle.trim().length > 0 || pasteValue.trim().length > 0);
+  useEffect(() => {
+    if (!pasteDirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [pasteDirty]);
 
   const WORKSPACE_KEY = "md-viewer-current-workspace";
 

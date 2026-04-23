@@ -44,6 +44,18 @@ export function CreateNameDialog({
     }
   }, [open, defaultValue]);
 
+  useEffect(() => {
+    if (!open) return;
+    const dirty =
+      value.trim() !== (defaultValue ?? "").trim();
+    if (!dirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [open, value, defaultValue]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = value.trim();

@@ -14,7 +14,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/write-deployment-id.mjs && next build",
     "start": "next start",
     "lint": "eslint"
   },
