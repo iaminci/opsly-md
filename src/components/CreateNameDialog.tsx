@@ -76,9 +76,9 @@ export function CreateNameDialog({
               }}
               placeholder={placeholder}
               className={cn(
-                "h-10 rounded-md border-input bg-background",
-                "ring-2 ring-foreground ring-offset-2 ring-offset-background",
-                error && "border-destructive ring-destructive",
+                "h-10 rounded-md border-border bg-background",
+                "ring-0 ring-foreground ring-offset-0",
+                error && "border-border ring-border",
               )}
               autoFocus
             />

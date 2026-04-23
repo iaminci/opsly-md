@@ -6,9 +6,9 @@ import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-/** Neo-brutalist panel: cream surface, thick black border, hard offset shadow (reference UI). */
+/** Neo-brutalist panel — colors follow theme (`globals.css`: --background, --border, --shadow). */
 const alertDialogSurface =
-  "border-2 border-foreground bg-background font-[ui-sans-serif,system-ui,sans-serif] shadow-[2px_2px_0_0_#000]"
+  "border-2 border-border bg-background font-[ui-sans-serif,system-ui,sans-serif] shadow-shadow"
 
 const alertDialogOverlayClasses =
   "fixed inset-0 isolate z-50 bg-black/20 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
@@ -93,7 +93,7 @@ function AlertDialogFooter({
     <div
       data-slot="alert-dialog-footer"
       className={cn(
-        "flex flex-row flex-wrap justify-end gap-3 pt-1",
+        "flex flex-row flex-wrap items-center justify-end gap-3 pt-1",
         className
       )}
       {...props}
@@ -141,7 +141,7 @@ const AlertDialogDescription = React.forwardRef<
     ref={ref}
     data-slot="alert-dialog-description"
     className={cn(
-      "text-sm leading-relaxed text-destructive *:[a]:underline *:[a]:underline-offset-2 *:[a]:hover:text-black",
+      "text-sm leading-relaxed text-muted-foreground *:[a]:underline *:[a]:underline-offset-2 *:[a]:hover:text-foreground",
       className
     )}
     {...props}
@@ -150,11 +150,19 @@ const AlertDialogDescription = React.forwardRef<
 AlertDialogDescription.displayName =
   AlertDialogPrimitive.Description.displayName
 
-const alertDialogActionClassName =
-  "border-2 border-foreground bg-destructive text-background shadow-[2px_2px_0_0_#000] hover:!bg-destructive hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+/** Same box model for Cancel + Action so heights always match (overrides size `py-*`). */
+const alertDialogFooterButtonBase =
+  "box-border h-10 min-h-10 max-h-10 shrink-0 !py-0"
 
-const alertDialogCancelClassName =
-  "border-2 border-foreground bg-background text-primary shadow-[2px_2px_0_0_#000] hover:!bg-background hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+const alertDialogActionClassName = cn(
+  alertDialogFooterButtonBase,
+  "border-2 border-border bg-background text-destructive shadow-shadow hover:!bg-background hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+)
+
+const alertDialogCancelClassName = cn(
+  alertDialogFooterButtonBase,
+  "border-2 border-border bg-background text-primary shadow-shadow hover:!bg-background hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+)
 
 function AlertDialogAction({
   className,

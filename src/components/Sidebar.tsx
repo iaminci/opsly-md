@@ -701,7 +701,7 @@ export function Sidebar({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="min-w-0 justify-center rounded-base border-2 border-foreground text-primary hover:border-border hover:bg-primary/90 hover:text-background"
+                      className="min-w-0 justify-center rounded-base border-2 border-border text-primary hover:border-border hover:bg-primary hover:text-background"
                       title="Import workspace"
                       onClick={() => {
                         setMoreMenuOpen(false);
@@ -714,7 +714,7 @@ export function Sidebar({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="min-w-0 justify-center rounded-base border-2 border-foreground text-primary hover:border-border hover:bg-primary/90 hover:text-background"
+                      className="min-w-0 justify-center rounded-base border-2 border-border text-primary hover:border-border hover:bg-primary hover:text-background"
                       title={selectedWorkspaceId ? "Export workspace" : "Export all workspaces"}
                       onClick={() => {
                         setMoreMenuOpen(false);
@@ -729,7 +729,7 @@ export function Sidebar({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="w-full min-w-0 justify-center rounded-base border-2 border-foreground text-foreground bg-background hover:border-border hover:bg-destructive hover:text-background focus-visible:ring-destructive [&_svg]:text-foreground hover:[&_svg]:text-background"
+                    className="w-full min-w-0 justify-center rounded-base border-2 border-border text-primary hover:border-border hover:bg-primary hover:text-background focus-visible:ring-destructive [&_svg]:text-primary hover:[&_svg]:text-background"
                     onClick={() => {
                       setMoreMenuOpen(false);
                       handleDeleteAllClick();
@@ -833,13 +833,13 @@ export function Sidebar({
                 htmlFor="create-markdown-title"
                 className="block text-sm font-medium text-foreground"
               >
-                File Name
+                Title
               </label>
               <Input
                 id="create-markdown-title"
                 value={pasteTitle}
                 onChange={(e) => setPasteTitle(e.target.value)}
-                placeholder="Enter filename...  "
+                placeholder="Enter title...  "
                 className="font-mono text-sm"
                 autoComplete="off"
               />
@@ -873,6 +873,7 @@ export function Sidebar({
               Cancel
             </Button>
             <Button
+              variant="neutral"
               onClick={async () => {
                 const trimmed = pasteValue.trim();
                 if (!trimmed) return;
@@ -1147,12 +1148,11 @@ function PasteInput({
           className="mb-2 border-main focus-visible:border-main focus-visible:ring-main/20"
         />
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="neutral" className="text-primary hover:text-primary-hover" size="sm" onClick={onClose}>
+          <Button variant="neutral" className="text-primary hover:text-primary-hover" onClick={onClose}>
             Cancel
           </Button>
           <Button
-            type="button"
-            size="sm"
+            variant="neutral"
             onClick={handleSubmit}
             disabled={!value.trim()}
             className="bg-primary/90 text-background hover:bg-primary/90"
