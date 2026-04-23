@@ -81,13 +81,20 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, Pencil, X } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Github as GitHubIcon,
+  Pencil,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
 
 const CURRENT_DOC_KEY = "md-viewer-current-doc";
 const RIGHT_TOC_OPEN_KEY = "md-viewer-right-toc-open";
 const DOC_STACK_ENABLED_KEY = "md-viewer-doc-stack-enabled";
+const GITHUB_URL = "https://github.com/iaminci/opsly-md";
 
 /**
  * Open Radix overlays that handle Escape. Used in the capture phase so we still see
@@ -545,7 +552,17 @@ function AppContent() {
             <span>Opsly </span>
             <span className="text-main">MD</span>
           </Link>
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-5">
+            <Button variant="neutral" size="icon-sm" asChild>
+              <a
+                href={GITHUB_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="View on GitHub"
+              >
+                <GitHubIcon className="size-4" />
+              </a>
+            </Button>
             <ThemeToggle />
           </div>
         </header>

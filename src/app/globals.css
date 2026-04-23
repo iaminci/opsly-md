@@ -420,3 +420,97 @@ html[data-window-inactive].dark *::-moz-selection {
 .prose a {
   color: var(--primary) !important;
 }
+
+/* README-style logo: matches prose h1 scale (em is relative to the h1’s font size) */
+.prose .site-logo-heading {
+  margin: 0 !important;
+  margin-block: 0 !important;
+  padding: 0 !important;
+  line-height: 0;
+}
+/* Prose gives `<p>` a large top margin; pull the tagline up under the wordmark */
+.prose .site-logo-heading + p,
+.prose h1.site-logo-heading ~ p:first-of-type {
+  margin-top: 0 !important;
+  margin-block-start: 0 !important;
+}
+.prose .site-logo-heading img {
+  display: block;
+  /* Wordmark width relative to h1 type */
+  width: 7.5em;
+  max-width: 100%;
+  height: auto;
+  /* @tailwindcss/typography defaults ~2em vertical margin on `.prose img` */
+  margin: 0 !important;
+  vertical-align: top;
+}
+
+/*
+ * Two wordmarks in one h1 (light + dark assets). Raw HTML `class` on <img> is not applied by
+ * the markdown pipeline, so we toggle by order + `html.dark` (same as theme script / ThemeProvider).
+ */
+.prose .site-logo-heading img:last-of-type {
+  display: none;
+}
+html.dark .prose .site-logo-heading img:first-of-type {
+  display: none;
+}
+html.dark .prose .site-logo-heading img:last-of-type {
+  display: block;
+}
+
+/*
+ * Homepage CTA buttons. Applied by MarkdownRenderer (opt-in via ctaLinks)
+ * when a link's href matches `/app*` (primary) or a github.com URL (secondary).
+ * Lives here so it wins the cascade over `.prose a` (which uses !important).
+ */
+.prose a.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-right: 0.5rem;
+  padding: 0.55rem 1.15rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-base, 5px);
+  box-shadow: var(--shadow);
+  font-weight: 700;
+  text-decoration: none !important;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.prose a.cta:hover {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.prose a.cta-primary {
+  background: var(--main);
+  color: var(--background) !important;
+}
+
+.prose a.cta-secondary {
+  background: var(--secondary-background);
+  color: var(--foreground) !important;
+}
+
+/* Footer inside markdown — muted; never a button. */
+.prose .site-footer {
+  display: block;
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  font-size: 0.875rem;
+  color: var(--muted) !important;
+}
+
+.prose .site-footer a,
+.prose .site-footer a.cta {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  background: transparent !important;
+  font-weight: inherit;
+  color: var(--primary) !important;
+  text-decoration: underline !important;
+}
