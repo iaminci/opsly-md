@@ -1,18 +1,27 @@
-import { MarkdownRenderer } from "@/components/MarkdownRenderer";
-import { ThemeToggleHomepage } from "@/components/ThemeToggle";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteHeader } from "@/components/SiteHeader";
 
 interface LandingPageProps {
-  content: string;
+  children: React.ReactNode;
 }
 
-export function LandingPage({ content }: LandingPageProps) {
+/**
+ * Site shell for the homepage. One max-width column wraps header, main, and
+ * footer so horizontal rules (header, section dividers, footer) are the same
+ * width and inset from the viewport, not full-bleed.
+ */
+export function LandingPage({ children }: LandingPageProps) {
   return (
     <div className="min-h-screen bg-background">
-      <div className="fixed right-4 top-4 z-50 sm:right-6 sm:top-6">
-        <ThemeToggleHomepage />
-      </div>
-      <div className="mx-auto max-w-[860px] px-6 py-12 sm:px-8 sm:py-16">
-        <MarkdownRenderer content={content} ctaLinks />
+      {/*
+        Single content column: all horizontal lines (header border, section
+        dividers, footer border) share this width and stop short of the
+        viewport edges — not full-bleed.
+      */}
+      <div className="mx-auto w-full max-w-[960px] px-6 sm:px-8">
+        <SiteHeader />
+        <main className="pt-8 sm:pt-10">{children}</main>
+        <SiteFooter />
       </div>
     </div>
   );

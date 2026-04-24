@@ -90,6 +90,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
+// import { FeedbackButton } from "@/components/Feedback";
 
 const CURRENT_DOC_KEY = "md-viewer-current-doc";
 const RIGHT_TOC_OPEN_KEY = "md-viewer-right-toc-open";
@@ -553,6 +554,7 @@ function AppContent() {
             <span className="text-main">MD</span>
           </Link>
           <div className="ml-auto flex items-center gap-5">
+            {/* <FeedbackButton /> */}
             <Button variant="neutral" size="icon-sm" asChild>
               <a
                 href={GITHUB_URL}
