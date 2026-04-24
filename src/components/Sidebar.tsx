@@ -718,14 +718,14 @@ export function Sidebar({
                 type="button"
                 variant="neutral"
                 size="sm"
-                className="w-full min-w-0 shrink-0 gap-2 text-foreground hover:text-background bg-background hover:bg-primary/80"
+                className="w-full min-w-0 shrink-0 gap-2 text-primary hover:text-background bg-background hover:bg-primary/80"
                 title="Import, export, delete"
               >
                 Advanced Options
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="overflow-hidden">
-              <div className="mb-1.5 box-border w-full min-w-0 rounded-base border-2 border-border bg-sidebar p-1.5 shadow-none">
+              <div className="mb-1.5 box-border w-full min-w-0 rounded-base border-2 border-border bg-background p-1.5 shadow-none">
                 <div className="flex min-w-0 flex-col gap-1.5">
                   <div className="grid min-w-0 grid-cols-2 gap-1.5">
                     <Button
