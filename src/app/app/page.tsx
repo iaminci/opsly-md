@@ -49,6 +49,7 @@ import {
 import { getFirstHeading, toMarkdownDownloadFilename } from "@/lib/utils";
 import { SAMPLE_MARKDOWN } from "@/lib/sample-document";
 import { EmptyState } from "@/components/EmptyState";
+import { HeaderLogo } from "@/components/HeaderLogo";
 import { Sidebar } from "@/components/Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 // import { DarkAccentPicker } from "@/components/DarkAccentPicker";
@@ -547,11 +548,10 @@ function AppContent() {
           <SidebarTrigger className="shrink-0 text-primary hover:text-primary-hover" />
           <Link
             href="/"
-            className="text-2xl font-semibold tracking-[-0.02em] text-foreground cursor-pointer hover:opacity-80 transition-opacity shrink-0"
+            className="flex min-w-0 items-center leading-none no-underline cursor-pointer transition-opacity hover:opacity-80 shrink-0"
             aria-label="Go to home"
           >
-            <span>Opsly </span>
-            <span className="text-main">MD</span>
+            <HeaderLogo className="h-7 w-auto max-w-[min(100%,20rem)] sm:h-8" />
           </Link>
           <div className="ml-auto flex items-center gap-5">
             {/* <FeedbackButton /> */}
