@@ -60,7 +60,7 @@ export function Search({ documents, onSelect }: SearchProps) {
           onFocus={() => query && setIsOpen(true)}
           onBlur={() => setTimeout(() => setIsOpen(false), 150)}
           className={
-            "!h-9 !border-2 !border-sidebar-border !bg-sidebar text-sm font-medium !shadow-shadow !rounded-[5px] group-hover/search:!shadow-none focus-visible:!border-sidebar-ring focus-visible:!ring-1 focus-visible:!ring-sidebar-ring focus-visible:!ring-offset-0 pl-8 " +
+            "!h-9 !border-2 !border-sidebar-border !bg-background text-sm font-medium !shadow-shadow !rounded-[5px] group-hover/search:!shadow-none focus-visible:!border-sidebar-ring focus-visible:!ring-1 focus-visible:!ring-sidebar-ring focus-visible:!ring-offset-0 pl-8 " +
             (showClear ? "pr-9 " : "pr-2.5 ")
           }
           autoComplete="off"
@@ -78,7 +78,7 @@ export function Search({ documents, onSelect }: SearchProps) {
         )}
       </div>
       {isOpen && results.length > 0 && (
-        <div className="no-scrollbar absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto overflow-x-hidden rounded-[5px] border-2 border-sidebar-border bg-sidebar shadow-md">
+        <div className="no-scrollbar absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto overflow-x-hidden rounded-[5px] border-2 border-sidebar-border bg-background shadow-md">
           {results.map((doc) => (
             <Button
               key={doc.id}

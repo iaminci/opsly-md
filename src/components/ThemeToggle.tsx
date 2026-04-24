@@ -12,7 +12,7 @@ export function ThemeToggle() {
       type="button"
       variant="neutral"
       size="icon-sm"
-      className="text-primary hover:text-primary-hover"
+      className="bg-background text-primary hover:text-primary-hover"
       onClick={(e) => {
         let { clientX, clientY } = e;
         if (clientX === 0 && clientY === 0) {

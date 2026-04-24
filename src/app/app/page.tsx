@@ -555,7 +555,7 @@ function AppContent() {
           </Link>
           <div className="ml-auto flex items-center gap-5">
             {/* <FeedbackButton /> */}
-            <Button variant="neutral" size="icon-sm" asChild>
+            <Button variant="neutral" size="icon-sm" className="bg-background" asChild>
               <a
                 href={GITHUB_URL}
                 target="_blank"
@@ -601,7 +601,7 @@ function AppContent() {
                         type="button"
                         variant="neutral"
                         size="sm"
-                        className="text-primary hover:text-primary-hover"
+                        className="bg-background text-primary hover:text-primary-hover"
                         onClick={handleEditOpen}
                       >
                         <Pencil className="size-4" />
@@ -729,7 +729,7 @@ function AppContent() {
           <DialogFooter className="gap-2 sm:gap-3">
             <Button
               variant="neutral" onClick={() => setEditOpen(false)}
-              className="text-primary hover:text-primary-hover"
+              className="bg-background text-primary hover:text-primary-hover"
             >
               Cancel
             </Button>

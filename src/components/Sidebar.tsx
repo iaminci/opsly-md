@@ -893,7 +893,7 @@ export function Sidebar({
           <DialogFooter className="gap-2 sm:gap-3">
             <Button
               variant="neutral"
-              className="text-primary hover:text-primary-hover"
+              className="bg-background text-primary hover:text-primary-hover"
               onClick={() => {
                 setShowPaste(false);
                 setPasteValue("");
@@ -1110,7 +1110,11 @@ export function Sidebar({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="neutral" className="text-primary hover:text-primary-hover" onClick={() => setExportDialogOpen(false)}>
+            <Button
+              variant="neutral"
+              className="bg-background text-primary hover:text-primary-hover"
+              onClick={() => setExportDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button
@@ -1178,7 +1182,11 @@ function PasteInput({
           className="mb-2 border-main focus-visible:border-main focus-visible:ring-main/20"
         />
         <div className="flex justify-end gap-2">
-          <Button variant="neutral" className="text-primary hover:text-primary-hover" onClick={onClose}>
+          <Button
+            variant="neutral"
+            className="bg-background text-primary hover:text-primary-hover"
+            onClick={onClose}
+          >
             Cancel
           </Button>
           <Button

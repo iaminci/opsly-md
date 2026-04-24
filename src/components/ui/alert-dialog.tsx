@@ -161,7 +161,7 @@ const alertDialogActionClassName = cn(
 
 const alertDialogCancelClassName = cn(
   alertDialogFooterButtonBase,
-  "border-2 border-border bg-background text-primary shadow-shadow hover:!bg-background hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+  "border-2 border-border !bg-background text-primary shadow-shadow hover:!bg-background hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
 )
 
 function AlertDialogAction({
@@ -186,7 +186,7 @@ function AlertDialogAction({
 
 function AlertDialogCancel({
   className,
-  variant = "ghost",
+  variant = "neutral",
   size,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.AlertDialogCancel> &

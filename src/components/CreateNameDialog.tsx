@@ -104,7 +104,7 @@ export function CreateNameDialog({
               variant="neutral"
               onClick={() => onOpenChange(false)}
               className={cn(
-                "text-primary hover:text-primary-hover"
+                "bg-background text-primary hover:text-primary-hover"
               )}
             >
               Cancel
