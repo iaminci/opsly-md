@@ -521,7 +521,8 @@ html[data-window-inactive].dark *::-moz-selection {
 
 .prose a.cta-secondary {
   background: var(--secondary-background);
-  color: var(--foreground) !important;
+  /* Match Launch (`.cta-primary` bg) for label color */
+  color: #ef4400 !important;
 }
 
 /*
