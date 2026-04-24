@@ -157,20 +157,18 @@ export function DeploymentRefreshWatcher() {
             </CardHeader>
             <CardFooter className="flex flex-wrap justify-end gap-2 border-t-0 pt-0">
               <Button
-                type="button"
                 variant="neutral"
                 size="sm"
-                className="text-primary hover:text-primary-hover"
+                className="bg-background text-primary hover:text-primary-hover"
                 onClick={handleRemindLater}
               >
                 Remind me later
               </Button>
               <Button
-                type="button"
                 size="sm"
                 variant="neutral"
                 disabled={blockCount > 0}
-                className="bg-primary/90 text-background hover:bg-primary/90 disabled:opacity-50"
+                className="bg-primary text-background hover:bg-primary/90 disabled:opacity-50"
                 onClick={() => void handleUpdate()}
               >
                 Update Now

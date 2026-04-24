@@ -111,7 +111,7 @@ export function WorkspaceSwitcher({
           <DropdownMenuContent
             align="end"
             sideOffset={4}
-            className="w-[var(--radix-popper-anchor-width)] min-w-0 max-w-[var(--radix-popper-anchor-width)] rounded-[5px] border-2 border-sidebar-border bg-sidebar p-0 font-heading shadow-md"
+            className="w-[var(--radix-popper-anchor-width)] min-w-0 max-w-[var(--radix-popper-anchor-width)] rounded-[5px] border-2 border-sidebar-border bg-background p-0 font-heading text-foreground shadow-md"
           >
             <div className="no-scrollbar max-h-[min(50vh,16rem)] w-full overflow-y-auto overflow-x-hidden">
               <div className="p-1">
@@ -180,7 +180,7 @@ export function WorkspaceSwitcher({
             <DropdownMenuContent
               align="end"
               sideOffset={4}
-              className="min-w-0 w-max whitespace-nowrap rounded-[5px] border-2 border-sidebar-border bg-sidebar p-1 font-heading shadow-md"
+              className="min-w-0 w-max whitespace-nowrap rounded-[5px] border-2 border-sidebar-border bg-background p-1 font-heading text-foreground shadow-md"
               onClick={(e) => e.stopPropagation()}
             >
               <DropdownMenuItem

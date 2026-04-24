@@ -601,7 +601,7 @@ function WorkspaceSection({
                 <DropdownMenuContent
                   align="end"
                   sideOffset={4}
-                  className="min-w-0 w-max whitespace-nowrap rounded-md border-border-2 bg-sidebar p-1 font-heading shadow-sm"
+                  className="min-w-0 w-max whitespace-nowrap rounded-md border-border-2 bg-background p-1 font-heading text-foreground shadow-sm"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <DropdownMenuItem onClick={() => onAddFile(workspace.id, null)}>
@@ -897,7 +897,7 @@ function FolderItem({
               <DropdownMenuContent
                 align="end"
                 sideOffset={4}
-                className="min-w-0 w-max whitespace-nowrap rounded-md border-border-2 bg-sidebar p-1 font-heading shadow-sm"
+                className="min-w-0 w-max whitespace-nowrap rounded-md border-border-2 bg-background p-1 font-heading text-foreground shadow-sm"
                 onClick={(e) => e.stopPropagation()}
               >
                 <DropdownMenuItem onClick={() => onAddFile(workspaceId, folder.id)}>
@@ -1104,7 +1104,7 @@ function FileItem({
             <DropdownMenuContent
               align="end"
               sideOffset={4}
-              className="min-w-0 w-max whitespace-nowrap rounded-md border-border-2 bg-sidebar p-1 font-heading shadow-sm"
+              className="min-w-0 w-max whitespace-nowrap rounded-md border-border-2 bg-background p-1 font-heading text-foreground shadow-sm"
             >
               <DropdownMenuItem onClick={onRename}>
                 <Pencil className="mr-2 size-4" />
