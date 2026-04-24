@@ -174,7 +174,10 @@ export function MarkdownRenderer({ content, ctaLinks = false }: MarkdownRenderer
         "[&_h1]:!text-foreground [&_h2]:!text-foreground [&_h3]:!text-foreground",
         "[&_h4]:!text-foreground [&_h5]:!text-foreground [&_h6]:!text-foreground",
         "[&_p]:!text-foreground [&_ul]:!text-foreground [&_ol]:!text-foreground [&_li]:!text-foreground",
-        "[&_blockquote]:!text-foreground [&_strong]:!text-foreground [&_em]:!text-foreground",
+        /* Caution blockquotes: p/li must stay destructive (beats [&_p]:!text-foreground) */
+        "[&_blockquote_p]:!text-destructive [&_blockquote_li]:!text-destructive",
+        "[&_strong]:!text-foreground [&_em]:!text-foreground",
+        "[&_blockquote_strong]:!text-inherit [&_blockquote_em]:!text-inherit",
         "[&_figcaption]:!text-foreground [&_th]:!text-foreground [&_td]:!text-muted-foreground",
         /* Links default to primary; exclude `.cta` so homepage CTAs can use cta-primary / cta-secondary colors */
         "[&_a:not(.cta)]:!text-primary"

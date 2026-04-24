@@ -21,10 +21,10 @@ export function CodeBlock({ className, children }: CodeBlockProps) {
 
   return (
     <div className="group relative my-4">
-      <pre className="overflow-x-auto rounded-md border border-border p-0">
+      <pre className="overflow-x-auto rounded-md border-2 border-border p-0">
         <code
           className={cn(
-            "block w-full p-4 text-sm font-mono whitespace-pre",
+            "block w-full p-5 text-sm font-mono whitespace-pre",
             className
           )}
         >

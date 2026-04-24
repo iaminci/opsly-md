@@ -91,22 +91,54 @@ body {
   font-family: var(--font-fira-code), ui-monospace, monospace !important;
 }
 
-/* Inline code badge styling (Cursor-like) - light mode amber, dark uses accent */
+/* Inline code: neutral chip; label text uses muted-foreground (not amber / accent ink) */
 .prose :not(pre) > code {
-  @apply rounded bg-amber-100 px-1.5 py-0.5 font-mono text-sm text-amber-900 before:content-none after:content-none;
+  @apply rounded border border-black/20 bg-secondary-background px-1.5 py-0.5 font-mono text-sm before:content-none after:content-none;
+  color: var(--muted-foreground) !important;
 }
 .dark .prose :not(pre) > code {
-  background-color: var(--dm-prose-bg);
-  color: var(--dm-prose-text);
+  background-color: var(--secondary-background);
+  color: var(--muted-foreground) !important;
+  border: 1px solid oklch(100% 0 0 / 0.14);
 }
 
-/* Blockquote / Note callouts - light mode amber, dark uses accent */
+/* Blockquote: caution callout — amber warning icon, destructive body text (see content/why.md) */
 .prose blockquote {
-  @apply border-l-4 border-amber-400 bg-amber-50 py-2 pl-4;
+  margin: 1.15em 0;
+  padding: 0.35rem 0.65rem 0.35rem 0.65rem;
+  border-left: 3px solid var(--destructive);
+  background: transparent;
+  font-style: italic;
+  color: var(--destructive) !important;
+  display: grid;
+  grid-template-columns: 1.125rem 1fr;
+  column-gap: 0.45rem;
+  align-items: center;
+}
+.prose blockquote::before {
+  content: "";
+  width: 1.125rem;
+  height: 1.125rem;
+  background-color: var(--prose-blockquote-caution-icon);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' fill-rule='evenodd' d='M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.577 4.5-2.598 4.5H4.645c-2.022 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z' clip-rule='evenodd'/%3E%3C/svg%3E");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' fill-rule='evenodd' d='M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.577 4.5-2.598 4.5H4.645c-2.022 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z' clip-rule='evenodd'/%3E%3C/svg%3E");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  grid-column: 1;
+  grid-row: 1;
+  font-style: normal;
+}
+.prose blockquote > * {
+  grid-column: 2;
+  min-width: 0;
 }
 .dark .prose blockquote {
-  border-left-color: var(--dm-prose-border);
-  background-color: var(--dm-prose-blockquote);
+  border-left-color: var(--destructive);
+  background: none;
 }
 
 /* Print styles */
@@ -130,7 +162,7 @@ body {
 }
 
 :root {
-  --background: oklch(100% 0 0);
+  --background: oklch(95.38% 0.0357 72.89);
   --secondary-background: oklch(100% 0 0);
   --foreground: oklch(0% 0 0);
   --main-foreground: oklch(0% 0 0);
@@ -165,6 +197,8 @@ body {
   --sidebar-border: oklch(0% 0 0);
   --sidebar-ring: oklch(0% 0 0);
   --sidebar-guide: oklch(72% 0 0 / 0.35);
+  /* Warning / caution glyph — standard amber, not destructive */
+  --prose-blockquote-caution-icon: #ca8a04;
 }
 
 .dark {
@@ -203,6 +237,7 @@ body {
   --sidebar-border: oklch(0% 0 0);
   --sidebar-ring: oklch(100% 0 0);
   --sidebar-guide: oklch(48% 0 0 / 0.35);
+  --prose-blockquote-caution-icon: #eab308;
 }
 
 /* Unlayered: in-app ::selection must not live only in @layer base (Tailwind v4 can cascade it below preflight
@@ -249,7 +284,6 @@ html[data-window-inactive].dark *::-moz-selection {
   --dm-prose-bg: rgb(12 74 110 / 0.4);
   --dm-prose-text: #bae6fd;
   --dm-prose-border: #0284c7;
-  --dm-prose-blockquote: rgb(12 74 110 / 0.2);
 }
 .dark[data-dark-accent="emerald"] {
   --dm-text: #34d399;
@@ -266,7 +300,6 @@ html[data-window-inactive].dark *::-moz-selection {
   --dm-prose-bg: rgb(6 78 59 / 0.4);
   --dm-prose-text: #a7f3d0;
   --dm-prose-border: #059669;
-  --dm-prose-blockquote: rgb(6 78 59 / 0.2);
 }
 .dark[data-dark-accent="violet"] {
   --dm-text: #a78bfa;
@@ -283,7 +316,6 @@ html[data-window-inactive].dark *::-moz-selection {
   --dm-prose-bg: rgb(76 29 149 / 0.4);
   --dm-prose-text: #ddd6fe;
   --dm-prose-border: #7c3aed;
-  --dm-prose-blockquote: rgb(76 29 149 / 0.2);
 }
 .dark[data-dark-accent="rose"] {
   --dm-text: #fb7185;
@@ -300,7 +332,6 @@ html[data-window-inactive].dark *::-moz-selection {
   --dm-prose-bg: rgb(136 19 55 / 0.4);
   --dm-prose-text: #fecdd3;
   --dm-prose-border: #e11d48;
-  --dm-prose-blockquote: rgb(136 19 55 / 0.2);
 }
 .dark[data-dark-accent="indigo"] {
   --dm-text: #818cf8;
@@ -317,7 +348,6 @@ html[data-window-inactive].dark *::-moz-selection {
   --dm-prose-bg: rgb(55 48 163 / 0.4);
   --dm-prose-text: #c7d2fe;
   --dm-prose-border: #4f46e5;
-  --dm-prose-blockquote: rgb(55 48 163 / 0.2);
 }
 .dark[data-dark-accent="orange"] {
   --dm-text: #fb923c;
@@ -334,7 +364,6 @@ html[data-window-inactive].dark *::-moz-selection {
   --dm-prose-bg: rgb(154 52 18 / 0.4);
   --dm-prose-text: #fed7aa;
   --dm-prose-border: #ea580c;
-  --dm-prose-blockquote: rgb(154 52 18 / 0.2);
 }
 
 @layer utilities {
@@ -403,7 +432,6 @@ html[data-window-inactive].dark *::-moz-selection {
 .prose ul,
 .prose ol,
 .prose li,
-.prose blockquote,
 .prose strong,
 .prose em,
 .prose dd,
@@ -421,71 +449,74 @@ html[data-window-inactive].dark *::-moz-selection {
   color: var(--primary) !important;
 }
 
-/* README-style logo: matches prose h1 scale (em is relative to the h1’s font size) */
-.prose .site-logo-heading {
-  margin: 0 !important;
-  margin-block: 0 !important;
-  padding: 0 !important;
-  line-height: 0;
-}
-/* Prose gives `<p>` a large top margin; pull the tagline up under the wordmark */
-.prose .site-logo-heading + p,
-.prose h1.site-logo-heading ~ p:first-of-type {
-  margin-top: 0 !important;
-  margin-block-start: 0 !important;
-}
-.prose .site-logo-heading img {
-  display: block;
-  /* Wordmark width relative to h1 type */
-  width: 7.5em;
-  max-width: 100%;
-  height: auto;
-  /* @tailwindcss/typography defaults ~2em vertical margin on `.prose img` */
-  margin: 0 !important;
-  vertical-align: top;
+/* Blockquote body: beats `.prose p { foreground }` for nested paragraphs */
+.prose blockquote p,
+.prose blockquote li {
+  color: var(--destructive) !important;
 }
 
 /*
- * Two wordmarks in one h1 (light + dark assets). Raw HTML `class` on <img> is not applied by
- * the markdown pipeline, so we toggle by order + `html.dark` (same as theme script / ThemeProvider).
+ * Hero copy: the first paragraph of `hero.md` is promoted to display-size
+ * so the hero reads as a clear entry point without any branding markup in
+ * the markdown itself. Branding lives in SiteHeader. Scoped to `.hero` so
+ * user markdown documents are unaffected.
  */
-.prose .site-logo-heading img:last-of-type {
-  display: none;
+.hero .prose > p:first-child {
+  max-width: 640px;
+  margin-top: 0 !important;
+  margin-block-start: 0 !important;
+  font-size: clamp(1.625rem, 3.2vw, 2.125rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
 }
-html.dark .prose .site-logo-heading img:first-of-type {
-  display: none;
-}
-html.dark .prose .site-logo-heading img:last-of-type {
-  display: block;
+
+/*
+ * Homepage CTA row. Tight, left-aligned block that closes the hero; extra
+ * breathing room below is handled by `.cta-row + hr` further down.
+ */
+.prose .cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0;
 }
 
 /*
  * Homepage CTA buttons. Applied by MarkdownRenderer (opt-in via ctaLinks)
  * when a link's href matches `/app*` (primary) or a github.com URL (secondary).
  * Lives here so it wins the cascade over `.prose a` (which uses !important).
+ *
+ * Heavy neobrutalist treatment: 2px border, 4px hard offset shadow, press
+ * translate matches shadow offset.
  */
 .prose a.cta {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-right: 0.5rem;
-  padding: 0.55rem 1.15rem;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0.5rem 1rem;
   border: 2px solid var(--border);
   border-radius: var(--radius-base, 5px);
-  box-shadow: var(--shadow);
+  box-shadow: 4px 4px 0px 0px var(--border);
+  font-size: 0.875rem;
   font-weight: 700;
+  letter-spacing: -0.005em;
   text-decoration: none !important;
   transition: transform 120ms ease, box-shadow 120ms ease;
 }
 
 .prose a.cta:hover {
-  transform: translate(2px, 2px);
+  transform: translate(4px, 4px);
   box-shadow: none;
 }
 
+/* Primary: explicit #ef4400 so it reads as the same accent in both themes. */
 .prose a.cta-primary {
-  background: var(--main);
-  color: var(--background) !important;
+  background: #ef4400;
+  color: #ffffff !important;
 }
 
 .prose a.cta-secondary {
@@ -493,13 +524,90 @@ html.dark .prose .site-logo-heading img:last-of-type {
   color: var(--foreground) !important;
 }
 
-/* Footer inside markdown — muted; never a button. */
+/*
+ * Section rhythm: `<hr>` (markdown `---`) is the structural anchor between
+ * sections. Keep it flat and thick; give it consistent vertical margin so
+ * every `##` section reads as a separate block.
+ */
+.prose hr {
+  border: none;
+  border-top: 2px solid var(--border);
+  margin-top: 4rem !important;
+  margin-bottom: 4rem !important;
+}
+
+/* Extra space below the hero so it reads as a clear entry point. */
+.prose .cta-row + hr {
+  margin-top: 4.5rem !important;
+}
+
+/* The hr above a `##` does the separating; remove the heading's default top margin. */
+.prose hr + h2 {
+  margin-top: 0 !important;
+}
+
+/*
+ * README-style section headings: confident but not brutalist. Size up from
+ * prose defaults, tight spacing below, prose weight (700) left intact so the
+ * heaviness lives on the buttons, not the type.
+ */
+.prose h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.875rem;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
+/*
+ * Final CTA section. No extra border, no box — just extra breathing room
+ * above and a beefier primary-button shadow so the closing beat reads as
+ * the heaviest object on the page without contradicting the open layout.
+ */
+.cta-section {
+  margin-top: 6rem !important;
+  padding-top: 5rem !important;
+  padding-bottom: 1rem;
+}
+
+.cta-section .prose a.cta-primary {
+  box-shadow: 5px 5px 0px 0px var(--border);
+}
+
+.cta-section .prose a.cta-primary:hover {
+  transform: translate(5px, 5px);
+  box-shadow: none;
+}
+
+/* Tighter, aligned lists — bullets and numbers sit flush to the text edge. */
+.prose ul,
+.prose ol {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  padding-left: 1.375rem;
+}
+
+.prose ul li,
+.prose ol li {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+  padding-left: 0.25rem;
+  line-height: 1.55;
+}
+
+.prose ul li::marker {
+  color: var(--foreground);
+}
+
+/* Footer inside markdown — muted; separated by a thin divider, not a hard rule. */
 .prose .site-footer {
   display: block;
-  margin-top: 2.5rem;
-  padding-top: 1rem;
-  font-size: 0.875rem;
+  margin-top: 3.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 20%, transparent);
+  font-size: 0.8125rem;
   color: var(--muted) !important;
+  opacity: 0.8;
 }
 
 .prose .site-footer a,
