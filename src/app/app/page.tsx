@@ -5,6 +5,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -38,6 +39,7 @@ function getSubtitle(content: string): string | null {
   return firstNonEmpty?.trim() ?? null;
 }
 import type { Document } from "@/types/document";
+import type { Folder } from "@/types/workspace";
 import {
   getDocuments,
   getDocument,
@@ -57,6 +59,12 @@ import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { TableOfContents } from "@/components/TableOfContents";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
@@ -76,6 +84,7 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import {
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Github as GitHubIcon,
@@ -86,11 +95,47 @@ import { toast } from "sonner";
 import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
 import { Feedback } from "@/components/Feedback";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { WorkspaceTreeProvider, useWorkspaceTree } from "@/context/WorkspaceTreeContext";
+import {
+  workspacePairTabClassName,
+  workspaceSwitcherDropdownContentClassName,
+} from "@/components/WorkspaceSwitcher";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const CURRENT_DOC_KEY = "md-viewer-current-doc";
 const RIGHT_TOC_OPEN_KEY = "md-viewer-right-toc-open";
 const DOC_STACK_ENABLED_KEY = "md-viewer-doc-stack-enabled";
 const GITHUB_URL = "https://github.com/iaminci/opsly-md";
+
+/** Title resolution for Create Markdown (same rules as the former modal). */
+function resolveNewDocumentTitle(titleInput: string, markdownBody: string): string {
+  const trimmed = markdownBody.trim();
+  const explicit = titleInput.trim().replace(/\.md$/i, "");
+  return (
+    explicit ||
+    getFirstHeading(trimmed) ||
+    trimmed.split("\n")[0]?.trim() ||
+    "Untitled"
+  );
+}
+
+function folderPathLabel(folder: Folder, allInWorkspace: Folder[]): string {
+  const byId = new Map(allInWorkspace.map((f) => [f.id, f]));
+  const parts: string[] = [];
+  let f: Folder | undefined = folder;
+  const seen = new Set<string>();
+  while (f && !seen.has(f.id)) {
+    seen.add(f.id);
+    parts.unshift(f.name);
+    f = f.parentFolderId ? byId.get(f.parentFolderId) : undefined;
+  }
+  return parts.join(" / ");
+}
 
 /**
  * Open Radix overlays that handle Escape. Used in the capture phase so we still see
@@ -221,6 +266,284 @@ function DocumentRightSidebar({
   );
 }
 
+type InlineCreateMarkdownFormProps = {
+  rightTocOpen: boolean;
+  createTitle: string;
+  setCreateTitle: (v: string) => void;
+  createMarkdown: string;
+  setCreateMarkdown: (v: string) => void;
+  createSelectedWorkspaceId: string;
+  setCreateSelectedWorkspaceId: (v: string) => void;
+  createSelectedFolderId: string | null;
+  setCreateSelectedFolderId: (v: string | null) => void;
+  onCancel: () => void;
+  onSubmit: () => void | Promise<void>;
+};
+
+function InlineCreateMarkdownForm({
+  rightTocOpen,
+  createTitle,
+  setCreateTitle,
+  createMarkdown,
+  setCreateMarkdown,
+  createSelectedWorkspaceId,
+  setCreateSelectedWorkspaceId,
+  createSelectedFolderId,
+  setCreateSelectedFolderId,
+  onCancel,
+  onSubmit,
+}: InlineCreateMarkdownFormProps) {
+  const { sortedWorkspaces, getFoldersInWorkspace, hasSyncedWorkspacesAtLeastOnce } =
+    useWorkspaceTree();
+
+  const folders = useMemo(
+    () => getFoldersInWorkspace(createSelectedWorkspaceId),
+    [getFoldersInWorkspace, createSelectedWorkspaceId]
+  );
+
+  useEffect(() => {
+    if (sortedWorkspaces.length === 0) return;
+    if (sortedWorkspaces.some((w) => w.id === createSelectedWorkspaceId)) return;
+    setCreateSelectedWorkspaceId(sortedWorkspaces[0]!.id);
+    setCreateSelectedFolderId(null);
+  }, [sortedWorkspaces, createSelectedWorkspaceId, setCreateSelectedWorkspaceId, setCreateSelectedFolderId]);
+
+  useEffect(() => {
+    if (createSelectedFolderId === null) return;
+    if (folders.some((f) => f.id === createSelectedFolderId)) return;
+    setCreateSelectedFolderId(null);
+  }, [createSelectedFolderId, folders, setCreateSelectedFolderId]);
+
+  const createFolderOptions = useMemo(
+    () =>
+      [...folders]
+        .map((f) => ({
+          folder: f,
+          label: folderPathLabel(f, folders),
+        }))
+        .sort((a, b) =>
+          a.label.localeCompare(b.label, undefined, { sensitivity: "base" })
+        ),
+    [folders]
+  );
+
+  const inlineCreateWorkspaceTriggerLabel = useMemo(() => {
+    if (!sortedWorkspaces.length) return "…";
+    return (
+      sortedWorkspaces.find((w) => w.id === createSelectedWorkspaceId)?.name ?? "…"
+    );
+  }, [sortedWorkspaces, createSelectedWorkspaceId]);
+
+  const inlineCreateFolderTriggerLabel = useMemo(() => {
+    if (createSelectedFolderId === null) return "None (workspace root)";
+    return (
+      createFolderOptions.find((x) => x.folder.id === createSelectedFolderId)
+        ?.label ?? "None (workspace root)"
+    );
+  }, [createSelectedFolderId, createFolderOptions]);
+
+  return (
+    <>
+      <DocumentColumn rightTocOpen={rightTocOpen}>
+        <div className="mb-6 print:mb-4">
+          {hasSyncedWorkspacesAtLeastOnce && sortedWorkspaces.length > 0 ? (
+            <div className="flex w-full min-w-0 flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-start lg:justify-between lg:gap-x-4 lg:gap-y-3">
+              <div className="min-h-0 min-w-0 w-full lg:w-auto lg:min-w-0 lg:flex-1 lg:basis-0">
+                <h1 className="text-3xl font-semibold text-foreground">Create Markdown</h1>
+              </div>
+              <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3 md:gap-5 lg:w-auto lg:max-w-full">
+                <Button
+                  type="button"
+                  variant="neutral"
+                  size="sm"
+                  className="bg-background text-primary hover:text-primary-hover"
+                  onClick={onCancel}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="neutral"
+                  size="sm"
+                  className="bg-primary/90 text-background"
+                  onClick={() => void onSubmit()}
+                  disabled={!createMarkdown.trim() || !createSelectedWorkspaceId}
+                >
+                  Add
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <h1 className="text-3xl font-semibold text-foreground">Create Markdown</h1>
+          )}
+        </div>
+        {!hasSyncedWorkspacesAtLeastOnce ? (
+          <p className="text-sm text-muted-foreground">Loading workspaces…</p>
+        ) : sortedWorkspaces.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No workspace available. Add one with “New Workspace” in the workspace menu.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:items-end">
+              <div className="flex min-w-0 flex-col gap-1">
+                <label
+                  htmlFor="inline-create-workspace"
+                  className="block text-sm font-medium text-foreground"
+                >
+                  Workspace
+                </label>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      id="inline-create-workspace"
+                      className={cn(
+                        workspacePairTabClassName,
+                        "flex w-full min-w-0 items-center gap-2 px-3 text-left"
+                      )}
+                    >
+                      <span className="min-w-0 flex-1 truncate">
+                        {inlineCreateWorkspaceTriggerLabel}
+                      </span>
+                      <ChevronDown className="size-4 shrink-0" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="start"
+                    sideOffset={4}
+                    className={workspaceSwitcherDropdownContentClassName}
+                  >
+                    <div className="no-scrollbar max-h-[min(50vh,16rem)] w-full overflow-y-auto overflow-x-hidden">
+                      <div className="p-1">
+                        {sortedWorkspaces.map((ws) => (
+                          <DropdownMenuItem
+                            key={ws.id}
+                            onClick={() => {
+                              setCreateSelectedWorkspaceId(ws.id);
+                              setCreateSelectedFolderId(null);
+                            }}
+                            className={cn(
+                              "cursor-pointer",
+                              createSelectedWorkspaceId === ws.id &&
+                                "bg-primary/90 font-semibold text-sidebar-accent-foreground"
+                            )}
+                          >
+                            <span className="truncate">{ws.name}</span>
+                          </DropdownMenuItem>
+                        ))}
+                      </div>
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <div className="flex min-w-0 flex-col gap-1">
+                <label
+                  htmlFor="inline-create-folder"
+                  className="block text-sm font-medium text-foreground"
+                >
+                  Folder
+                </label>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      id="inline-create-folder"
+                      className={cn(
+                        workspacePairTabClassName,
+                        "flex w-full min-w-0 items-center gap-2 px-3 text-left"
+                      )}
+                    >
+                      <span className="min-w-0 flex-1 truncate">
+                        {inlineCreateFolderTriggerLabel}
+                      </span>
+                      <ChevronDown className="size-4 shrink-0" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="start"
+                    sideOffset={4}
+                    className={workspaceSwitcherDropdownContentClassName}
+                  >
+                    <div className="no-scrollbar max-h-[min(50vh,16rem)] w-full overflow-y-auto overflow-x-hidden">
+                      <div className="p-1">
+                        <DropdownMenuItem
+                          onClick={() => setCreateSelectedFolderId(null)}
+                          className={cn(
+                            "cursor-pointer",
+                            createSelectedFolderId === null &&
+                              "bg-primary/70 border-border-2 font-semibold text-background"
+                          )}
+                        >
+                          <span className="truncate">None (workspace root)</span>
+                        </DropdownMenuItem>
+                        {createFolderOptions.map(({ folder, label }) => (
+                          <DropdownMenuItem
+                            key={folder.id}
+                            onClick={() => setCreateSelectedFolderId(folder.id)}
+                            className={cn(
+                              "cursor-pointer",
+                              createSelectedFolderId === folder.id &&
+                                "bg-primary/90 font-semibold text-sidebar-accent-foreground"
+                            )}
+                          >
+                            <span className="truncate">{label}</span>
+                          </DropdownMenuItem>
+                        ))}
+                      </div>
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="inline-create-title"
+                className="block text-sm font-medium text-foreground"
+              >
+                Title
+              </label>
+              <Input
+                id="inline-create-title"
+                autoFocus
+                value={createTitle}
+                onChange={(e) => setCreateTitle(e.target.value)}
+                placeholder="Enter title...  "
+                className="font-mono text-sm"
+                autoComplete="off"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="inline-create-body"
+                className="block text-sm font-medium text-foreground"
+              >
+                Markdown
+              </label>
+              <Textarea
+                id="inline-create-body"
+                value={createMarkdown}
+                onChange={(e) => setCreateMarkdown(e.target.value)}
+                placeholder="Enter markdown here..."
+                spellCheck={false}
+                className={cn(
+                  "field-sizing-fixed h-[calc(100svh-24rem)] min-h-[12rem] w-full max-w-full resize-y font-mono text-sm",
+                  "overflow-y-auto overflow-x-hidden",
+                  "[scrollbar-width:thin] [scrollbar-color:var(--border)_var(--secondary-background)]",
+                  "[&::-webkit-scrollbar]:w-2",
+                  "[&::-webkit-scrollbar-track]:rounded-base [&::-webkit-scrollbar-track]:bg-secondary-background",
+                  "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border",
+                  "border-border bg-secondary-background text-foreground"
+                )}
+              />
+            </div>
+          </div>
+        )}
+      </DocumentColumn>
+    </>
+  );
+}
+
 function AppContent() {
   const router = useRouter();
   const pathname = usePathname();
@@ -241,20 +564,28 @@ function AppContent() {
   const [documentStackEnabled, setDocumentStackEnabled] = useState(true);
   const [docStackIds, setDocStackIds] = useState<string[]>([]);
   const contentScrollRef = useRef<HTMLDivElement>(null);
+  const [createMode, setCreateMode] = useState(false);
+  const [createSelectedWorkspaceId, setCreateSelectedWorkspaceId] = useState("");
+  const [createSelectedFolderId, setCreateSelectedFolderId] = useState<string | null>(null);
+  const [createTitle, setCreateTitle] = useState("");
+  const [createMarkdown, setCreateMarkdown] = useState("");
 
   const editDirty =
     editMode &&
     !!currentDoc &&
     draftContent !== currentDoc.content;
-  useDeploymentReloadBlock(editMode);
+  const createDirty =
+    createMode &&
+    (createTitle.trim().length > 0 || createMarkdown.trim().length > 0);
+  useDeploymentReloadBlock(editMode || createMode);
   useEffect(() => {
-    if (!editDirty) return;
+    if (!editDirty && !createDirty) return;
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
     };
     window.addEventListener("beforeunload", onBeforeUnload);
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, [editDirty]);
+  }, [editDirty, createDirty]);
 
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
@@ -341,6 +672,12 @@ function AppContent() {
   }, [currentDoc?.id]);
 
   useLayoutEffect(() => {
+    if (!createMode) return;
+    const vp = contentScrollRef.current;
+    if (vp) vp.scrollTop = 0;
+  }, [createMode]);
+
+  useLayoutEffect(() => {
     if (editMode) return;
     if (!shouldRestoreScrollRef.current) return;
     shouldRestoreScrollRef.current = false;
@@ -362,7 +699,7 @@ function AppContent() {
       content: string,
       workspaceId?: string,
       folderId?: string | null
-    ) => {
+    ): Promise<boolean> => {
       const wsId = workspaceId ?? "default";
       try {
         const doc = await addDocument(
@@ -380,12 +717,14 @@ function AppContent() {
         const params = new URLSearchParams(searchParams.toString());
         params.set("doc", doc.id);
         router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        return true;
       } catch (err) {
         if (err instanceof DuplicateNameError) {
           toast.error(err.message);
         } else {
           toast.error("Failed to create document.");
         }
+        return false;
       }
     },
     [router, pathname, searchParams, documentStackEnabled]
@@ -410,8 +749,58 @@ function AppContent() {
     [documentStackEnabled, docStackIds]
   );
 
+  const handleOpenInlineCreate = useCallback(
+    (workspaceId: string, folderId: string | null) => {
+      setEditMode(false);
+      setCreateSelectedWorkspaceId(workspaceId);
+      setCreateSelectedFolderId(folderId);
+      setCreateTitle("");
+      setCreateMarkdown("");
+      setCreateMode(true);
+    },
+    []
+  );
+
+  const handleCancelInlineCreate = useCallback(() => {
+    setCreateMode(false);
+    setCreateSelectedWorkspaceId("");
+    setCreateSelectedFolderId(null);
+    setCreateTitle("");
+    setCreateMarkdown("");
+  }, []);
+
+  const handleSubmitInlineCreate = useCallback(async () => {
+    if (!createSelectedWorkspaceId) return;
+    const trimmed = createMarkdown.trim();
+    if (!trimmed) return;
+    const title = resolveNewDocumentTitle(createTitle, trimmed);
+    const ok = await handleAddDocument(
+      title,
+      trimmed,
+      createSelectedWorkspaceId,
+      createSelectedFolderId
+    );
+    if (!ok) return;
+    setCreateMode(false);
+    setCreateSelectedWorkspaceId("");
+    setCreateSelectedFolderId(null);
+    setCreateTitle("");
+    setCreateMarkdown("");
+  }, [
+    createSelectedWorkspaceId,
+    createSelectedFolderId,
+    createMarkdown,
+    createTitle,
+    handleAddDocument,
+  ]);
+
   const handleEnterEditMode = useCallback(() => {
     if (!currentDoc) return;
+    setCreateMode(false);
+    setCreateSelectedWorkspaceId("");
+    setCreateSelectedFolderId(null);
+    setCreateTitle("");
+    setCreateMarkdown("");
     const vp = contentScrollRef.current;
     scrollTopBeforeEditRef.current = vp?.scrollTop ?? 0;
     setDraftContent(currentDoc.content);
@@ -487,23 +876,30 @@ function AppContent() {
   }, [documentStackEnabled, docStackIds, router, pathname, searchParams]);
 
   useEffect(() => {
-    if (!currentDoc) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      if (
-        editMode ||
-        downloadConfirmOpen ||
-        hasOpenEscapeBlockingOverlay()
-      ) {
+      if (downloadConfirmOpen || hasOpenEscapeBlockingOverlay()) return;
+      if (createMode) {
+        e.preventDefault();
+        handleCancelInlineCreate();
         return;
       }
+      if (!currentDoc) return;
+      if (editMode) return;
       e.preventDefault();
       handleCloseDocument();
     };
     // Capture: run before Radix dismiss-on-Escape unmounts the dialog, so we don’t also close the doc.
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [currentDoc, editMode, downloadConfirmOpen, handleCloseDocument]);
+  }, [
+    currentDoc,
+    createMode,
+    editMode,
+    downloadConfirmOpen,
+    handleCloseDocument,
+    handleCancelInlineCreate,
+  ]);
 
   useEffect(() => {
     const loadSample = searchParams.get("loadSample");
@@ -531,6 +927,7 @@ function AppContent() {
   }
 
   return (
+    <WorkspaceTreeProvider documents={documents}>
     <SidebarProvider className="h-svh overflow-hidden">
       <Sidebar
         documents={documents}
@@ -546,6 +943,11 @@ function AppContent() {
         }}
         onSelectDocument={async (doc) => {
           navigatingToHomeRef.current = false;
+          setCreateMode(false);
+          setCreateSelectedWorkspaceId("");
+          setCreateSelectedFolderId(null);
+          setCreateTitle("");
+          setCreateMarkdown("");
           justSelectedDocIdRef.current = doc.id;
           const fresh = await getDocument(doc.id);
           setCurrentDoc(fresh ?? doc);
@@ -558,6 +960,7 @@ function AppContent() {
         }}
         onDeleteDocument={handleDeleteDocument}
         onAddDocument={handleAddDocument}
+        onOpenInlineCreate={handleOpenInlineCreate}
         onRefresh={refresh}
       />
 
@@ -573,16 +976,28 @@ function AppContent() {
           </Link>
           <div className="ml-auto flex items-center gap-5">
             <Feedback />
-            <Button variant="neutral" size="icon-sm" className="bg-background" asChild>
-              <a
-                href={GITHUB_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="View on GitHub"
-              >
-                <GitHubIcon className="size-4" />
-              </a>
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="neutral"
+                  size="icon-sm"
+                  className="bg-background"
+                  asChild
+                >
+                  <a
+                    href={GITHUB_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="View on GitHub"
+                  >
+                    <GitHubIcon className="size-4" />
+                  </a>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" align="center">
+                View on GitHub
+              </TooltipContent>
+            </Tooltip>
             <ThemeToggle />
           </div>
         </header>
@@ -593,7 +1008,21 @@ function AppContent() {
             viewportClassName="overflow-x-hidden"
           >
             <div className="py-8 pl-8 pr-8 print:px-0 lg:pl-8 lg:pr-12">
-          {currentDoc ? (
+          {createMode ? (
+            <InlineCreateMarkdownForm
+              rightTocOpen={rightTocOpen}
+              createTitle={createTitle}
+              setCreateTitle={setCreateTitle}
+              createMarkdown={createMarkdown}
+              setCreateMarkdown={setCreateMarkdown}
+              createSelectedWorkspaceId={createSelectedWorkspaceId}
+              setCreateSelectedWorkspaceId={setCreateSelectedWorkspaceId}
+              createSelectedFolderId={createSelectedFolderId}
+              setCreateSelectedFolderId={setCreateSelectedFolderId}
+              onCancel={handleCancelInlineCreate}
+              onSubmit={handleSubmitInlineCreate}
+            />
+          ) : currentDoc ? (
             <>
               <DocumentColumn rightTocOpen={rightTocOpen}>
                 <div className="mb-6 flex flex-col gap-3 print:mb-4">
@@ -662,14 +1091,16 @@ function AppContent() {
                           </Button>
                         </>
                       )}
-                      <button
-                        type="button"
-                        aria-label="Close document and return to overview"
-                        className="flex size-7 shrink-0 items-center justify-center rounded-[4px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-primary print:hidden"
-                        onClick={handleCloseDocument}
-                      >
-                        <X className="size-4 shrink-0" strokeWidth={2.5} aria-hidden />
-                      </button>
+                      {!editMode && (
+                        <button
+                          type="button"
+                          aria-label="Close document and return to overview"
+                          className="flex size-7 shrink-0 items-center justify-center rounded-[4px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-primary print:hidden"
+                          onClick={handleCloseDocument}
+                        >
+                          <X className="size-4 shrink-0" strokeWidth={2.5} aria-hidden />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -701,7 +1132,7 @@ function AppContent() {
             </div>
           </ScrollArea>
 
-          {currentDoc && (
+          {currentDoc && !createMode && (
             <>
               <div
                 id="document-outline-panel"
@@ -722,29 +1153,35 @@ function AppContent() {
                   />
                 </div>
               </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                aria-expanded={rightTocOpen}
-                aria-controls="document-outline-panel"
-                title={rightTocOpen ? "Hide outline" : "Show outline"}
-                onClick={() => setRightTocOpen((o) => !o)}
-                className={cn(
-                  "fixed h-15 w-6 shadow-shadow-2 border-2 border-border bg-background top-[calc(50%-1rem)] z-30 hidden shrink-0 text-primary transition-[right] duration-150 ease-linear hover:text-primary-hover",
-                  "print:hidden lg:inline-flex",
-                  rightTocOpen ? "right-[13.3rem]" : "right-0"
-                )}
-              >
-                {rightTocOpen ? (
-                  <ChevronRight aria-hidden />
-                ) : (
-                  <ChevronLeft aria-hidden />
-                )}
-                <span className="sr-only">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-expanded={rightTocOpen}
+                    aria-controls="document-outline-panel"
+                    onClick={() => setRightTocOpen((o) => !o)}
+                    className={cn(
+                      "fixed h-15 w-6 shadow-shadow-2 border-2 border-border bg-background top-[calc(50%-1rem)] z-30 hidden shrink-0 text-primary transition-[right] duration-150 ease-linear hover:text-primary-hover",
+                      "print:hidden lg:inline-flex",
+                      rightTocOpen ? "right-[13.3rem]" : "right-0"
+                    )}
+                  >
+                    {rightTocOpen ? (
+                      <ChevronRight aria-hidden />
+                    ) : (
+                      <ChevronLeft aria-hidden />
+                    )}
+                    <span className="sr-only">
+                      {rightTocOpen ? "Hide outline" : "Show outline"}
+                    </span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left" align="center">
                   {rightTocOpen ? "Hide outline" : "Show outline"}
-                </span>
-              </Button>
+                </TooltipContent>
+              </Tooltip>
             </>
           )}
         </div>
@@ -780,6 +1217,7 @@ function AppContent() {
       </AlertDialog>
 
     </SidebarProvider>
+    </WorkspaceTreeProvider>
   );
 }
 

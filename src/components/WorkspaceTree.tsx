@@ -580,24 +580,30 @@ function WorkspaceSection({
                   onTreeMenuOpenChange(open);
                 }}
               >
-                <DropdownMenuTrigger asChild>
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    title="Workspace actions"
-                    aria-label="Workspace actions"
-                    className={cn(
-                      "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
-                      workspaceFullRowAccent ? "text-foreground" : "text-muted",
-                      "group-hover/ws:text-primary"
-                    )}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") e.preventDefault();
-                    }}
-                  >
-                    <MoreHorizontal className="size-5 shrink-0" />
-                  </div>
-                </DropdownMenuTrigger>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Workspace actions"
+                        className={cn(
+                          "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
+                          workspaceFullRowAccent ? "text-foreground" : "text-muted",
+                          "group-hover/ws:text-primary"
+                        )}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") e.preventDefault();
+                        }}
+                      >
+                        <MoreHorizontal className="size-5 shrink-0" />
+                      </div>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" align="end">
+                    Workspace actions
+                  </TooltipContent>
+                </Tooltip>
                 <DropdownMenuContent
                   align="end"
                   sideOffset={4}
@@ -605,15 +611,15 @@ function WorkspaceSection({
                   onClick={(e) => e.stopPropagation()}
                 >
                   <DropdownMenuItem onClick={() => onAddFile(workspace.id, null)}>
-                    <FilePlus className="mr-2 size-4 text-muted" />
+                    <FilePlus className="mr-2 size-4" />
                     Create File
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onUploadFile(workspace.id, null)}>
-                    <FileBraces className="mr-2 size-4 text-muted" />
+                    <FileBraces className="mr-2 size-4" />
                     Upload File
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onAddFolder(workspace.id, null)}>
-                    <FolderIcon className="mr-2 size-4 text-muted" />
+                    <FolderIcon className="mr-2 size-4" />
                     Create Folder
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onRenameWorkspace(workspace.id, workspace.name)}>
@@ -876,24 +882,30 @@ function FolderItem({
                 onTreeMenuOpenChange(open);
               }}
             >
-              <DropdownMenuTrigger asChild>
-                <div
-                  role="button"
-                  tabIndex={0}
-                  title="Folder actions"
-                  aria-label="Folder actions"
-                  className={cn(
-                    "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
-                    folderRowActive ? "text-foreground" : "text-muted",
-                    "group-hover/folder:text-primary"
-                  )}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") e.preventDefault();
-                  }}
-                >
-                  <MoreHorizontal className="size-5 shrink-0" />
-                </div>
-              </DropdownMenuTrigger>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Folder actions"
+                      className={cn(
+                        "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
+                        folderRowActive ? "text-foreground" : "text-muted",
+                        "group-hover/folder:text-primary"
+                      )}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") e.preventDefault();
+                      }}
+                    >
+                      <MoreHorizontal className="size-5 shrink-0" />
+                    </div>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="right" align="end">
+                  Folder actions
+                </TooltipContent>
+              </Tooltip>
               <DropdownMenuContent
                 align="end"
                 sideOffset={4}
@@ -1042,7 +1054,7 @@ function FileItem({
           fileTintPrimary && "text-primary"
         )}
       >
-        <Tooltip delayDuration={2000}>
+        <Tooltip delayDuration={1000}>
           <TooltipTrigger asChild>
             <button
               type="button"
@@ -1083,24 +1095,30 @@ function FileItem({
               onTreeMenuOpenChange(open);
             }}
           >
-            <DropdownMenuTrigger asChild>
-              <div
-                role="button"
-                tabIndex={0}
-                title="Document actions"
-                aria-label="Document actions"
-                className={cn(
-                  "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
-                  fileTintPrimary ? "text-primary" : "text-muted",
-                  "group-hover/file:!text-primary"
-                )}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") e.preventDefault();
-                }}
-              >
-                <MoreHorizontal className="size-5 shrink-0" />
-              </div>
-            </DropdownMenuTrigger>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Document actions"
+                    className={cn(
+                      "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
+                      fileTintPrimary ? "text-primary" : "text-muted",
+                      "group-hover/file:!text-primary"
+                    )}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") e.preventDefault();
+                    }}
+                  >
+                    <MoreHorizontal className="size-5 shrink-0" />
+                  </div>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="right" align="end">
+                Document actions
+              </TooltipContent>
+            </Tooltip>
             <DropdownMenuContent
               align="end"
               sideOffset={4}

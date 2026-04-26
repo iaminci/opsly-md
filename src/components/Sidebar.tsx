@@ -6,7 +6,6 @@ import type { Folder } from "@/types/workspace";
 import { WorkspaceTree } from "./WorkspaceTree";
 import { Search } from "./Search";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -17,11 +16,9 @@ import {
   SidebarGroupLabel,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useWorkspaceTree } from "@/context/WorkspaceTreeContext";
 import {
-  getWorkspaces,
-  getAllFolders,
   getDocument,
-  getDocuments,
   addWorkspace,
   addFolder,
   addDocument,
@@ -92,7 +89,14 @@ interface SidebarProps {
   currentId: string | null;
   onSelectDocument: (doc: Document) => void;
   onDeleteDocument: (id: string) => void;
-  onAddDocument: (title: string, content: string, workspaceId?: string, folderId?: string | null) => void;
+  onAddDocument: (
+    title: string,
+    content: string,
+    workspaceId?: string,
+    folderId?: string | null
+  ) => void | Promise<boolean>;
+  /** Opens inline Create Markdown in the main pane (replaces the former modal). */
+  onOpenInlineCreate: (workspaceId: string, folderId: string | null) => void;
   onRefresh: () => void;
   documentStackEnabled: boolean;
   onDocumentStackEnabledChange: (enabled: boolean) => void;
@@ -104,19 +108,12 @@ export function Sidebar({
   onSelectDocument,
   onDeleteDocument,
   onAddDocument,
+  onOpenInlineCreate,
   onRefresh,
   documentStackEnabled,
   onDocumentStackEnabledChange,
 }: SidebarProps) {
   const { setOpen } = useSidebar();
-  const [showPaste, setShowPaste] = useState(false);
-  /** When set, Create Markdown saves into this workspace/folder; when null, uses sidebar workspace filter + root. */
-  const [pasteTarget, setPasteTarget] = useState<{
-    workspaceId: string;
-    folderId: string | null;
-  } | null>(null);
-  const [pasteValue, setPasteValue] = useState("");
-  const [pasteTitle, setPasteTitle] = useState("");
   const [workspaceDialogOpen, setWorkspaceDialogOpen] = useState(false);
   const [folderDialogOpen, setFolderDialogOpen] = useState(false);
   const [folderDialogTarget, setFolderDialogTarget] = useState<{
@@ -139,11 +136,7 @@ export function Sidebar({
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [exportConfirmDialogOpen, setExportConfirmDialogOpen] = useState(false);
   const [exportSelectedIds, setExportSelectedIds] = useState<Set<string>>(new Set());
-  const [workspaces, setWorkspaces] = useState<Awaited<ReturnType<typeof getWorkspaces>>>([]);
-  const [foldersByWorkspace, setFoldersByWorkspace] = useState<
-    Map<string, Awaited<ReturnType<typeof getAllFolders>>>
-  >(new Map());
-  const [allDocuments, setAllDocuments] = useState<Document[]>([]);
+  const { sortedWorkspaces, getFoldersInWorkspace } = useWorkspaceTree();
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
   const [workspaceSwitcherMenuOpen, setWorkspaceSwitcherMenuOpen] = useState(false);
   const [uploadTarget, setUploadTarget] = useState<{
@@ -157,7 +150,6 @@ export function Sidebar({
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
   const sidebarBlocksDeployReload =
-    showPaste ||
     workspaceDialogOpen ||
     folderDialogOpen ||
     renameWorkspaceOpen ||
@@ -173,18 +165,6 @@ export function Sidebar({
 
   useDeploymentReloadBlock(sidebarBlocksDeployReload);
 
-  const pasteDirty =
-    showPaste &&
-    (pasteTitle.trim().length > 0 || pasteValue.trim().length > 0);
-  useEffect(() => {
-    if (!pasteDirty) return;
-    const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-    };
-    window.addEventListener("beforeunload", onBeforeUnload);
-    return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, [pasteDirty]);
-
   const WORKSPACE_KEY = "md-viewer-current-workspace";
 
   useEffect(() => {
@@ -199,9 +179,6 @@ export function Sidebar({
     return () => window.removeEventListener("pointerdown", handlePointerDown, true);
   }, [moreMenuOpen]);
 
-  const sortedWorkspaces = [...workspaces].sort((a, b) =>
-    a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
-  );
   const displayedWorkspaces = selectedWorkspaceId
     ? sortedWorkspaces.filter((w) => w.id === selectedWorkspaceId)
     : sortedWorkspaces;
@@ -210,31 +187,20 @@ export function Sidebar({
     ? documents.filter((d) => d.workspaceId === selectedWorkspaceId)
     : documents;
 
-  const refreshTreeData = async () => {
-    const [ws, docs] = await Promise.all([getWorkspaces(), getDocuments()]);
-    setWorkspaces(ws);
-    setAllDocuments(docs);
-    const folderMap = new Map<string, Awaited<ReturnType<typeof getAllFolders>>>();
-    await Promise.all(
-      ws.map(async (w) => {
-        const folders = await getAllFolders(w.id);
-        folderMap.set(w.id, folders);
-      })
-    );
-    setFoldersByWorkspace(folderMap);
-    if (typeof window !== "undefined") {
-      setSelectedWorkspaceId((prev) => {
-        if (prev !== null && prev !== undefined) return prev;
-        const stored = localStorage.getItem(WORKSPACE_KEY);
-        if (stored === "") return null;
-        if (stored && ws.some((w) => w.id === stored)) return stored;
-        return null;
-      });
-    }
-  };
+  useEffect(() => {
+    if (sortedWorkspaces.length === 0) return;
+    if (typeof window === "undefined") return;
+    setSelectedWorkspaceId((prev) => {
+      if (prev != null) return prev;
+      const stored = localStorage.getItem(WORKSPACE_KEY);
+      if (stored === "") return null;
+      if (stored && sortedWorkspaces.some((w) => w.id === stored)) return stored;
+      return null;
+    });
+  }, [sortedWorkspaces]);
 
   const getFoldersSync = (workspaceId: string, parentFolderId: string | null) => {
-    const folders = foldersByWorkspace.get(workspaceId) ?? [];
+    const folders = getFoldersInWorkspace(workspaceId);
     return folders.filter(
       (f) =>
         (parentFolderId === null && f.parentFolderId === null) ||
@@ -243,7 +209,7 @@ export function Sidebar({
   };
 
   const getDocumentsSync = (workspaceId: string, folderId: string | null) => {
-    return allDocuments.filter(
+    return documents.filter(
       (d) =>
         d.workspaceId === workspaceId &&
         (folderId === null ? d.folderId === null : d.folderId === folderId)
@@ -251,13 +217,9 @@ export function Sidebar({
   };
 
   const getFoldersFlat = useCallback(
-    (workspaceId: string): Folder[] => foldersByWorkspace.get(workspaceId) ?? [],
-    [foldersByWorkspace]
+    (workspaceId: string): Folder[] => getFoldersInWorkspace(workspaceId),
+    [getFoldersInWorkspace]
   );
-
-  useEffect(() => {
-    refreshTreeData();
-  }, [documents]);
 
   const handleUploadFile = (workspaceId: string, folderId: string | null) => {
     setUploadTarget({ workspaceId, folderId });
@@ -297,10 +259,19 @@ export function Sidebar({
 
   const handleAddWorkspace = () => setWorkspaceDialogOpen(true);
 
+  const handleQuickCreateFromAllView = useCallback(() => {
+    const defaultId =
+      selectedWorkspaceId ??
+      sortedWorkspaces.find((w) => w.id === "default")?.id ??
+      sortedWorkspaces.find((w) => w.name === "Default")?.id ??
+      sortedWorkspaces[0]?.id ??
+      "default";
+    onOpenInlineCreate(defaultId, null);
+  }, [onOpenInlineCreate, selectedWorkspaceId, sortedWorkspaces]);
+
   const handleWorkspaceSubmit = async (name: string) => {
     await addWorkspace(name);
-    await refreshTreeData();
-    onRefresh();
+    await onRefresh();
   };
 
   const handleAddFolder = (workspaceId: string, parentFolderId: string | null) => {
@@ -312,8 +283,7 @@ export function Sidebar({
     if (!folderDialogTarget) return;
     await addFolder(folderDialogTarget.workspaceId, name, folderDialogTarget.parentFolderId);
     setFolderDialogTarget(null);
-    await refreshTreeData();
-    onRefresh();
+    await onRefresh();
   };
 
   const handleMoveDocument = async (
@@ -322,8 +292,7 @@ export function Sidebar({
     folderId: string | null
   ) => {
     await moveDocument(docId, workspaceId, folderId);
-    await refreshTreeData();
-    onRefresh();
+    await onRefresh();
   };
 
   const handleMoveFolder = async (
@@ -334,8 +303,7 @@ export function Sidebar({
     try {
       const result = await moveFolder(folderId, workspaceId, parentFolderId);
       if (result) {
-        await refreshTreeData();
-        onRefresh();
+        await onRefresh();
       }
     } catch (err) {
       if (err instanceof DuplicateNameError) {
@@ -352,8 +320,7 @@ export function Sidebar({
         { title: "Untitled", content: "", workspaceId, folderId },
         { workspaceId, folderId }
       );
-      await refreshTreeData();
-      onRefresh();
+      await onRefresh();
       onSelectDocument(doc);
     } catch (err) {
       if (err instanceof DuplicateNameError) {
@@ -362,11 +329,6 @@ export function Sidebar({
         toast.error("Failed to create file.");
       }
     }
-  };
-
-  const handleOpenCreateMarkdown = (workspaceId: string, folderId: string | null) => {
-    setPasteTarget({ workspaceId, folderId });
-    setShowPaste(true);
   };
 
   const handleRenameWorkspace = (id: string, name: string) => {
@@ -378,8 +340,7 @@ export function Sidebar({
     if (!renameWorkspaceTarget) return;
     await updateWorkspace(renameWorkspaceTarget.id, name);
     setRenameWorkspaceTarget(null);
-    await refreshTreeData();
-    onRefresh();
+    await onRefresh();
   };
 
   const handleDeleteWorkspaceRequest = (id: string, name: string) => {
@@ -392,8 +353,7 @@ export function Sidebar({
     await deleteWorkspace(deleteWorkspaceTarget.id);
     setDeleteWorkspaceTarget(null);
     setDeleteWorkspaceDialogOpen(false);
-    await refreshTreeData();
-    onRefresh();
+    await onRefresh();
   };
 
   const handleDeleteAllClick = () => setDeleteAllDialogOpen(true);
@@ -413,8 +373,7 @@ export function Sidebar({
       }
     }
     setDeleteAllDialogOpen(false);
-    await refreshTreeData();
-    onRefresh();
+    await onRefresh();
   };
 
   const handleExportClick = () => {
@@ -527,8 +486,7 @@ export function Sidebar({
       } else {
         throw new Error("Invalid workspace export file");
       }
-      await refreshTreeData();
-      onRefresh();
+      await onRefresh();
     } catch {
       toast.error("Failed to import workspace. The file may be invalid or corrupted.");
     }
@@ -544,8 +502,7 @@ export function Sidebar({
     if (!renameFolderTarget) return;
     await updateFolder(renameFolderTarget.id, name);
     setRenameFolderTarget(null);
-    await refreshTreeData();
-    onRefresh();
+    await onRefresh();
   };
 
   const handleDeleteFolderRequest = (id: string, name: string) => {
@@ -558,8 +515,7 @@ export function Sidebar({
     await deleteFolder(deleteFolderTarget.id);
     setDeleteFolderTarget(null);
     setDeleteFolderDialogOpen(false);
-    await refreshTreeData();
-    onRefresh();
+    await onRefresh();
   };
 
   const handleDeleteDocumentRequest = (id: string, title: string) => {
@@ -572,8 +528,7 @@ export function Sidebar({
     await onDeleteDocument(deleteDocTarget.id);
     setDeleteDocTarget(null);
     setDeleteDocDialogOpen(false);
-    await refreshTreeData();
-    onRefresh();
+    await onRefresh();
   };
 
   const handleRenameDocument = (id: string, title: string) => {
@@ -599,8 +554,7 @@ export function Sidebar({
       return;
     }
     setRenameDocTarget(null);
-    await refreshTreeData();
-    onRefresh();
+    await onRefresh();
   };
 
   const selectedWorkspaceName = selectedWorkspaceId
@@ -653,10 +607,11 @@ export function Sidebar({
                 selectedId={selectedWorkspaceId}
                 onSelect={handleWorkspaceSelect}
                 onAddWorkspace={handleAddWorkspace}
+                onQuickCreateMarkdown={handleQuickCreateFromAllView}
                 onWorkspaceMenuOpenChange={setWorkspaceSwitcherMenuOpen}
                 onAddFolder={handleAddFolder}
                 onUploadFile={handleUploadFile}
-                onCreateFile={handleOpenCreateMarkdown}
+                onCreateFile={onOpenInlineCreate}
                 onRenameWorkspace={handleRenameWorkspace}
               />
             </SidebarGroupContent>
@@ -679,7 +634,7 @@ export function Sidebar({
               onDeleteDocument={handleDeleteDocumentRequest}
               onAddWorkspace={handleAddWorkspace}
               onAddFolder={handleAddFolder}
-              onAddFile={handleOpenCreateMarkdown}
+              onAddFile={onOpenInlineCreate}
               onUploadFile={handleUploadFile}
               onMoveDocument={handleMoveDocument}
               onMoveFolder={handleMoveFolder}
@@ -695,10 +650,7 @@ export function Sidebar({
 
         <div ref={moreMenuRef} className="shrink-0 border-t-0 px-2 py-2">
           {!moreMenuOpen && (
-            <label
-              className="mb-2 flex w-full cursor-pointer items-center justify-between gap-2 rounded-base border-2 border-border bg-background px-3 py-1.5 text-muted-foreground"
-              title="Stack Docs"
-            >
+            <label className="mb-2 flex w-full cursor-pointer items-center justify-between gap-2 rounded-base border-2 border-border bg-background px-3 py-1.5 text-muted-foreground">
               <span className="min-w-0 text-m">Stack Docs</span>
               <Switch
                 size="sm"
@@ -719,7 +671,6 @@ export function Sidebar({
                 variant="neutral"
                 size="sm"
                 className="w-full min-w-0 shrink-0 gap-2 text-primary hover:text-background bg-background hover:bg-primary/80"
-                title="Import, export, delete"
               >
                 Advanced Options
               </Button>
@@ -732,7 +683,6 @@ export function Sidebar({
                       variant="ghost"
                       size="sm"
                       className="min-w-0 justify-center rounded-base border-2 border-border text-primary hover:border-border hover:bg-primary hover:text-background"
-                      title="Import workspace"
                       onClick={() => {
                         setMoreMenuOpen(false);
                         window.setTimeout(() => importInputRef.current?.click(), 0);
@@ -745,7 +695,6 @@ export function Sidebar({
                       variant="ghost"
                       size="sm"
                       className="min-w-0 justify-center rounded-base border-2 border-border text-primary hover:border-border hover:bg-primary hover:text-background"
-                      title={selectedWorkspaceId ? "Export workspace" : "Export all workspaces"}
                       onClick={() => {
                         setMoreMenuOpen(false);
                         handleExportClick();
@@ -764,11 +713,6 @@ export function Sidebar({
                       setMoreMenuOpen(false);
                       handleDeleteAllClick();
                     }}
-                    title={
-                      selectedWorkspaceId
-                        ? `Delete workspace and all its contents`
-                        : "Delete all workspaces, folders, and documents"
-                    }
                   >
                     <Trash2 className="size-4 shrink-0" />
                     {selectedWorkspaceId ? "Delete Workspace" : "Delete Everything"}
@@ -841,94 +785,6 @@ export function Sidebar({
         closeButtonClassName="hover:text-destructive"
         onSubmit={handleRenameDocumentSubmit}
       />
-
-      <Dialog
-        open={showPaste}
-        onOpenChange={(open) => {
-          setShowPaste(open);
-          if (!open) {
-            setPasteValue("");
-            setPasteTitle("");
-            setPasteTarget(null);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-3xl max-h-[85vh] flex flex-col shadow-xl ring-1 ring-border/50">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">Create Markdown</DialogTitle>
-          </DialogHeader>
-          <div className="min-h-0 flex-1 space-y-3 py-2">
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="create-markdown-title"
-                className="block text-sm font-medium text-foreground"
-              >
-                Title
-              </label>
-              <Input
-                id="create-markdown-title"
-                value={pasteTitle}
-                onChange={(e) => setPasteTitle(e.target.value)}
-                placeholder="Enter title...  "
-                className="font-mono text-sm"
-                autoComplete="off"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="create-markdown-body"
-                className="block text-sm font-medium text-foreground"
-              >
-                Markdown
-              </label>
-              <Textarea
-                id="create-markdown-body"
-                value={pasteValue}
-                onChange={(e) => setPasteValue(e.target.value)}
-                placeholder="Enter markdown here..."
-                className="field-sizing-fixed min-h-[50vh] max-h-[60vh] w-full resize-y overflow-y-auto font-mono text-sm"
-              />
-            </div>
-          </div>
-          <DialogFooter className="gap-2 sm:gap-3">
-            <Button
-              variant="neutral"
-              className="bg-background text-primary hover:text-primary-hover"
-              onClick={() => {
-                setShowPaste(false);
-                setPasteValue("");
-                setPasteTitle("");
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="neutral"
-              onClick={async () => {
-                const trimmed = pasteValue.trim();
-                if (!trimmed) return;
-                const explicit = pasteTitle.trim().replace(/\.md$/i, "");
-                const title =
-                  explicit ||
-                  getFirstHeading(trimmed) ||
-                  trimmed.split("\n")[0]?.trim() ||
-                  "Untitled";
-                const wsId = pasteTarget?.workspaceId ?? selectedWorkspaceId ?? undefined;
-                const folderId = pasteTarget?.folderId ?? null;
-                await onAddDocument(title, trimmed, wsId, folderId);
-                setPasteValue("");
-                setPasteTitle("");
-                setPasteTarget(null);
-                setShowPaste(false);
-              }}
-              disabled={!pasteValue.trim()}
-              className="bg-primary/90 text-background hover:bg-primary/90"
-            >
-              Add
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <AlertDialog open={exportConfirmDialogOpen} onOpenChange={setExportConfirmDialogOpen}>
         <AlertDialogContent>

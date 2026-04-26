@@ -5,6 +5,11 @@ import { MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { _encatch } from "@encatch/web-sdk";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 /** Must match where Encatch hosts `/s/web-sdk-form`. Without this, localhost uses the current origin and the iframe loads a non-existent path (blank/black modal). */
 const ENCATCH_WEB_HOST = "https://app.encatch.com";
@@ -48,17 +53,24 @@ export function Feedback() {
   }, []);
 
   return (
-    <Button
-      variant="neutral"
-      size="icon-sm"
-      aria-label="Send feedback"
-      className="bg-background"
-      onClick={() => {
-        ensureEncatchInit();
-        _encatch.showForm(FEEDBACK_FORM_ID,);
-      }}
-    >
-      <MessageSquare className="size-4" />
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="neutral"
+          size="icon-sm"
+          aria-label="Bugs/Feedback"
+          className="bg-background"
+          onClick={() => {
+            ensureEncatchInit();
+            _encatch.showForm(FEEDBACK_FORM_ID,);
+          }}
+        >
+          <MessageSquare className="size-4" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" align="center">
+        Bugs/Feedback
+      </TooltipContent>
+    </Tooltip>
   );
 }
