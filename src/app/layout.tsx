@@ -16,6 +16,11 @@ const firaCode = Fira_Code({
 });
 
 function metadataBaseUrl(): URL {
+  // In dev, a production NEXT_PUBLIC_SITE_URL would otherwise make all metadata
+  // (including `metadata.icons` absolute URLs) point at the wrong host.
+  if (process.env.NODE_ENV === "development") {
+    return new URL("http://localhost:3000");
+  }
   const raw = process.env.NEXT_PUBLIC_SITE_URL;
   if (raw) {
     const normalized = /^(https?:)?\/\//.test(raw) ? raw : `https://${raw}`;
@@ -31,10 +36,25 @@ function metadataBaseUrl(): URL {
   return new URL("http://localhost:3000");
 }
 
+const deploymentCacheKey = process.env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_ID
+  ? `?v=${encodeURIComponent(process.env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_ID)}`
+  : "";
+
+function iconHref(path: string) {
+  return `${path}${deploymentCacheKey}`;
+}
+
 export const metadata: Metadata = {
   metadataBase: metadataBaseUrl(),
   title: "Opsly MD",
   description: "View and organize markdown documents with paste, upload, and rich rendering",
+  icons: {
+    icon: [
+      { url: iconHref("/favicon-64.png"), type: "image/png", sizes: "64x64" },
+      { url: iconHref("/favicon.ico"), sizes: "any" },
+    ],
+    apple: [{ url: iconHref("/apple-icon.png"), sizes: "180x180" }],
+  },
 };
 
 export default function RootLayout({
