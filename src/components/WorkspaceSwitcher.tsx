@@ -23,8 +23,25 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-const workspaceTabBaseClassName =
+/** Native scrollbar aligned with TOC / `ScrollArea` thumb (Radix scroll area breaks inside menus). */
+const workspaceSwitcherScrollbarClassName = cn(
+  "overflow-y-auto overflow-x-hidden",
+  "[scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]",
+  "[&::-webkit-scrollbar]:w-2.5",
+  "[&::-webkit-scrollbar-track]:bg-transparent",
+  "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border"
+);
+
+const workspaceSwitcherDropdownMaxHeightClassName =
+  "max-h-[min(50vh,16rem)]";
+
+export const workspaceTabBaseClassName =
   "!h-9 !min-h-9 !rounded-[5px] !border-2 !border-border !font-heading !font-bold !shadow-shadow !outline-0 transition-[transform,box-shadow] hover:!translate-x-[2px] hover:!translate-y-[2px] hover:!shadow-shadow hover:!outline-0 focus-visible:!outline-0 focus-visible:!shadow-shadow";
 
 const workspaceTabAllClassName = cn(
@@ -39,16 +56,25 @@ const workspaceNeutralChipClassName = cn(
 );
 
 /** Single-workspace view: wide name + ⋯ as two matching “cards” (white fill, black border, hard shadow). */
-const workspacePairTabClassName = cn(
+export const workspacePairTabClassName = cn(
   workspaceTabBaseClassName,
   "!bg-primary/90 !text-background hover:!bg-primary/90 hover:!text-primary-foreground focus-visible:!bg-primary/90"
 );
+
+/** List panel under the workspace switcher trigger (and inline Create Markdown). */
+export const workspaceSwitcherDropdownContentClassName =
+  "w-[var(--radix-popper-anchor-width)] min-w-0 max-w-[var(--radix-popper-anchor-width)] rounded-[5px] border-2 border-sidebar-border bg-background p-0 font-heading text-foreground shadow-md";
 
 interface WorkspaceSwitcherProps {
   workspaces: Workspace[];
   selectedId: string | null;
   onSelect: (workspaceId: string | null) => void;
   onAddWorkspace?: () => void;
+  /**
+   * In “All Workspaces” view, the (+) chip opens inline Create Markdown (not New Workspace).
+   * “New Workspace” remains in the workspace dropdown.
+   */
+  onQuickCreateMarkdown?: () => void;
   /** When a workspace is selected, actions for that workspace (⋯ menu). */
   onWorkspaceMenuOpenChange?: (open: boolean) => void;
   onAddFolder?: (workspaceId: string, parentFolderId: string | null) => void;
@@ -62,6 +88,7 @@ export function WorkspaceSwitcher({
   selectedId,
   onSelect,
   onAddWorkspace,
+  onQuickCreateMarkdown,
   onWorkspaceMenuOpenChange,
   onAddFolder,
   onUploadFile,
@@ -79,6 +106,32 @@ export function WorkspaceSwitcher({
     onUploadFile &&
     onCreateFile &&
     onRenameWorkspace;
+
+  const workspaceSwitcherListBody = (
+    <>
+      <DropdownMenuItem
+        onClick={() => onSelect(null)}
+        className={cn(
+          !selectedId &&
+            "bg-primary/70 border-border-2 font-semibold text-background"
+        )}
+      >
+        <span className="truncate">All Workspaces</span>
+      </DropdownMenuItem>
+      {workspaces.map((ws) => (
+        <DropdownMenuItem
+          key={ws.id}
+          onClick={() => onSelect(ws.id)}
+          className={cn(
+            selectedId === ws.id &&
+              "bg-primary/90 font-semibold text-sidebar-accent-foreground"
+          )}
+        >
+          <span className="truncate">{ws.name}</span>
+        </DropdownMenuItem>
+      ))}
+    </>
+  );
 
   return (
     <SidebarMenu
@@ -111,50 +164,67 @@ export function WorkspaceSwitcher({
           <DropdownMenuContent
             align="end"
             sideOffset={4}
-            className="w-[var(--radix-popper-anchor-width)] min-w-0 max-w-[var(--radix-popper-anchor-width)] rounded-[5px] border-2 border-sidebar-border bg-background p-0 font-heading text-foreground shadow-md"
+            className={workspaceSwitcherDropdownContentClassName}
           >
-            <div className="no-scrollbar max-h-[min(50vh,16rem)] w-full overflow-y-auto overflow-x-hidden">
-              <div className="p-1">
-                <DropdownMenuItem
-                  onClick={() => onSelect(null)}
+            {onAddWorkspace ? (
+              <div
+                className={cn(
+                  "flex w-full min-h-0 flex-col overflow-hidden",
+                  workspaceSwitcherDropdownMaxHeightClassName
+                )}
+              >
+                <div
                   className={cn(
-                    !selectedId &&
-                      "bg-primary/70 border-border-2 font-semibold text-background"
+                    "min-h-0 flex-1 pr-1",
+                    workspaceSwitcherScrollbarClassName
                   )}
                 >
-                  <span className="truncate">All Workspaces</span>
-                </DropdownMenuItem>
-                {workspaces.map((ws) => (
+                  <div className="p-1">{workspaceSwitcherListBody}</div>
+                </div>
+                <div className="shrink-0 border-t-2 border-border p-1">
                   <DropdownMenuItem
-                    key={ws.id}
-                    onClick={() => onSelect(ws.id)}
-                    className={cn(
-                      selectedId === ws.id &&
-                        "bg-primary/90 font-semibold text-sidebar-accent-foreground"
-                    )}
+                    onClick={() => onAddWorkspace()}
+                    className="cursor-pointer"
                   >
-                    <span className="truncate">{ws.name}</span>
+                    <Plus className="size-4 shrink-0" />
+                    <span className="truncate">New Workspace</span>
                   </DropdownMenuItem>
-                ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div
+                className={cn(
+                  workspaceSwitcherDropdownMaxHeightClassName,
+                  "w-full pr-1",
+                  workspaceSwitcherScrollbarClassName
+                )}
+              >
+                <div className="p-1">{workspaceSwitcherListBody}</div>
+              </div>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
-      {onAddWorkspace && selectedId === null ? (
+      {onQuickCreateMarkdown && selectedId === null ? (
         <SidebarMenuItem className="w-auto shrink-0">
-          <Button
-            variant="ghost"
-            title="New workspace"
-            aria-label="New workspace"
-            onClick={onAddWorkspace}
-            className={cn(
-              workspaceNeutralChipClassName,
-              "inline-flex w-9 min-w-9 shrink-0 items-center justify-center px-0"
-            )}
-          >
-            <Plus className="size-4 shrink-0 text-primary" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                aria-label="New markdown file"
+                onClick={onQuickCreateMarkdown}
+                className={cn(
+                  workspaceNeutralChipClassName,
+                  "inline-flex w-9 min-w-9 shrink-0 items-center justify-center px-0"
+                )}
+              >
+                <Plus className="size-4 shrink-0 text-primary" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" align="end">
+              New markdown file
+            </TooltipContent>
+          </Tooltip>
         </SidebarMenuItem>
       ) : null}
       {workspaceActionsAvailable && selected && selectedId ? (
@@ -164,19 +234,25 @@ export function WorkspaceSwitcher({
               onWorkspaceMenuOpenChange?.(open);
             }}
           >
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                title="Workspace actions"
-                aria-label="Workspace actions"
-                className={cn(
-                  workspaceNeutralChipClassName,
-                  "inline-flex w-9 min-w-9 shrink-0 items-center justify-center px-0"
-                )}
-              >
-                <MoreHorizontal className="size-4 shrink-0 text-primary" />
-              </Button>
-            </DropdownMenuTrigger>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    aria-label="Workspace actions"
+                    className={cn(
+                      workspaceNeutralChipClassName,
+                      "inline-flex w-9 min-w-9 shrink-0 items-center justify-center px-0"
+                    )}
+                  >
+                    <MoreHorizontal className="size-4 shrink-0 text-primary" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" align="end">
+                Workspace actions
+              </TooltipContent>
+            </Tooltip>
             <DropdownMenuContent
               align="end"
               sideOffset={4}
