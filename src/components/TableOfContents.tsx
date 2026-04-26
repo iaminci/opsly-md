@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { buildHeadingManifest } from "@/lib/heading-manifest";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TableOfContentsProps {
   content: string;
@@ -17,7 +18,7 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
   const [activeId, setActiveId] = useState<string | null>(
     () => buildHeadingManifest(content).filter((h) => h.level <= 3)[0]?.id ?? null
   );
-  const tocRef = useRef<HTMLUListElement>(null);
+  const tocScrollRef = useRef<HTMLDivElement | null>(null);
   const activeItemRef = useRef<HTMLAnchorElement | null>(null);
   const tickingRef = useRef(false);
   const lastSetIdRef = useRef<string | null>(null);
@@ -73,19 +74,19 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
 
   useLayoutEffect(() => {
     if (!activeId) return;
-    const list = tocRef.current;
+    const viewport = tocScrollRef.current;
     const node = activeItemRef.current;
-    if (!list || !node) return;
+    if (!viewport || !node) return;
 
-    // Only adjust the TOC list’s scrollTop — avoid scrollIntoView(), which can
+    // Only adjust the scroll viewport’s scrollTop — avoid scrollIntoView(), which can
     // scroll ancestor panes (tabs/sidebar) and move headings/tabs with it.
     const pad = 8;
-    const listRect = list.getBoundingClientRect();
+    const viewRect = viewport.getBoundingClientRect();
     const nodeRect = node.getBoundingClientRect();
-    if (nodeRect.top < listRect.top + pad) {
-      list.scrollTop += nodeRect.top - listRect.top - pad;
-    } else if (nodeRect.bottom > listRect.bottom - pad) {
-      list.scrollTop += nodeRect.bottom - listRect.bottom + pad;
+    if (nodeRect.top < viewRect.top + pad) {
+      viewport.scrollTop += nodeRect.top - viewRect.top - pad;
+    } else if (nodeRect.bottom > viewRect.bottom - pad) {
+      viewport.scrollTop += nodeRect.bottom - viewRect.bottom + pad;
     }
   }, [activeId]);
 
@@ -101,35 +102,38 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
 
   return (
     <nav className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
-      <h3 className="mb-2 shrink-0 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+      <h3 className="mb-2 shrink-0 pr-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
         On this page
       </h3>
-      <ul
-        ref={tocRef}
-        className="min-h-0 w-full flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-1.5 pb-1"
+      <ScrollArea
+        ref={tocScrollRef}
+        className="min-h-0 min-w-0 w-full flex-1"
+        viewportClassName="overflow-x-hidden pr-4"
       >
-        {headings.map(({ id, text, level }) => (
-          <li
-            key={id}
-            style={{ paddingLeft: `${(level - 1) * 8}px` }}
-            className="min-w-0 text-sm"
-          >
-            <a
-              ref={activeId === id ? activeItemRef : null}
-              href={`#${id}`}
-              onClick={(e) => handleClick(e, id)}
-              className={cn(
-                "block w-full min-w-0 break-words rounded-md border-2 border-l-2 px-2 py-1 transition-colors scroll-mt-4",
-                activeId === id
-                  ? "border-border bg-primary/90 font-medium !text-background visited:!text-background"
-                  : "border-transparent text-muted hover:bg-primary/90 hover:!text-background"
-              )}
+        <ul className="w-full min-w-0 space-y-1 px-1.5 pb-1">
+          {headings.map(({ id, text, level }) => (
+            <li
+              key={id}
+              style={{ paddingLeft: `${(level - 1) * 8}px` }}
+              className="min-w-0 text-sm"
             >
-              {text}
-            </a>
-          </li>
-        ))}
-      </ul>
+              <a
+                ref={activeId === id ? activeItemRef : null}
+                href={`#${id}`}
+                onClick={(e) => handleClick(e, id)}
+                className={cn(
+                  "block w-full min-w-0 break-words rounded-md border-2 border-l-2 px-2 py-1 transition-colors scroll-mt-4",
+                  activeId === id
+                    ? "border-border bg-primary/90 font-medium !text-background visited:!text-background"
+                    : "border-transparent text-muted hover:bg-primary/90 hover:!text-background"
+                )}
+              >
+                {text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </ScrollArea>
     </nav>
   );
 }

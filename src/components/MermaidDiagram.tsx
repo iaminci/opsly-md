@@ -1,28 +1,45 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import mermaid from "mermaid";
+
+function subscribeDocumentDark(callback: () => void) {
+  const el = document.documentElement;
+  const obs = new MutationObserver(callback);
+  obs.observe(el, { attributes: true, attributeFilter: ["class"] });
+  return () => obs.disconnect();
+}
+
+function getDocumentIsDark() {
+  return document.documentElement.classList.contains("dark");
+}
+
+function getServerIsDark() {
+  return false;
+}
 
 interface MermaidDiagramProps {
   chart: string;
 }
 
 export function MermaidDiagram({ chart }: MermaidDiagramProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: "neutral",
-      securityLevel: "loose",
-    });
-  }, []);
+  const isDark = useSyncExternalStore(
+    subscribeDocumentDark,
+    getDocumentIsDark,
+    getServerIsDark
+  );
 
   useEffect(() => {
     let cancelled = false;
     setError(null);
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: isDark ? "dark" : "neutral",
+      securityLevel: "loose",
+    });
 
     mermaid
       .render(`mermaid-${Date.now()}`, chart)
@@ -36,7 +53,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
     return () => {
       cancelled = true;
     };
-  }, [chart]);
+  }, [chart, isDark]);
 
   if (error) {
     return (
@@ -56,8 +73,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
 
   return (
     <div
-      ref={containerRef}
-      className="my-4 flex justify-center overflow-x-auto rounded-md border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900"
+      className="not-prose my-4 flex justify-center overflow-x-auto rounded-md border-2 border-border p-4"
       dangerouslySetInnerHTML={{ __html: svg }}
     />
   );

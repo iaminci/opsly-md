@@ -16,9 +16,17 @@ const FEEDBACK_FORM_ID = "a2b01181-50e9-4daf-b06e-e07453b69d70";
 let encatchInitialized = false;
 let encatchErrorSubscribed = false;
 
+function encatchThemeFromDocument(): "light" | "dark" {
+  if (typeof document === "undefined") return "light";
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
+
 function ensureEncatchInit() {
   if (encatchInitialized) return;
-  _encatch.init(ENCATCH_API_KEY, { webHost: ENCATCH_WEB_HOST });
+  _encatch.init(ENCATCH_API_KEY, {
+    webHost: ENCATCH_WEB_HOST,
+    theme: encatchThemeFromDocument(),
+  });
   encatchInitialized = true;
 
   if (!encatchErrorSubscribed) {
@@ -34,7 +42,7 @@ function ensureEncatchInit() {
   }
 }
 
-export function FeedbackButton() {
+export function Feedback() {
   useEffect(() => {
     ensureEncatchInit();
   }, []);
@@ -44,9 +52,10 @@ export function FeedbackButton() {
       variant="neutral"
       size="icon-sm"
       aria-label="Send feedback"
+      className="bg-background"
       onClick={() => {
         ensureEncatchInit();
-        _encatch.showForm(FEEDBACK_FORM_ID);
+        _encatch.showForm(FEEDBACK_FORM_ID,);
       }}
     >
       <MessageSquare className="size-4" />

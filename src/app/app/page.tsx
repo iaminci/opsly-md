@@ -91,7 +91,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
-// import { FeedbackButton } from "@/components/Feedback";
+import { Feedback } from "@/components/Feedback";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const CURRENT_DOC_KEY = "md-viewer-current-doc";
 const RIGHT_TOC_OPEN_KEY = "md-viewer-right-toc-open";
@@ -217,7 +218,10 @@ function DocumentRightSidebar({
           scrollContainerRef={contentScrollRef}
         />
       </TabsContent>
-      <TabsContent value="info" className="mt-0 flex min-h-0 flex-1 flex-col overflow-auto">
+      <TabsContent
+        value="info"
+        className="mt-0 flex min-h-0 flex-1 flex-col overflow-auto pr-4"
+      >
         <DocumentInfo doc={doc} />
       </TabsContent>
     </Tabs>
@@ -554,7 +558,7 @@ function AppContent() {
             <HeaderLogo className="h-7 w-auto max-w-[min(100%,20rem)] sm:h-8" />
           </Link>
           <div className="ml-auto flex items-center gap-5">
-            {/* <FeedbackButton /> */}
+            <Feedback />
             <Button variant="neutral" size="icon-sm" className="bg-background" asChild>
               <a
                 href={GITHUB_URL}
@@ -569,10 +573,12 @@ function AppContent() {
           </div>
         </header>
         <div className="flex min-h-0 flex-1 overflow-hidden">
-          <div
+          <ScrollArea
             ref={contentScrollRef}
-            className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden py-8 pl-8 pr-8 print:px-0 lg:pl-8 lg:pr-12"
+            className="min-h-0 min-w-0 flex-1"
+            viewportClassName="overflow-x-hidden"
           >
+            <div className="py-8 pl-8 pr-8 print:px-0 lg:pl-8 lg:pr-12">
           {currentDoc ? (
             <>
               <DocumentColumn rightTocOpen={rightTocOpen}>
@@ -633,7 +639,8 @@ function AppContent() {
           ) : (
             <EmptyState hasDocuments={documents.length > 0} />
           )}
-          </div>
+            </div>
+          </ScrollArea>
 
           {currentDoc && (
             <>
@@ -644,7 +651,7 @@ function AppContent() {
                   "hidden min-h-0 min-w-0 shrink-0 overflow-hidden lg:flex lg:flex-col print:hidden",
                   "transition-[width,padding-left,padding-right,padding-top,padding-bottom,border-left-width] duration-150 ease-linear",
                   rightTocOpen
-                    ? "w-56 border-l-2 border-border px-4 py-6"
+                    ? "w-56 border-l-2 border-border px-3 py-6"
                     : "w-0 border-l-0 px-0 py-0"
                 )}
               >
@@ -723,7 +730,7 @@ function AppContent() {
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
               placeholder="Markdown content..."
-              className="field-sizing-fixed min-h-[50vh] max-h-[60vh] w-full resize-y overflow-y-auto font-mono text-sm"
+              className="min-h-[200px] max-h-[50vh] overflow-y-auto"
             />
           </div>
           <DialogFooter className="gap-2 sm:gap-3">
