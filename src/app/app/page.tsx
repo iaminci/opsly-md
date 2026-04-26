@@ -69,13 +69,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
@@ -102,7 +95,7 @@ const GITHUB_URL = "https://github.com/iaminci/opsly-md";
 /**
  * Open Radix overlays that handle Escape. Used in the capture phase so we still see
  * [data-state=open] before Radix dismisses a dialog (in the bubble phase, React may
- * already have unmounted the dialog and `editOpen` can be false — causing a second Esc effect).
+ * already have unmounted the overlay — causing a second Esc effect).
  */
 const ESCAPE_BLOCKING_OVERLAY_SELECTOR = [
   '[data-state="open"][data-slot="dialog-content"]',
@@ -239,8 +232,10 @@ function AppContent() {
   const currentDocIdRef = useRef<string | null>(null);
   currentDocIdRef.current = currentDoc?.id ?? null;
   const [loading, setLoading] = useState(true);
-  const [editOpen, setEditOpen] = useState(false);
-  const [editContent, setEditContent] = useState("");
+  const [editMode, setEditMode] = useState(false);
+  const [draftContent, setDraftContent] = useState("");
+  const scrollTopBeforeEditRef = useRef(0);
+  const shouldRestoreScrollRef = useRef(false);
   const [rightTocOpen, setRightTocOpen] = useState(true);
   const [downloadConfirmOpen, setDownloadConfirmOpen] = useState(false);
   const [documentStackEnabled, setDocumentStackEnabled] = useState(true);
@@ -248,10 +243,10 @@ function AppContent() {
   const contentScrollRef = useRef<HTMLDivElement>(null);
 
   const editDirty =
-    editOpen &&
+    editMode &&
     !!currentDoc &&
-    editContent !== currentDoc.content;
-  useDeploymentReloadBlock(editOpen);
+    draftContent !== currentDoc.content;
+  useDeploymentReloadBlock(editMode);
   useEffect(() => {
     if (!editDirty) return;
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -341,6 +336,19 @@ function AppContent() {
   }, [documents, searchParams]);
 
   useEffect(() => {
+    setEditMode(false);
+    shouldRestoreScrollRef.current = false;
+  }, [currentDoc?.id]);
+
+  useLayoutEffect(() => {
+    if (editMode) return;
+    if (!shouldRestoreScrollRef.current) return;
+    shouldRestoreScrollRef.current = false;
+    const vp = contentScrollRef.current;
+    if (vp) vp.scrollTop = scrollTopBeforeEditRef.current;
+  }, [editMode]);
+
+  useEffect(() => {
     if (!currentDoc || typeof window === "undefined") return;
     localStorage.setItem(CURRENT_DOC_KEY, currentDoc.id);
     // Do NOT sync currentDoc→URL here. That causes a race: router.replace is async,
@@ -402,26 +410,32 @@ function AppContent() {
     [documentStackEnabled, docStackIds]
   );
 
-  const handleEditOpen = useCallback(() => {
-    if (currentDoc) {
-      setEditContent(currentDoc.content);
-      setEditOpen(true);
-    }
+  const handleEnterEditMode = useCallback(() => {
+    if (!currentDoc) return;
+    const vp = contentScrollRef.current;
+    scrollTopBeforeEditRef.current = vp?.scrollTop ?? 0;
+    setDraftContent(currentDoc.content);
+    setEditMode(true);
   }, [currentDoc]);
+
+  const handleExitEditMode = useCallback((restoreScroll: boolean) => {
+    shouldRestoreScrollRef.current = restoreScroll;
+    setEditMode(false);
+  }, []);
 
   const handleEditSave = useCallback(async () => {
     if (!currentDoc) return;
     try {
-      const newTitle = getFirstHeading(editContent) ?? currentDoc.title;
+      const newTitle = getFirstHeading(draftContent) ?? currentDoc.title;
       const updated = await updateDocument(currentDoc.id, {
-        content: editContent,
+        content: draftContent,
         title: newTitle,
       });
       if (updated) {
         setCurrentDoc(updated);
         await refresh();
       }
-      setEditOpen(false);
+      handleExitEditMode(true);
     } catch (err) {
       if (err instanceof DuplicateNameError) {
         toast.error(err.message);
@@ -429,7 +443,7 @@ function AppContent() {
         toast.error("Failed to save document.");
       }
     }
-  }, [currentDoc, editContent, refresh]);
+  }, [currentDoc, draftContent, refresh, handleExitEditMode]);
 
   const performDownload = useCallback(() => {
     if (!currentDoc) return;
@@ -477,7 +491,7 @@ function AppContent() {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       if (
-        editOpen ||
+        editMode ||
         downloadConfirmOpen ||
         hasOpenEscapeBlockingOverlay()
       ) {
@@ -489,7 +503,7 @@ function AppContent() {
     // Capture: run before Radix dismiss-on-Escape unmounts the dialog, so we don’t also close the doc.
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [currentDoc, editOpen, downloadConfirmOpen, handleCloseDocument]);
+  }, [currentDoc, editMode, downloadConfirmOpen, handleCloseDocument]);
 
   useEffect(() => {
     const loadSample = searchParams.get("loadSample");
@@ -585,43 +599,69 @@ function AppContent() {
                 <div className="mb-6 flex flex-col gap-3 print:mb-4">
                   <div className="flex w-full min-w-0 flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-start lg:justify-between lg:gap-x-4 lg:gap-y-3">
                     <div className="min-h-0 min-w-0 w-full lg:w-auto lg:min-w-0 lg:flex-1 lg:basis-0">
-                      {(() => {
-                        const firstHeading = getFirstHeading(currentDoc.content);
-                        // When content has a heading, it will be rendered by MarkdownRenderer—don't duplicate.
-                        if (firstHeading) return null;
-                        // No heading in content: show doc.title as fallback.
-                        return (
-                          <h1 className="text-3xl font-semibold text-foreground">
-                            {currentDoc.title}
-                          </h1>
-                        );
-                      })()}
-                      {getSubtitle(currentDoc.content) && (
+                      {!editMode &&
+                        (() => {
+                          const firstHeading = getFirstHeading(currentDoc.content);
+                          // When content has a heading, it will be rendered by MarkdownRenderer—don't duplicate.
+                          if (firstHeading) return null;
+                          // No heading in content: show doc.title as fallback.
+                          return (
+                            <h1 className="text-3xl font-semibold text-foreground">
+                              {currentDoc.title}
+                            </h1>
+                          );
+                        })()}
+                      {!editMode && getSubtitle(currentDoc.content) && (
                         <p className="mt-1 text-muted-foreground text-sm">
                           {getSubtitle(currentDoc.content)}
                         </p>
                       )}
                     </div>
                     <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3 md:gap-5 lg:w-auto lg:max-w-full">
-                      <Button
-                        type="button"
-                        variant="neutral"
-                        size="sm"
-                        className="bg-background text-primary hover:text-primary-hover"
-                        onClick={handleEditOpen}
-                      >
-                        <Pencil className="size-4" />
-                        Edit
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="neutral"
-                        size="sm"
-                        className="bg-background text-primary"
-                        onClick={() => setDownloadConfirmOpen(true)}
-                      >
-                        Download
-                      </Button>
+                      {editMode ? (
+                        <>
+                          <Button
+                            type="button"
+                            variant="neutral"
+                            size="sm"
+                            className="bg-background text-primary hover:text-primary-hover"
+                            onClick={() => handleExitEditMode(true)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="neutral"
+                            size="sm"
+                            className="bg-primary/90 text-background"
+                            onClick={handleEditSave}
+                          >
+                            Save
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            type="button"
+                            variant="neutral"
+                            size="sm"
+                            className="bg-background text-primary hover:text-primary-hover"
+                            onClick={handleEnterEditMode}
+                          >
+                            <Pencil className="size-4" />
+                            Edit
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="neutral"
+                            size="sm"
+                            className="bg-background text-primary"
+                            onClick={() => setDownloadConfirmOpen(true)}
+                          >
+                            Download
+                          </Button>
+                        </>
+                      )}
                       <button
                         type="button"
                         aria-label="Close document and return to overview"
@@ -633,7 +673,26 @@ function AppContent() {
                     </div>
                   </div>
                 </div>
-                <MarkdownRenderer content={currentDoc.content} />
+                {editMode ? (
+                  <Textarea
+                    autoFocus
+                    value={draftContent}
+                    onChange={(e) => setDraftContent(e.target.value)}
+                    placeholder="Markdown content..."
+                    spellCheck={false}
+                    className={cn(
+                      "h-[calc(100svh-12rem)] min-h-[calc(100svh-12rem)] resize-y font-mono text-sm leading-relaxed",
+                      "overflow-y-auto overflow-x-hidden",
+                      "[scrollbar-width:thin] [scrollbar-color:var(--border)_var(--secondary-background)]",
+                      "[&::-webkit-scrollbar]:w-2",
+                      "[&::-webkit-scrollbar-track]:rounded-base [&::-webkit-scrollbar-track]:bg-secondary-background",
+                      "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border",
+                      "border-border bg-secondary-background text-foreground"
+                    )}
+                  />
+                ) : (
+                  <MarkdownRenderer content={currentDoc.content} />
+                )}
               </DocumentColumn>
             </>
           ) : (
@@ -720,36 +779,6 @@ function AppContent() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-3xl max-h-[85vh] flex flex-col shadow-xl ring-1 ring-border/50">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">Edit document</DialogTitle>
-          </DialogHeader>
-          <div className="min-h-0 flex-1 py-2">
-            <Textarea
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              placeholder="Markdown content..."
-              className="min-h-[200px] max-h-[50vh] overflow-y-auto"
-            />
-          </div>
-          <DialogFooter className="gap-2 sm:gap-3">
-            <Button
-              variant="neutral" onClick={() => setEditOpen(false)}
-              className="bg-background text-primary hover:text-primary-hover"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleEditSave}
-              variant="neutral"
-              className="bg-primary/90 text-background"
-            >
-              Save
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </SidebarProvider>
   );
 }
