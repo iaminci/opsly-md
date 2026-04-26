@@ -7,18 +7,26 @@ const homeTitle = "Opsly MD — A local-first Markdown workspace.";
 const homeDescription =
   "Runs entirely in your browser — no accounts, no servers, no tracking.";
 
+const ogImage = "/favicon-64.png";
+
 export const metadata: Metadata = {
   title: homeTitle,
   description: homeDescription,
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: homeTitle,
     description: homeDescription,
     type: "website",
+    url: "/",
+    images: [{ url: ogImage, width: 64, height: 64, alt: "Opsly MD" }],
   },
   twitter: {
     card: "summary",
     title: homeTitle,
     description: homeDescription,
+    images: [ogImage],
   },
 };
 
