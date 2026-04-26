@@ -15,7 +15,24 @@ const firaCode = Fira_Code({
   display: "swap",
 });
 
+function metadataBaseUrl(): URL {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL;
+  if (raw) {
+    const normalized = /^(https?:)?\/\//.test(raw) ? raw : `https://${raw}`;
+    try {
+      return new URL(normalized);
+    } catch {
+      // Invalid env breaks all metadata; fall back to vercel/localhost
+    }
+  }
+  if (process.env.VERCEL_URL) {
+    return new URL(`https://${process.env.VERCEL_URL}`);
+  }
+  return new URL("http://localhost:3000");
+}
+
 export const metadata: Metadata = {
+  metadataBase: metadataBaseUrl(),
   title: "Opsly MD",
   description: "View and organize markdown documents with paste, upload, and rich rendering",
 };
