@@ -15,7 +15,7 @@ import {
 const ENCATCH_WEB_HOST = "https://app.encatch.com";
 
 const ENCATCH_API_KEY =
-  "en_ZpxFYPbO3bWnmWovUrZ7matMJYgewwbt61DOePMhhTuBnwn3yEkFvxGVYXerGuWGynywCQdG2cebEzZ_357c68bc";
+  "en_ZpxFYPlKUQq7zjg70QVJ1FDK4mvUXTKGioh1VSmGaYc3gDh8Rx8YUqEYqYS27cd7M4gkgIBcQb6FPfV_709035e6";
 const FEEDBACK_FORM_ID = "a2b01181-50e9-4daf-b06e-e07453b69d70";
 
 let encatchInitialized = false;
