@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { _encatch } from "@encatch/web-sdk";
+import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -21,16 +22,16 @@ const FEEDBACK_FORM_ID = "a2b01181-50e9-4daf-b06e-e07453b69d70";
 let encatchInitialized = false;
 let encatchErrorSubscribed = false;
 
-function encatchThemeFromDocument(): "light" | "dark" {
-  if (typeof document === "undefined") return "light";
-  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+function syncEncatch(theme: "light" | "dark") {
+  ensureEncatchInit(theme);
+  _encatch.setTheme(theme);
 }
 
-function ensureEncatchInit() {
+function ensureEncatchInit(theme: "light" | "dark") {
   if (encatchInitialized) return;
   _encatch.init(ENCATCH_API_KEY, {
     webHost: ENCATCH_WEB_HOST,
-    theme: encatchThemeFromDocument(),
+    theme,
   });
   encatchInitialized = true;
 
@@ -48,9 +49,11 @@ function ensureEncatchInit() {
 }
 
 export function Feedback() {
+  const { theme } = useTheme();
+
   useEffect(() => {
-    ensureEncatchInit();
-  }, []);
+    syncEncatch(theme);
+  }, [theme]);
 
   return (
     <Tooltip>
@@ -61,8 +64,8 @@ export function Feedback() {
           aria-label="Bugs/Feedback"
           className="bg-background"
           onClick={() => {
-            ensureEncatchInit();
-            _encatch.showForm(FEEDBACK_FORM_ID,);
+            syncEncatch(theme);
+            _encatch.showForm(FEEDBACK_FORM_ID);
           }}
         >
           <MessageSquare className="size-4" />
