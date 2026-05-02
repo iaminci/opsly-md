@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@encatch/web-sdk':
-        specifier: ^1.1.0
-        version: 1.1.0
+        specifier: ^1.2.0
+        version: 1.2.0
       '@radix-ui/react-accordion':
         specifier: ^1.2.12
         version: 1.2.12(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -358,8 +358,8 @@ packages:
   '@emnapi/wasi-threads@1.1.0':
     resolution: {integrity: sha512-WI0DdZ8xFSbgMjR1sFsKABJ/C5OnRrjT06JXbZKexJGrDuPTzZdDYfFlsgcCXCyf+suG5QU2e/y1Wo2V/OapLQ==}
 
-  '@encatch/web-sdk@1.1.0':
-    resolution: {integrity: sha512-WE5ADZL0E3X8Ne9z7kqXPFF9bkamt2H19IZfMLaBc2WRCBGAPE4UgUpXzTY6wpCXdQdSmuony0yv8mwnpyPISg==}
+  '@encatch/web-sdk@1.2.0':
+    resolution: {integrity: sha512-Vb/0arCZ5DINTgCBOhtUinhKds/C8g7JZqsotMnyikV7CPRMPMjQJ8I/pJCP2nBFYl8nuKGkbK7X6rJ0nbudsA==}
     engines: {node: '>=18'}
 
   '@eslint-community/eslint-utils@4.9.1':
@@ -5068,7 +5068,7 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
-  '@encatch/web-sdk@1.1.0': {}
+  '@encatch/web-sdk@1.2.0': {}
 
   '@eslint-community/eslint-utils@4.9.1(eslint@9.39.4(jiti@2.6.1))':
     dependencies:
