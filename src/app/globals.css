@@ -392,6 +392,18 @@ html[data-window-inactive].dark *::-moz-selection {
   }
 }
 
+/*
+ * Encatch SDK iframe — inline radius + soft shadow from Encatch; dashboard CSS cannot target this node.
+ * Duplicated in comments for “combined Encatch paste” docs; source of truth for the app is here.
+ */
+iframe[src*="app.encatch.com/s/web-sdk-form"],
+iframe[id^="encatch-iframe-"] {
+  border: 2px solid var(--border) !important;
+  border-radius: var(--radius-base) !important;
+  box-shadow: var(--shadow) !important;
+  overflow: hidden !important;
+}
+
 /* Theme toggle: circular reveal from click (View Transitions API) */
 ::view-transition-old(root) {
   animation: none;
