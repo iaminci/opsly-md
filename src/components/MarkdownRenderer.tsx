@@ -170,7 +170,7 @@ export function MarkdownRenderer({ content, ctaLinks = false }: MarkdownRenderer
   return (
     <article
       className={cn(
-        "prose prose-zinc dark:prose-invert max-w-none",
+        "prose prose-zinc dark:prose-invert max-w-none min-w-0 break-words",
         "[&_h1]:!text-foreground [&_h2]:!text-foreground [&_h3]:!text-foreground",
         "[&_h4]:!text-foreground [&_h5]:!text-foreground [&_h6]:!text-foreground",
         "[&_p]:!text-foreground [&_ul]:!text-foreground [&_ol]:!text-foreground [&_li]:!text-foreground",

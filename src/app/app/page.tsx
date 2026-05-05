@@ -94,7 +94,6 @@ import {
 import { toast } from "sonner";
 import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
 import { Feedback } from "@/components/Feedback";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { WorkspaceTreeProvider, useWorkspaceTree } from "@/context/WorkspaceTreeContext";
 import {
   workspacePairTabClassName,
@@ -225,7 +224,7 @@ function DocumentColumn({
   return (
     <div
       className={cn(
-        "relative mx-auto w-full min-w-0 transition-[max-width] duration-200 ease-linear",
+        "relative mx-auto w-full min-w-0 max-w-full overflow-x-clip transition-[max-width] duration-200 ease-linear",
         maxClass
       )}
     >
@@ -347,16 +346,16 @@ function InlineCreateMarkdownForm({
       <DocumentColumn rightTocOpen={rightTocOpen}>
         <div className="mb-6 print:mb-4">
           {hasSyncedWorkspacesAtLeastOnce && sortedWorkspaces.length > 0 ? (
-            <div className="flex w-full min-w-0 flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-start lg:justify-between lg:gap-x-4 lg:gap-y-3">
-              <div className="min-h-0 min-w-0 w-full lg:w-auto lg:min-w-0 lg:flex-1 lg:basis-0">
-                <h1 className="text-3xl font-semibold text-foreground">Create Markdown</h1>
+            <div className="flex min-w-0 flex-col gap-3">
+              <div className="min-h-0 min-w-0">
+                <h1 className="break-words text-3xl font-semibold text-foreground">Create Markdown</h1>
               </div>
-              <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3 md:gap-5 lg:w-auto lg:max-w-full">
+              <div className="flex min-w-0 w-full max-w-full flex-wrap items-center justify-start gap-2 sm:justify-end sm:gap-3 md:gap-5">
                 <Button
                   type="button"
                   variant="neutral"
                   size="sm"
-                  className="bg-background text-primary hover:text-primary-hover"
+                  className="shrink-0 bg-background text-primary hover:text-primary-hover"
                   onClick={onCancel}
                 >
                   Cancel
@@ -365,7 +364,7 @@ function InlineCreateMarkdownForm({
                   type="button"
                   variant="neutral"
                   size="sm"
-                  className="bg-primary/90 text-background"
+                  className="shrink-0 bg-primary/90 text-background"
                   onClick={() => void onSubmit()}
                   disabled={!createMarkdown.trim() || !createSelectedWorkspaceId}
                 >
@@ -1001,13 +1000,30 @@ function AppContent() {
             <ThemeToggle />
           </div>
         </header>
-        <div className="flex min-h-0 flex-1 overflow-hidden">
-          <ScrollArea
+        <div
+          className={cn(
+            "min-h-0 flex-1 overflow-hidden",
+            currentDoc && !createMode
+              ? "flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:grid-rows-1"
+              : "flex flex-col"
+          )}
+        >
+          <div
             ref={contentScrollRef}
-            className="min-h-0 min-w-0 flex-1"
-            viewportClassName="overflow-x-hidden"
+            className={cn(
+              // Native overflow (not Radix ScrollArea): Radix wraps content in display:table + minWidth:100%,
+              // which can grow wider than the grid column and clip right-aligned doc actions beside the TOC.
+              "relative z-[1] min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden font-base outline-none",
+              "[scrollbar-width:thin] [scrollbar-color:var(--border)_var(--secondary-background)]",
+              "[&::-webkit-scrollbar]:w-2",
+              "[&::-webkit-scrollbar-track]:rounded-base [&::-webkit-scrollbar-track]:bg-secondary-background",
+              "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border",
+              currentDoc &&
+                !createMode &&
+                "lg:col-span-1 lg:col-start-1 lg:row-start-1 lg:h-full lg:max-h-full lg:min-h-0"
+            )}
           >
-            <div className="py-8 pl-8 pr-8 print:px-0 lg:pl-8 lg:pr-12">
+            <div className="box-border max-w-full min-w-0 py-8 pl-8 pr-8 print:px-0 lg:pl-8 lg:pr-12">
           {createMode ? (
             <InlineCreateMarkdownForm
               rightTocOpen={rightTocOpen}
@@ -1025,35 +1041,34 @@ function AppContent() {
           ) : currentDoc ? (
             <>
               <DocumentColumn rightTocOpen={rightTocOpen}>
-                <div className="mb-6 flex flex-col gap-3 print:mb-4">
-                  <div className="flex w-full min-w-0 flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-start lg:justify-between lg:gap-x-4 lg:gap-y-3">
-                    <div className="min-h-0 min-w-0 w-full lg:w-auto lg:min-w-0 lg:flex-1 lg:basis-0">
-                      {!editMode &&
-                        (() => {
-                          const firstHeading = getFirstHeading(currentDoc.content);
-                          // When content has a heading, it will be rendered by MarkdownRenderer—don't duplicate.
-                          if (firstHeading) return null;
-                          // No heading in content: show doc.title as fallback.
-                          return (
-                            <h1 className="text-3xl font-semibold text-foreground">
-                              {currentDoc.title}
-                            </h1>
-                          );
-                        })()}
-                      {!editMode && getSubtitle(currentDoc.content) && (
-                        <p className="mt-1 text-muted-foreground text-sm">
-                          {getSubtitle(currentDoc.content)}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3 md:gap-5 lg:w-auto lg:max-w-full">
+                <div className="mb-6 flex min-w-0 flex-col gap-3 print:mb-4">
+                  <div className="min-h-0 min-w-0">
+                    {!editMode &&
+                      (() => {
+                        const firstHeading = getFirstHeading(currentDoc.content);
+                        // When content has a heading, it will be rendered by MarkdownRenderer—don't duplicate.
+                        if (firstHeading) return null;
+                        // No heading in content: show doc.title as fallback.
+                        return (
+                          <h1 className="break-words text-3xl font-semibold text-foreground">
+                            {currentDoc.title}
+                          </h1>
+                        );
+                      })()}
+                    {!editMode && getSubtitle(currentDoc.content) && (
+                      <p className="mt-1 text-muted-foreground text-sm">
+                        {getSubtitle(currentDoc.content)}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex min-w-0 w-full max-w-full flex-wrap items-center justify-start gap-2 sm:justify-end sm:gap-3 md:gap-5">
                       {editMode ? (
                         <>
                           <Button
                             type="button"
                             variant="neutral"
                             size="sm"
-                            className="bg-background text-primary hover:text-primary-hover"
+                            className="shrink-0 bg-background text-primary hover:text-primary-hover"
                             onClick={() => handleExitEditMode(true)}
                           >
                             Cancel
@@ -1062,7 +1077,7 @@ function AppContent() {
                             type="button"
                             variant="neutral"
                             size="sm"
-                            className="bg-primary/90 text-background"
+                            className="shrink-0 bg-primary/90 text-background"
                             onClick={handleEditSave}
                           >
                             Save
@@ -1074,7 +1089,7 @@ function AppContent() {
                             type="button"
                             variant="neutral"
                             size="sm"
-                            className="bg-background text-primary hover:text-primary-hover"
+                            className="shrink-0 bg-background text-primary hover:text-primary-hover"
                             onClick={handleEnterEditMode}
                           >
                             <Pencil className="size-4" />
@@ -1084,7 +1099,7 @@ function AppContent() {
                             type="button"
                             variant="neutral"
                             size="sm"
-                            className="bg-background text-primary"
+                            className="shrink-0 bg-background text-primary"
                             onClick={() => setDownloadConfirmOpen(true)}
                           >
                             Download
@@ -1101,7 +1116,6 @@ function AppContent() {
                           <X className="size-4 shrink-0" strokeWidth={2.5} aria-hidden />
                         </button>
                       )}
-                    </div>
                   </div>
                 </div>
                 {editMode ? (
@@ -1130,15 +1144,15 @@ function AppContent() {
             <EmptyState hasDocuments={documents.length > 0} />
           )}
             </div>
-          </ScrollArea>
+          </div>
 
           {currentDoc && !createMode && (
-            <>
+            <div className="relative z-[2] hidden min-h-0 min-w-0 shrink-0 print:hidden lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:flex lg:h-full lg:min-h-0 lg:flex-col">
               <div
                 id="document-outline-panel"
                 aria-hidden={!rightTocOpen}
                 className={cn(
-                  "hidden min-h-0 min-w-0 shrink-0 overflow-hidden lg:flex lg:flex-col print:hidden",
+                  "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden",
                   "transition-[width,padding-left,padding-right,padding-top,padding-bottom,border-left-width] duration-150 ease-linear",
                   rightTocOpen
                     ? "w-56 border-l-2 border-border px-3 py-6"
@@ -1182,7 +1196,7 @@ function AppContent() {
                   {rightTocOpen ? "Hide outline" : "Show outline"}
                 </TooltipContent>
               </Tooltip>
-            </>
+            </div>
           )}
         </div>
       </SidebarInset>
@@ -1207,7 +1221,7 @@ function AppContent() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="!bg-primary/90 hover:!bg-primary/90 !text-background border-2 border-foreground shadow-[2px_2px_0_0_#000] hover:!translate-x-0.5 hover:!translate-y-0.5 hover:!shadow-none"
+              className="!bg-primary/90 hover:!bg-primary/90 !text-background border-2 border-border shadow-[2px_2px_0_0_#000] hover:!translate-x-0.5 hover:!translate-y-0.5 hover:!shadow-none"
               onClick={() => performDownload()}
             >
               Download

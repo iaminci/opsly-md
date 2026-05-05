@@ -61,7 +61,8 @@ const AlertDialogContent = React.forwardRef<
       data-slot="alert-dialog-content"
       data-size={size}
       className={cn(
-        "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-base p-5 text-foreground outline-none duration-100",
+        "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-2rem)] max-w-full min-w-0 -translate-x-1/2 -translate-y-1/2 gap-4 overflow-x-hidden overflow-y-auto rounded-base p-5 text-foreground outline-none duration-100",
+        "box-border max-h-[90dvh] overscroll-contain",
         alertDialogSurface,
         "data-[size=default]:max-w-md data-[size=sm]:max-w-xs data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
         className
@@ -79,7 +80,7 @@ function AlertDialogHeader({
   return (
     <div
       data-slot="alert-dialog-header"
-      className={cn("flex flex-col gap-2 text-left", className)}
+      className={cn("flex min-w-0 flex-col gap-2 text-left", className)}
       {...props}
     />
   )
@@ -93,7 +94,7 @@ function AlertDialogFooter({
     <div
       data-slot="alert-dialog-footer"
       className={cn(
-        "flex flex-row flex-wrap items-center justify-end gap-3 pt-1",
+        "flex w-full min-w-0 flex-row flex-wrap items-center justify-start gap-2 pt-1 sm:justify-end sm:gap-3",
         className
       )}
       {...props}
@@ -125,7 +126,7 @@ const AlertDialogTitle = React.forwardRef<
     ref={ref}
     data-slot="alert-dialog-title"
     className={cn(
-      "text-lg font-bold leading-snug tracking-tight text-foreground",
+      "break-words text-lg font-bold leading-snug tracking-tight text-foreground",
       className
     )}
     {...props}
@@ -141,7 +142,7 @@ const AlertDialogDescription = React.forwardRef<
     ref={ref}
     data-slot="alert-dialog-description"
     className={cn(
-      "text-sm leading-relaxed text-muted-foreground *:[a]:underline *:[a]:underline-offset-2 *:[a]:hover:text-foreground",
+      "min-w-0 break-words text-sm leading-relaxed text-muted-foreground *:[a]:underline *:[a]:underline-offset-2 *:[a]:hover:text-foreground",
       className
     )}
     {...props}

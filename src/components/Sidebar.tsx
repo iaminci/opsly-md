@@ -562,7 +562,8 @@ export function Sidebar({
     : null;
 
   return (
-    <ShadcnSidebar collapsible="offcanvas" className="print:hidden border-r-2 border-sidebar-border">
+    <>
+      <ShadcnSidebar collapsible="offcanvas" className="print:hidden border-r-2 border-sidebar-border">
       <input
         ref={fileInputRef}
         type="file"
@@ -724,6 +725,7 @@ export function Sidebar({
         </div>
         </div>
       </SidebarContent>
+    </ShadcnSidebar>
 
       <CreateNameDialog
         open={workspaceDialogOpen}
@@ -1004,7 +1006,7 @@ export function Sidebar({
           onImportWorkspace: handleImportWorkspace,
         }}
       />
-    </ShadcnSidebar>
+    </>
   );
 }
 

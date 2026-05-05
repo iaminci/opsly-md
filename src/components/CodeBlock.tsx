@@ -20,7 +20,7 @@ export function CodeBlock({ className, children }: CodeBlockProps) {
   }, [code]);
 
   return (
-    <div className="group relative my-4">
+    <div className="group relative my-4 max-w-full min-w-0">
       <pre className="overflow-x-auto rounded-md border-2 border-border p-0">
         <code
           className={cn(
