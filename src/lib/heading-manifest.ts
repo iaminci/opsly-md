@@ -1,7 +1,18 @@
 /**
- * Parse ATX headings from markdown (same rules as legacy TOC) and assign
- * stable, unique DOM ids when slug collisions occur (e.g. two "Setup" sections).
+ * Build heading manifest from markdown using the same remark pipeline as
+ * `MarkdownRenderer`, so TOC labels and anchor IDs match rendered headings.
  */
+
+import type { Heading, Root } from "mdast";
+import { toString } from "mdast-util-to-string";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import remarkParse from "remark-parse";
+import { unified } from "unified";
+import { visit } from "unist-util-visit";
+import { remarkCodeBlockLang } from "@/lib/remark-code-block-lang";
+import { remarkTreeStructure } from "@/lib/remark-tree-structure";
+import { normalizeInvalidAtxParagraphBreaks } from "@/lib/utils";
 
 export interface HeadingManifestEntry {
   id: string;
@@ -17,11 +28,45 @@ export function slugifyHeadingText(text: string): string {
     .replace(/-+/g, "-");
 }
 
+function markdownToMdast(markdown: string): Root {
+  const file = unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .use(remarkMath)
+    .use(remarkCodeBlockLang)
+    .use(remarkTreeStructure)
+    .parse(markdown);
+  return file as Root;
+}
+
 /**
  * Ordered list of headings in the document with unique `id` values for anchors.
  */
 export function buildHeadingManifest(markdown: string): HeadingManifestEntry[] {
-  const lines = markdown.split("\n");
+  const src = normalizeInvalidAtxParagraphBreaks(markdown);
+
+  let tree: Root;
+  try {
+    tree = markdownToMdast(src);
+  } catch {
+    return legacyLineHeadingManifest(src);
+  }
+
+  const raw: { level: number; text: string }[] = [];
+  visit(tree, "heading", (node: Heading) => {
+    const text = toString(node, {
+      includeImageAlt: false,
+    }).trim();
+    if (!text) return;
+    raw.push({ level: node.depth, text });
+  });
+
+  return assignSlugIds(raw);
+}
+
+/** Fallback when remark fails so the document still renders a reasonable TOC. */
+function legacyLineHeadingManifest(src: string): HeadingManifestEntry[] {
+  const lines = src.split("\n");
   let inCodeBlock = false;
   const raw: { level: number; text: string }[] = [];
 
@@ -35,12 +80,17 @@ export function buildHeadingManifest(markdown: string): HeadingManifestEntry[] {
 
     const match = line.match(/^(#{1,6})\s+(.+)$/);
     if (match) {
-      const level = match[1].length;
-      const text = match[2].replace(/#+\s*$/, "").trim();
+      const level = match[1]!.length;
+      const text = match[2]!.replace(/#+\s*$/, "").trim();
+      if (!text) continue;
       raw.push({ level, text });
     }
   }
 
+  return assignSlugIds(raw);
+}
+
+function assignSlugIds(raw: { level: number; text: string }[]): HeadingManifestEntry[] {
   const seen = new Map<string, number>();
   return raw.map(({ level, text }) => {
     const base = slugifyHeadingText(text);

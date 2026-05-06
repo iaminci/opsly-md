@@ -14,6 +14,7 @@ import {
 import rehypeKatex from "rehype-katex";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
+import rehypeSanitize, { defaultSchema, type Options as RehypeSanitizeSchema } from "rehype-sanitize";
 import { cn, normalizeInvalidAtxParagraphBreaks, reactNodeToPlainText } from "@/lib/utils";
 import { CodeBlock } from "./CodeBlock";
 import { MermaidDiagram } from "./MermaidDiagram";
@@ -21,6 +22,55 @@ import type { Components } from "react-markdown";
 
 import "katex/dist/katex.min.css";
 import "highlight.js/styles/github-dark.min.css";
+
+/**
+ * After `rehype-raw`, prose like `std::vector<int>` becomes fake HTML elements (`vector`, `int`, …)
+ * that React rejects. `rehype-sanitize` unwraps unknown tags into text and strips unsafe attrs.
+ * Schema extensions: KaTeX (span styles, optional SVG), highlight.js (spans), homepage `hero.md` (div.cta-row).
+ * Heading `id` is not clobber-prefixed so TOC/hash links stay stable.
+ */
+const markdownRehypeSanitizeSchema: RehypeSanitizeSchema = {
+  ...defaultSchema,
+  clobber: (defaultSchema.clobber ?? []).filter((p) => p !== "id" && p !== "name"),
+  attributes: {
+    ...defaultSchema.attributes,
+    a: [...(defaultSchema.attributes?.a ?? []), "target", "rel"],
+    div: [...(defaultSchema.attributes?.div ?? []), "className"],
+    span: ["className", "style"],
+    svg: [
+      "xmlns",
+      "width",
+      "height",
+      "viewBox",
+      "preserveAspectRatio",
+      "className",
+      "style",
+      "fill",
+      "stroke",
+      "strokeLinecap",
+      "strokeLinejoin",
+      "strokeWidth",
+      "ariaHidden",
+      "focusable",
+    ],
+    path: ["d", "className", "style", "fill", "stroke", "strokeLinecap", "strokeLinejoin", "strokeWidth"],
+    g: ["className", "style"],
+    line: ["x1", "y1", "x2", "y2", "className", "style"],
+    rect: ["x", "y", "width", "height", "className", "style"],
+  },
+  tagNames: [
+    ...(defaultSchema.tagNames ?? []),
+    "svg",
+    "path",
+    "g",
+    "line",
+    "polyline",
+    "polygon",
+    "circle",
+    "ellipse",
+    "rect",
+  ],
+};
 
 interface MarkdownRendererProps {
   content: string;
@@ -47,6 +97,7 @@ function classifyCtaLink(href: string | undefined): string | undefined {
 }
 
 export function MarkdownRenderer({ content, ctaLinks = false }: MarkdownRendererProps) {
+  /** Same normalization pipeline as TOC (`buildHeadingManifest` normalizes again; cheap and idempotent). */
   const normalizedContent = useMemo(
     () => normalizeInvalidAtxParagraphBreaks(content),
     [content]
@@ -189,6 +240,7 @@ export function MarkdownRenderer({ content, ctaLinks = false }: MarkdownRenderer
           rehypeKatex,
           [rehypeHighlight, { plainText: ["text", "plaintext", "txt", "tree"] }],
           rehypeRaw,
+          [rehypeSanitize, markdownRehypeSanitizeSchema],
         ]}
         components={components}
       >

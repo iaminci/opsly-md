@@ -224,7 +224,8 @@ function DocumentColumn({
   return (
     <div
       className={cn(
-        "relative mx-auto w-full min-w-0 max-w-full overflow-x-clip transition-[max-width] duration-200 ease-linear",
+        // Inset for box-shadow (--shadow: 2px 2px); overflow-x-clip would otherwise crop right-aligned buttons.
+        "relative mx-auto w-full min-w-0 max-w-full overflow-x-clip pb-1 pr-1 transition-[max-width] duration-200 ease-linear",
         maxClass
       )}
     >

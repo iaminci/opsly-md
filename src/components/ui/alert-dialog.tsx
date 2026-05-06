@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 
 /** Neo-brutalist panel — colors follow theme (`globals.css`: --background, --border, --shadow). */
 const alertDialogSurface =
-  "border-2 border-border bg-background font-[ui-sans-serif,system-ui,sans-serif] shadow-shadow"
+  "border-2 border-border bg-background shadow-shadow"
 
 const alertDialogOverlayClasses =
   "fixed inset-0 isolate z-50 bg-black/20 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
@@ -61,7 +61,7 @@ const AlertDialogContent = React.forwardRef<
       data-slot="alert-dialog-content"
       data-size={size}
       className={cn(
-        "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-2rem)] max-w-full min-w-0 -translate-x-1/2 -translate-y-1/2 gap-4 overflow-x-hidden overflow-y-auto rounded-base p-5 text-foreground outline-none duration-100",
+        "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-2rem)] max-w-full min-w-0 -translate-x-1/2 -translate-y-1/2 gap-4 overflow-x-hidden overflow-y-auto rounded-base px-5 pt-5 pb-6 pr-6 text-foreground outline-none duration-100",
         "box-border max-h-[90dvh] overscroll-contain",
         alertDialogSurface,
         "data-[size=default]:max-w-md data-[size=sm]:max-w-xs data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
