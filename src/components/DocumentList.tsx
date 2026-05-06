@@ -5,11 +5,6 @@ import type { Document } from "@/types/document";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-function getFirstHeading(content: string): string | null {
-  const match = content.match(/^#{1,6}\s+(.+)$/m);
-  return match ? match[1].replace(/#+\s*$/, "").trim() : null;
-}
-
 interface DocumentListProps {
   documents: Document[];
   currentId: string | null;
@@ -45,7 +40,7 @@ export function DocumentList({
               currentId === doc.id && "bg-accent font-medium"
             )}
           >
-            {doc.title.trim() || getFirstHeading(doc.content) || "Untitled"}
+            {doc.title.trim() || "Untitled"}
           </Button>
           <Button
             type="button"

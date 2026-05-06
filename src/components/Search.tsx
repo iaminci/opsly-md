@@ -6,11 +6,6 @@ import type { Document } from "@/types/document";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-function getFirstHeading(content: string): string | null {
-  const match = content.match(/^#{1,6}\s+(.+)$/m);
-  return match ? match[1].replace(/#+\s*$/, "").trim() : null;
-}
-
 interface SearchProps {
   documents: Document[];
   onSelect: (doc: Document) => void;
@@ -93,7 +88,7 @@ export function Search({ documents, onSelect }: SearchProps) {
             >
               <span className="flex flex-col items-start text-left">
                 <span className="font-medium truncate w-full">
-                  {doc.title.trim() || getFirstHeading(doc.content) || "Untitled"}
+                  {doc.title.trim() || "Untitled"}
                 </span>
                 <span className="truncate w-full text-muted-foreground text-xs">
                   {doc.content.slice(0, 80).replace(/\n/g, " ")}...

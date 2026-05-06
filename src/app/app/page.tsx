@@ -48,7 +48,7 @@ import {
   deleteDocument,
   DuplicateNameError,
 } from "@/lib/storage";
-import { getFirstHeading, toMarkdownDownloadFilename } from "@/lib/utils";
+import { toMarkdownDownloadFilename } from "@/lib/utils";
 import { SAMPLE_MARKDOWN } from "@/lib/sample-document";
 import { EmptyState } from "@/components/EmptyState";
 import { HeaderLogo } from "@/components/HeaderLogo";
@@ -110,17 +110,12 @@ const CURRENT_DOC_KEY = "md-viewer-current-doc";
 const RIGHT_TOC_OPEN_KEY = "md-viewer-right-toc-open";
 const DOC_STACK_ENABLED_KEY = "md-viewer-doc-stack-enabled";
 const GITHUB_URL = "https://github.com/iaminci/opsly-md";
+const DEFAULT_NEW_DOCUMENT_TITLE = "Untitled";
 
-/** Title resolution for Create Markdown (same rules as the former modal). */
-function resolveNewDocumentTitle(titleInput: string, markdownBody: string): string {
-  const trimmed = markdownBody.trim();
-  const explicit = titleInput.trim().replace(/\.md$/i, "");
-  return (
-    explicit ||
-    getFirstHeading(trimmed) ||
-    trimmed.split("\n")[0]?.trim() ||
-    "Untitled"
-  );
+/** Normalized title when creating a document (empty input → default). */
+function resolveNewDocumentTitle(titleInput: string): string {
+  const explicit = titleInput.trim().replace(/\.md$/i, "").trim();
+  return explicit || DEFAULT_NEW_DOCUMENT_TITLE;
 }
 
 function folderPathLabel(folder: Folder, allInWorkspace: Folder[]): string {
@@ -268,6 +263,8 @@ function DocumentRightSidebar({
 
 type InlineCreateMarkdownFormProps = {
   rightTocOpen: boolean;
+  /** When true, workspace/folder were chosen from the tree or switcher menu; hide those pickers. */
+  hideLocationSelectors: boolean;
   createTitle: string;
   setCreateTitle: (v: string) => void;
   createMarkdown: string;
@@ -282,6 +279,7 @@ type InlineCreateMarkdownFormProps = {
 
 function InlineCreateMarkdownForm({
   rightTocOpen,
+  hideLocationSelectors,
   createTitle,
   setCreateTitle,
   createMarkdown,
@@ -385,123 +383,125 @@ function InlineCreateMarkdownForm({
           </p>
         ) : (
           <div className="space-y-3">
-            <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:items-end">
-              <div className="flex min-w-0 flex-col gap-1">
-                <label
-                  htmlFor="inline-create-workspace"
-                  className="block text-sm font-medium text-foreground"
-                >
-                  Workspace
-                </label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      id="inline-create-workspace"
-                      className={cn(
-                        workspacePairTabClassName,
-                        "flex w-full min-w-0 items-center gap-2 px-3 text-left"
-                      )}
-                    >
-                      <span className="min-w-0 flex-1 truncate">
-                        {inlineCreateWorkspaceTriggerLabel}
-                      </span>
-                      <ChevronDown className="size-4 shrink-0" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="start"
-                    sideOffset={4}
-                    className={workspaceSwitcherDropdownContentClassName}
+            {!hideLocationSelectors ? (
+              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:items-end">
+                <div className="flex min-w-0 flex-col gap-1">
+                  <label
+                    htmlFor="inline-create-workspace"
+                    className="block text-sm font-medium text-foreground"
                   >
-                    <div className="no-scrollbar max-h-[min(50vh,16rem)] w-full overflow-y-auto overflow-x-hidden">
-                      <div className="p-1">
-                        {sortedWorkspaces.map((ws) => (
+                    Workspace
+                  </label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        id="inline-create-workspace"
+                        className={cn(
+                          workspacePairTabClassName,
+                          "flex w-full min-w-0 items-center gap-2 px-3 text-left"
+                        )}
+                      >
+                        <span className="min-w-0 flex-1 truncate">
+                          {inlineCreateWorkspaceTriggerLabel}
+                        </span>
+                        <ChevronDown className="size-4 shrink-0" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="start"
+                      sideOffset={4}
+                      className={workspaceSwitcherDropdownContentClassName}
+                    >
+                      <div className="no-scrollbar max-h-[min(50vh,16rem)] w-full overflow-y-auto overflow-x-hidden">
+                        <div className="p-1">
+                          {sortedWorkspaces.map((ws) => (
+                            <DropdownMenuItem
+                              key={ws.id}
+                              onClick={() => {
+                                setCreateSelectedWorkspaceId(ws.id);
+                                setCreateSelectedFolderId(null);
+                              }}
+                              className={cn(
+                                "cursor-pointer",
+                                createSelectedWorkspaceId === ws.id &&
+                                  "bg-primary/90 font-semibold text-sidebar-accent-foreground"
+                              )}
+                            >
+                              <span className="truncate">{ws.name}</span>
+                            </DropdownMenuItem>
+                          ))}
+                        </div>
+                      </div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <div className="flex min-w-0 flex-col gap-1">
+                  <label
+                    htmlFor="inline-create-folder"
+                    className="block text-sm font-medium text-foreground"
+                  >
+                    Folder
+                  </label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        id="inline-create-folder"
+                        className={cn(
+                          workspacePairTabClassName,
+                          "flex w-full min-w-0 items-center gap-2 px-3 text-left"
+                        )}
+                      >
+                        <span className="min-w-0 flex-1 truncate">
+                          {inlineCreateFolderTriggerLabel}
+                        </span>
+                        <ChevronDown className="size-4 shrink-0" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="start"
+                      sideOffset={4}
+                      className={workspaceSwitcherDropdownContentClassName}
+                    >
+                      <div className="no-scrollbar max-h-[min(50vh,16rem)] w-full overflow-y-auto overflow-x-hidden">
+                        <div className="p-1">
                           <DropdownMenuItem
-                            key={ws.id}
-                            onClick={() => {
-                              setCreateSelectedWorkspaceId(ws.id);
-                              setCreateSelectedFolderId(null);
-                            }}
+                            onClick={() => setCreateSelectedFolderId(null)}
                             className={cn(
                               "cursor-pointer",
-                              createSelectedWorkspaceId === ws.id &&
-                                "bg-primary/90 font-semibold text-sidebar-accent-foreground"
+                              createSelectedFolderId === null &&
+                                "bg-primary/70 border-border-2 font-semibold text-background"
                             )}
                           >
-                            <span className="truncate">{ws.name}</span>
+                            <span className="truncate">None (workspace root)</span>
                           </DropdownMenuItem>
-                        ))}
+                          {createFolderOptions.map(({ folder, label }) => (
+                            <DropdownMenuItem
+                              key={folder.id}
+                              onClick={() => setCreateSelectedFolderId(folder.id)}
+                              className={cn(
+                                "cursor-pointer",
+                                createSelectedFolderId === folder.id &&
+                                  "bg-primary/90 font-semibold text-sidebar-accent-foreground"
+                              )}
+                            >
+                              <span className="truncate">{label}</span>
+                            </DropdownMenuItem>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
-              <div className="flex min-w-0 flex-col gap-1">
-                <label
-                  htmlFor="inline-create-folder"
-                  className="block text-sm font-medium text-foreground"
-                >
-                  Folder
-                </label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      id="inline-create-folder"
-                      className={cn(
-                        workspacePairTabClassName,
-                        "flex w-full min-w-0 items-center gap-2 px-3 text-left"
-                      )}
-                    >
-                      <span className="min-w-0 flex-1 truncate">
-                        {inlineCreateFolderTriggerLabel}
-                      </span>
-                      <ChevronDown className="size-4 shrink-0" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="start"
-                    sideOffset={4}
-                    className={workspaceSwitcherDropdownContentClassName}
-                  >
-                    <div className="no-scrollbar max-h-[min(50vh,16rem)] w-full overflow-y-auto overflow-x-hidden">
-                      <div className="p-1">
-                        <DropdownMenuItem
-                          onClick={() => setCreateSelectedFolderId(null)}
-                          className={cn(
-                            "cursor-pointer",
-                            createSelectedFolderId === null &&
-                              "bg-primary/70 border-border-2 font-semibold text-background"
-                          )}
-                        >
-                          <span className="truncate">None (workspace root)</span>
-                        </DropdownMenuItem>
-                        {createFolderOptions.map(({ folder, label }) => (
-                          <DropdownMenuItem
-                            key={folder.id}
-                            onClick={() => setCreateSelectedFolderId(folder.id)}
-                            className={cn(
-                              "cursor-pointer",
-                              createSelectedFolderId === folder.id &&
-                                "bg-primary/90 font-semibold text-sidebar-accent-foreground"
-                            )}
-                          >
-                            <span className="truncate">{label}</span>
-                          </DropdownMenuItem>
-                        ))}
-                      </div>
-                    </div>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
+            ) : null}
             <div className="flex flex-col gap-1">
               <label
                 htmlFor="inline-create-title"
                 className="block text-sm font-medium text-foreground"
               >
-                Title
+                Filename
               </label>
               <Input
                 id="inline-create-title"
@@ -518,7 +518,6 @@ function InlineCreateMarkdownForm({
                 htmlFor="inline-create-body"
                 className="block text-sm font-medium text-foreground"
               >
-                Markdown
               </label>
               <Textarea
                 id="inline-create-body"
@@ -567,8 +566,10 @@ function AppContent() {
   const [createMode, setCreateMode] = useState(false);
   const [createSelectedWorkspaceId, setCreateSelectedWorkspaceId] = useState("");
   const [createSelectedFolderId, setCreateSelectedFolderId] = useState<string | null>(null);
-  const [createTitle, setCreateTitle] = useState("");
+  const [createTitle, setCreateTitle] = useState(DEFAULT_NEW_DOCUMENT_TITLE);
   const [createMarkdown, setCreateMarkdown] = useState("");
+  const [inlineCreateHideLocationSelectors, setInlineCreateHideLocationSelectors] =
+    useState(false);
 
   const editDirty =
     editMode &&
@@ -576,7 +577,8 @@ function AppContent() {
     draftContent !== currentDoc.content;
   const createDirty =
     createMode &&
-    (createTitle.trim().length > 0 || createMarkdown.trim().length > 0);
+    (createMarkdown.trim().length > 0 ||
+      createTitle.trim() !== DEFAULT_NEW_DOCUMENT_TITLE);
   useDeploymentReloadBlock(editMode || createMode);
   useEffect(() => {
     if (!editDirty && !createDirty) return;
@@ -750,12 +752,17 @@ function AppContent() {
   );
 
   const handleOpenInlineCreate = useCallback(
-    (workspaceId: string, folderId: string | null) => {
+    (
+      workspaceId: string,
+      folderId: string | null,
+      options?: { hideLocationSelectors?: boolean }
+    ) => {
       setEditMode(false);
       setCreateSelectedWorkspaceId(workspaceId);
       setCreateSelectedFolderId(folderId);
-      setCreateTitle("");
+      setCreateTitle(DEFAULT_NEW_DOCUMENT_TITLE);
       setCreateMarkdown("");
+      setInlineCreateHideLocationSelectors(Boolean(options?.hideLocationSelectors));
       setCreateMode(true);
     },
     []
@@ -763,9 +770,10 @@ function AppContent() {
 
   const handleCancelInlineCreate = useCallback(() => {
     setCreateMode(false);
+    setInlineCreateHideLocationSelectors(false);
     setCreateSelectedWorkspaceId("");
     setCreateSelectedFolderId(null);
-    setCreateTitle("");
+    setCreateTitle(DEFAULT_NEW_DOCUMENT_TITLE);
     setCreateMarkdown("");
   }, []);
 
@@ -773,7 +781,7 @@ function AppContent() {
     if (!createSelectedWorkspaceId) return;
     const trimmed = createMarkdown.trim();
     if (!trimmed) return;
-    const title = resolveNewDocumentTitle(createTitle, trimmed);
+    const title = resolveNewDocumentTitle(createTitle);
     const ok = await handleAddDocument(
       title,
       trimmed,
@@ -782,9 +790,10 @@ function AppContent() {
     );
     if (!ok) return;
     setCreateMode(false);
+    setInlineCreateHideLocationSelectors(false);
     setCreateSelectedWorkspaceId("");
     setCreateSelectedFolderId(null);
-    setCreateTitle("");
+    setCreateTitle(DEFAULT_NEW_DOCUMENT_TITLE);
     setCreateMarkdown("");
   }, [
     createSelectedWorkspaceId,
@@ -797,9 +806,10 @@ function AppContent() {
   const handleEnterEditMode = useCallback(() => {
     if (!currentDoc) return;
     setCreateMode(false);
+    setInlineCreateHideLocationSelectors(false);
     setCreateSelectedWorkspaceId("");
     setCreateSelectedFolderId(null);
-    setCreateTitle("");
+    setCreateTitle(DEFAULT_NEW_DOCUMENT_TITLE);
     setCreateMarkdown("");
     const vp = contentScrollRef.current;
     scrollTopBeforeEditRef.current = vp?.scrollTop ?? 0;
@@ -815,10 +825,8 @@ function AppContent() {
   const handleEditSave = useCallback(async () => {
     if (!currentDoc) return;
     try {
-      const newTitle = getFirstHeading(draftContent) ?? currentDoc.title;
       const updated = await updateDocument(currentDoc.id, {
         content: draftContent,
-        title: newTitle,
       });
       if (updated) {
         setCurrentDoc(updated);
@@ -944,9 +952,10 @@ function AppContent() {
         onSelectDocument={async (doc) => {
           navigatingToHomeRef.current = false;
           setCreateMode(false);
+          setInlineCreateHideLocationSelectors(false);
           setCreateSelectedWorkspaceId("");
           setCreateSelectedFolderId(null);
-          setCreateTitle("");
+          setCreateTitle(DEFAULT_NEW_DOCUMENT_TITLE);
           setCreateMarkdown("");
           justSelectedDocIdRef.current = doc.id;
           const fresh = await getDocument(doc.id);
@@ -1028,6 +1037,7 @@ function AppContent() {
           {createMode ? (
             <InlineCreateMarkdownForm
               rightTocOpen={rightTocOpen}
+              hideLocationSelectors={inlineCreateHideLocationSelectors}
               createTitle={createTitle}
               setCreateTitle={setCreateTitle}
               createMarkdown={createMarkdown}
@@ -1043,25 +1053,13 @@ function AppContent() {
             <>
               <DocumentColumn rightTocOpen={rightTocOpen}>
                 <div className="mb-6 flex min-w-0 flex-col gap-3 print:mb-4">
-                  <div className="min-h-0 min-w-0">
-                    {!editMode &&
-                      (() => {
-                        const firstHeading = getFirstHeading(currentDoc.content);
-                        // When content has a heading, it will be rendered by MarkdownRenderer—don't duplicate.
-                        if (firstHeading) return null;
-                        // No heading in content: show doc.title as fallback.
-                        return (
-                          <h1 className="break-words text-3xl font-semibold text-foreground">
-                            {currentDoc.title}
-                          </h1>
-                        );
-                      })()}
-                    {!editMode && getSubtitle(currentDoc.content) && (
+                  {!editMode && getSubtitle(currentDoc.content) && (
+                    <div className="min-h-0 min-w-0">
                       <p className="mt-1 text-muted-foreground text-sm">
                         {getSubtitle(currentDoc.content)}
                       </p>
-                    )}
-                  </div>
+                    </div>
+                  )}
                   <div className="flex min-w-0 w-full max-w-full flex-wrap items-center justify-start gap-2 sm:justify-end sm:gap-3 md:gap-5">
                       {editMode ? (
                         <>

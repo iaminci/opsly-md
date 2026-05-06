@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/sidebar";
 import { useWorkspaceTree } from "@/context/WorkspaceTreeContext";
 import {
-  getDocument,
   addWorkspace,
   addFolder,
   addDocument,
@@ -69,8 +68,6 @@ import {
 import { toast } from "sonner";
 import { CommandPalette } from "./CommandPalette";
 import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
-import { cn, getFirstHeading, replaceFirstHeading } from "@/lib/utils";
-
 /** Outside-click / pointer-dismiss: `contains(target)` misses retargeting; composedPath matches Radix/portals reliably. */
 function isPointerEventInside(container: HTMLElement | null, nativeEvent: Event): boolean {
   if (!container) return false;
@@ -96,7 +93,11 @@ interface SidebarProps {
     folderId?: string | null
   ) => void | Promise<boolean>;
   /** Opens inline Create Markdown in the main pane (replaces the former modal). */
-  onOpenInlineCreate: (workspaceId: string, folderId: string | null) => void;
+  onOpenInlineCreate: (
+    workspaceId: string,
+    folderId: string | null,
+    options?: { hideLocationSelectors?: boolean }
+  ) => void;
   onRefresh: () => void;
   documentStackEnabled: boolean;
   onDocumentStackEnabledChange: (enabled: boolean) => void;
@@ -243,7 +244,7 @@ export function Sidebar({
     const isReadmeName = stem.toLowerCase() === "readme";
     const trimmed = content.trim();
     const titleFromBody =
-      getFirstHeading(trimmed) || trimmed.split("\n").find((l) => l.trim().length > 0)?.trim() || "Untitled";
+      trimmed.split("\n").find((l) => l.trim().length > 0)?.trim() || "Untitled";
     const title = isReadmeName ? titleFromBody : stem || "Untitled";
     await onAddDocument(title, content, target.workspaceId, target.folderId);
     setUploadTarget(null);
@@ -541,10 +542,7 @@ export function Sidebar({
     const newTitle = title.trim();
     if (!newTitle) return;
     try {
-      const doc = await getDocument(renameDocTarget.id);
-      if (!doc) return;
-      const content = replaceFirstHeading(doc.content, newTitle);
-      await updateDocument(renameDocTarget.id, { title: newTitle, content });
+      await updateDocument(renameDocTarget.id, { title: newTitle });
     } catch (err) {
       if (err instanceof DuplicateNameError) {
         toast.error(err.message);
@@ -612,7 +610,9 @@ export function Sidebar({
                 onWorkspaceMenuOpenChange={setWorkspaceSwitcherMenuOpen}
                 onAddFolder={handleAddFolder}
                 onUploadFile={handleUploadFile}
-                onCreateFile={onOpenInlineCreate}
+                onCreateFile={(ws, folderId) =>
+                  onOpenInlineCreate(ws, folderId, { hideLocationSelectors: true })
+                }
                 onRenameWorkspace={handleRenameWorkspace}
               />
             </SidebarGroupContent>
@@ -635,7 +635,9 @@ export function Sidebar({
               onDeleteDocument={handleDeleteDocumentRequest}
               onAddWorkspace={handleAddWorkspace}
               onAddFolder={handleAddFolder}
-              onAddFile={onOpenInlineCreate}
+              onAddFile={(ws, folderId) =>
+                onOpenInlineCreate(ws, folderId, { hideLocationSelectors: true })
+              }
               onUploadFile={handleUploadFile}
               onMoveDocument={handleMoveDocument}
               onMoveFolder={handleMoveFolder}

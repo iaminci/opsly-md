@@ -39,11 +39,6 @@ export function cnState<TState = unknown>(
     );
 }
 
-export function getFirstHeading(content: string): string | null {
-  const match = content.match(/^#{1,6}\s+(.+)$/m);
-  return match ? match[1].replace(/#+\s*$/, "").trim() : null;
-}
-
 /** ATX heading requires a space after the # run; otherwise the next line soft-joins into one paragraph. */
 const INVALID_ATX_LINE = /^\s{0,3}#{1,6}(?=\S)/;
 
@@ -72,17 +67,4 @@ export function toMarkdownDownloadFilename(title: string): string {
   const base = title.replace(/\.md$/i, "").trim();
   const stem = (base.replace(/\s+/g, "_") || "document").toLowerCase();
   return `${stem}.md`;
-}
-
-/** Updates the first ATX heading to match the title, or prepends `# title` if none. */
-export function replaceFirstHeading(content: string, newTitle: string): string {
-  const trimmed = newTitle.trim();
-  if (!trimmed) return content;
-  const re = /^(#{1,6})\s+.+$/m;
-  const match = content.match(re);
-  if (match) {
-    const level = match[1];
-    return content.replace(re, `${level} ${trimmed}`);
-  }
-  return `# ${trimmed}\n\n${content}`;
 }

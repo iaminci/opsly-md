@@ -81,11 +81,6 @@ function containsActiveDoc(
   )
 }
 
-function getFirstHeading(content: string): string | null {
-  const match = content.match(/^#{1,6}\s+(.+)$/m);
-  return match ? match[1].replace(/#+\s*$/, "").trim() : null;
-}
-
 interface WorkspaceTreeProps {
   workspaces: Workspace[];
   folders: (workspaceId: string, parentFolderId: string | null) => Folder[];
@@ -1026,7 +1021,7 @@ function FileItem({
   onRename: () => void;
   onMoveDocument: (docId: string, workspaceId: string, folderId: string | null) => void;
 }) {
-  const displayName = doc.title.trim() || getFirstHeading(doc.content) || "Untitled";
+  const displayName = doc.title.trim() || "Untitled";
   const nameTruncated = false;
   const [fileMenuOpen, setFileMenuOpen] = useState(false);
   const fileLooksSelected = isActive && !suppressDocHighlights;
