@@ -20,24 +20,6 @@ function hashContent(s: string): number {
   return h;
 }
 
-function getSubtitle(content: string): string | null {
-  const lines = content.split("\n");
-  const firstHeadingIdx = lines.findIndex((l) => /^#{1,6}\s+/.test(l));
-  if (firstHeadingIdx >= 0) {
-    const afterHeading = lines.slice(firstHeadingIdx + 1);
-    const para: string[] = [];
-    for (const line of afterHeading) {
-      if (/^\s*$/.test(line)) break;
-      // Next ATX line: valid (`## words`) or mistaken (`###oops` — CommonMark needs a space).
-      // Otherwise mistaken hashes get merged into the subtitle and duplicate/stray text appears under the title.
-      if (/^\s*#{1,6}/.test(line)) break;
-      para.push(line.trim());
-    }
-    return para.join(" ").trim() || null;
-  }
-  const firstNonEmpty = lines.find((l) => l.trim().length > 0);
-  return firstNonEmpty?.trim() ?? null;
-}
 import type { Document } from "@/types/document";
 import type { Folder } from "@/types/workspace";
 import {
@@ -65,7 +47,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { LineNumberedTextarea } from "@/components/LineNumberedTextarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -519,21 +501,13 @@ function InlineCreateMarkdownForm({
                 className="block text-sm font-medium text-foreground"
               >
               </label>
-              <Textarea
+              <LineNumberedTextarea
                 id="inline-create-body"
                 value={createMarkdown}
                 onChange={(e) => setCreateMarkdown(e.target.value)}
                 placeholder="Enter markdown here..."
                 spellCheck={false}
-                className={cn(
-                  "field-sizing-fixed h-[calc(100svh-24rem)] min-h-[12rem] w-full max-w-full resize-y font-mono text-sm",
-                  "overflow-y-auto overflow-x-hidden",
-                  "[scrollbar-width:thin] [scrollbar-color:var(--border)_var(--secondary-background)]",
-                  "[&::-webkit-scrollbar]:w-2",
-                  "[&::-webkit-scrollbar-track]:rounded-base [&::-webkit-scrollbar-track]:bg-secondary-background",
-                  "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border",
-                  "border-border bg-secondary-background text-foreground"
-                )}
+                className="field-sizing-fixed h-[calc(100svh-24rem)] min-h-[12rem] w-full max-w-full"
               />
             </div>
           </div>
@@ -1052,15 +1026,7 @@ function AppContent() {
           ) : currentDoc ? (
             <>
               <DocumentColumn rightTocOpen={rightTocOpen}>
-                <div className="mb-6 flex min-w-0 flex-col gap-3 print:mb-4">
-                  {!editMode && getSubtitle(currentDoc.content) && (
-                    <div className="min-h-0 min-w-0">
-                      <p className="mt-1 text-muted-foreground text-sm">
-                        {getSubtitle(currentDoc.content)}
-                      </p>
-                    </div>
-                  )}
-                  <div className="flex min-w-0 w-full max-w-full flex-wrap items-center justify-start gap-2 sm:justify-end sm:gap-3 md:gap-5">
+                <div className="mb-6 flex min-w-0 w-full max-w-full flex-wrap items-center justify-start gap-2 print:mb-4 sm:justify-end sm:gap-3 md:gap-5">
                       {editMode ? (
                         <>
                           <Button
@@ -1115,24 +1081,16 @@ function AppContent() {
                           <X className="size-4 shrink-0" strokeWidth={2.5} aria-hidden />
                         </button>
                       )}
-                  </div>
                 </div>
                 {editMode ? (
-                  <Textarea
+                  <LineNumberedTextarea
                     autoFocus
                     value={draftContent}
                     onChange={(e) => setDraftContent(e.target.value)}
                     placeholder="Markdown content..."
                     spellCheck={false}
-                    className={cn(
-                      "h-[calc(100svh-12rem)] min-h-[calc(100svh-12rem)] resize-y font-mono text-sm leading-relaxed",
-                      "overflow-y-auto overflow-x-hidden",
-                      "[scrollbar-width:thin] [scrollbar-color:var(--border)_var(--secondary-background)]",
-                      "[&::-webkit-scrollbar]:w-2",
-                      "[&::-webkit-scrollbar-track]:rounded-base [&::-webkit-scrollbar-track]:bg-secondary-background",
-                      "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border",
-                      "border-border bg-secondary-background text-foreground"
-                    )}
+                    className="h-[calc(100svh-12rem)] min-h-[calc(100svh-12rem)] leading-relaxed"
+                    textareaClassName="leading-relaxed"
                   />
                 ) : (
                   <MarkdownRenderer content={currentDoc.content} />

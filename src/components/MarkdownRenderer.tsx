@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import { remarkTreeStructure } from "@/lib/remark-tree-structure";
 import { remarkCodeBlockLang } from "@/lib/remark-code-block-lang";
+import { remarkPrettyJsonBlocks } from "@/lib/remark-pretty-json-blocks";
 import {
   buildHeadingIdQueueMap,
   buildHeadingManifest,
@@ -235,7 +236,13 @@ export function MarkdownRenderer({ content, ctaLinks = false }: MarkdownRenderer
       )}
     >
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkMath, remarkCodeBlockLang, remarkTreeStructure]}
+        remarkPlugins={[
+          remarkGfm,
+          remarkMath,
+          remarkCodeBlockLang,
+          remarkPrettyJsonBlocks,
+          remarkTreeStructure,
+        ]}
         rehypePlugins={[
           rehypeKatex,
           [rehypeHighlight, { plainText: ["text", "plaintext", "txt", "tree"] }],
