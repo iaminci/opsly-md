@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { Document } from "@/types/document";
 import type { Workspace } from "@/types/workspace";
 import type { Folder } from "@/types/workspace";
@@ -36,9 +36,16 @@ import {
 const DRAG_TYPE = "application/x-md-viewer-document";
 const DRAG_TYPE_FOLDER = "application/x-md-viewer-folder";
 
-/** Drop-target highlight for workspace / folder headers (paired with content-area drag state). */
-const DRAG_OVER_CLASS =
-  "bg-sidebar-accent/45 ring-0 ring-foreground ring-inset transition-colors duration-150";
+/** Full-height primary stripe on accordion section (header + expanded drop area). */
+const DRAG_SECTION_LEFT_STRIPE =
+  "relative before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:z-[5] before:w-0.5 before:bg-primary/40";
+
+/** Row tint during tree drag; vertical stripe is on the accordion section wrapper. */
+const DRAG_ROW_TINT_CLASS =
+  "bg-sidebar-accent/55 transition-colors duration-150";
+
+/** Background only while dragging over workspace / folder list drop zones. */
+const DROP_ZONE_BG_CLASS = "rounded-md bg-muted/25";
 
 /** Workspace name strip (tree rows) — borderless; name, chevron, and Layers use foreground when accent/path-highlighted. */
 const WORKSPACE_TAB_CORAL_PILL = cn(
@@ -241,6 +248,26 @@ export function WorkspaceTree({
   /** While any workspace/folder/file ⋯ menu is open, hide "active doc" styling elsewhere. */
   const [treeActionMenuOpen, setTreeActionMenuOpen] = useState(false);
 
+  /** True while dragging a workspace tree doc/folder reorder (selected file row uses text-only emphasis). */
+  const [treeReorderDragActive, setTreeReorderDragActive] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const isTreeReorderDrag = (e: DragEvent) => {
+      const types = Array.from(e.dataTransfer?.types ?? []);
+      return types.includes(DRAG_TYPE) || types.includes(DRAG_TYPE_FOLDER);
+    };
+    const onDragStart = (e: DragEvent) => {
+      if (isTreeReorderDrag(e)) setTreeReorderDragActive(true);
+    };
+    const onDragEnd = () => setTreeReorderDragActive(false);
+    window.addEventListener("dragstart", onDragStart);
+    window.addEventListener("dragend", onDragEnd);
+    return () => {
+      window.removeEventListener("dragstart", onDragStart);
+      window.removeEventListener("dragend", onDragEnd);
+    };
+  }, []);
+
   const sectionProps = (ws: Workspace) => ({
     workspace: ws,
     expandedFolders,
@@ -253,6 +280,7 @@ export function WorkspaceTree({
     selectedWorkspaceId,
     workspaceSwitcherMenuOpen,
     suppressDocHighlights: treeActionMenuOpen || workspaceSwitcherMenuOpen,
+    treeReorderDragActive,
     onTreeMenuOpenChange: setTreeActionMenuOpen,
     onSelectDocument,
     onDeleteDocument,
@@ -326,6 +354,7 @@ interface WorkspaceSectionProps {
   onDeleteFolder: (id: string, name: string) => void;
   onRenameDocument: (id: string, title: string) => void;
   suppressDocHighlights: boolean;
+  treeReorderDragActive: boolean;
   onTreeMenuOpenChange: (open: boolean) => void;
   ensureWorkspaceExpanded: (workspaceId: string) => void;
   ensureFolderExpanded: (folderId: string) => void;
@@ -345,6 +374,7 @@ function WorkspaceSection({
   selectedWorkspaceId,
   workspaceSwitcherMenuOpen,
   suppressDocHighlights,
+  treeReorderDragActive,
   onTreeMenuOpenChange,
   ensureWorkspaceExpanded,
   ensureFolderExpanded,
@@ -364,12 +394,28 @@ function WorkspaceSection({
 }: WorkspaceSectionProps) {
   const [wsDragOver, setWsDragOver] = useState(false);
   const [wsContentDragOver, setWsContentDragOver] = useState(false);
+  const nestedFolderDragCountRef = useRef(0);
+  const [nestedFolderDragActive, setNestedFolderDragActive] = useState(false);
+  const registerWorkspaceFolderDragTarget = useCallback((delta: number) => {
+    nestedFolderDragCountRef.current = Math.max(0, nestedFolderDragCountRef.current + delta);
+    setNestedFolderDragActive(nestedFolderDragCountRef.current > 0);
+  }, []);
+
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   useClearDragStateOnDragEnd(setWsDragOver);
   useClearDragStateOnDragEnd(setWsContentDragOver);
-  const folderIds = folders.map((f) => f.id);
+  useEffect(() => {
+    const clearNestedFolderDrag = () => {
+      nestedFolderDragCountRef.current = 0;
+      setNestedFolderDragActive(false);
+    };
+    window.addEventListener("dragend", clearNestedFolderDrag);
+    return () => window.removeEventListener("dragend", clearNestedFolderDrag);
+  }, []);
 
-  const workspaceHighlighted = wsDragOver || wsContentDragOver;
+  const folderIds = folders.map((f) => f.id);
+  const workspaceHighlighted =
+    wsDragOver || wsContentDragOver || nestedFolderDragActive;
   const docActiveInWorkspace =
     !suppressDocHighlights &&
     containsActiveDoc(workspace.id, null, currentId, getDocuments, getFolders);
@@ -388,11 +434,13 @@ function WorkspaceSection({
   const workspaceFullRowAccent = workspaceRowActive && !workspaceIconPrimaryOnly;
 
   const handleWsDragOver = (e: React.DragEvent) => {
+    if (!isTreeDrag(e)) {
+      setWsDragOver(false);
+      return;
+    }
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    if (isTreeDrag(e)) {
-      ensureWorkspaceExpanded(workspace.id);
-    }
+    ensureWorkspaceExpanded(workspace.id);
     setWsDragOver(true);
   };
 
@@ -437,6 +485,7 @@ function WorkspaceSection({
               getDocuments={getDocuments}
               currentId={currentId}
               suppressDocHighlights={suppressDocHighlights}
+              treeReorderDragActive={treeReorderDragActive}
               onTreeMenuOpenChange={onTreeMenuOpenChange}
               ensureWorkspaceExpanded={ensureWorkspaceExpanded}
               ensureFolderExpanded={ensureFolderExpanded}
@@ -450,6 +499,7 @@ function WorkspaceSection({
               onRenameFolder={onRenameFolder}
               onDeleteFolder={onDeleteFolder}
               onRenameDocument={onRenameDocument}
+              registerWorkspaceFolderDragTarget={registerWorkspaceFolderDragTarget}
             />
           ))}
         </Accordion>
@@ -460,6 +510,7 @@ function WorkspaceSection({
           doc={doc}
           isActive={currentId === doc.id}
           suppressDocHighlights={suppressDocHighlights}
+          treeReorderDragActive={treeReorderDragActive}
           onTreeMenuOpenChange={onTreeMenuOpenChange}
           onSelect={() => onSelectDocument(doc)}
           onDelete={() => onDeleteDocument(doc.id, doc.title)}
@@ -482,7 +533,7 @@ function WorkspaceSection({
     !hideWorkspaceHeader && "ml-2.5 pl-1",
     hasTreeItems
       ? "border-l-2 border-[color:var(--sidebar-guide)] pb-0.5 pt-0"
-      : "min-h-1 py-0.5"
+      : "min-h-8 py-0.5"
   );
 
   if (hideWorkspaceHeader) {
@@ -490,7 +541,8 @@ function WorkspaceSection({
       <div
         className={cn(
           "flex w-full max-w-full flex-col",
-          workspaceHighlighted && DRAG_OVER_CLASS
+          workspaceHighlighted &&
+            cn(DRAG_SECTION_LEFT_STRIPE, DRAG_ROW_TINT_CLASS)
         )}
         onDragOver={handleWsDragOver}
         onDragLeave={handleWsDragLeave}
@@ -511,14 +563,17 @@ function WorkspaceSection({
   }
 
   return (
-    <AccordionItem value={workspace.id} className="group">
+    <AccordionItem
+      value={workspace.id}
+      className={cn("group", workspaceHighlighted && DRAG_SECTION_LEFT_STRIPE)}
+    >
         <AccordionTrigger
           triggerVariant="section"
           isActive={workspaceFullRowAccent}
           hideTriggerChevron
           className={cn(
             "group/ws hover:no-underline !border-0 !bg-transparent !p-0 !pl-1 !pr-0 !shadow-none hover:!bg-transparent",
-            workspaceHighlighted && DRAG_OVER_CLASS
+            workspaceHighlighted && DRAG_ROW_TINT_CLASS
           )}
           onDragOver={handleWsDragOver}
           onDragLeave={handleWsDragLeave}
@@ -668,27 +723,37 @@ function WorkspaceDropArea({
   folderId: string | null;
   onMoveDocument: (docId: string, workspaceId: string, folderId: string | null) => void;
   onMoveFolder: (folderId: string, workspaceId: string, parentFolderId: string | null) => void;
-  /** Highlights the workspace/folder header while dragging over this zone (files, subfolders, etc.). */
+  /** Highlights the workspace / folder **row** while dragging over this list zone. */
   onDragTargetActiveChange?: (active: boolean) => void;
   className?: string;
   children: React.ReactNode;
 }) {
+  const [zoneActive, setZoneActive] = useState(false);
+  useClearDragStateOnDragEnd(setZoneActive);
+
   const handleDragOver = (e: React.DragEvent) => {
+    if (!isTreeDrag(e)) {
+      setZoneActive(false);
+      onDragTargetActiveChange?.(false);
+      return;
+    }
     e.preventDefault();
-    // Do not stopPropagation so outer workspace root still receives bubbled drags over nested folders.
     e.dataTransfer.dropEffect = "move";
+    setZoneActive(true);
     onDragTargetActiveChange?.(true);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
     const next = e.relatedTarget;
     if (next instanceof Node && e.currentTarget.contains(next)) return;
+    setZoneActive(false);
     onDragTargetActiveChange?.(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setZoneActive(false);
     onDragTargetActiveChange?.(false);
     const docId = e.dataTransfer.getData(DRAG_TYPE);
     const draggedFolderId = e.dataTransfer.getData(DRAG_TYPE_FOLDER);
@@ -701,7 +766,11 @@ function WorkspaceDropArea({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={cn("transition-colors duration-150", className)}
+      className={cn(
+        "min-h-0 transition-colors duration-150",
+        className,
+        zoneActive && DROP_ZONE_BG_CLASS
+      )}
     >
       {children}
     </div>
@@ -727,9 +796,11 @@ interface FolderItemProps {
   onDeleteFolder: (id: string, name: string) => void;
   onRenameDocument: (id: string, title: string) => void;
   suppressDocHighlights: boolean;
+  treeReorderDragActive: boolean;
   onTreeMenuOpenChange: (open: boolean) => void;
   ensureWorkspaceExpanded: (workspaceId: string) => void;
   ensureFolderExpanded: (folderId: string) => void;
+  registerWorkspaceFolderDragTarget: (delta: number) => void;
 }
 
 function FolderItem({
@@ -741,6 +812,7 @@ function FolderItem({
   getDocuments,
   currentId,
   suppressDocHighlights,
+  treeReorderDragActive,
   onTreeMenuOpenChange,
   ensureWorkspaceExpanded,
   ensureFolderExpanded,
@@ -754,6 +826,7 @@ function FolderItem({
   onRenameFolder,
   onDeleteFolder,
   onRenameDocument,
+  registerWorkspaceFolderDragTarget,
 }: FolderItemProps) {
   const subfolders = getFolders(workspaceId, folder.id);
   const docs = getDocuments(workspaceId, folder.id);
@@ -766,6 +839,12 @@ function FolderItem({
   useClearDragStateOnDragEnd(setFolderContentDragOver);
 
   const folderHighlighted = folderDragOver || folderContentDragOver;
+  useEffect(() => {
+    if (!folderHighlighted) return;
+    registerWorkspaceFolderDragTarget(1);
+    return () => registerWorkspaceFolderDragTarget(-1);
+  }, [folderHighlighted, registerWorkspaceFolderDragTarget]);
+
   const docActiveInFolder =
     !suppressDocHighlights &&
     containsActiveDoc(workspaceId, folder.id, currentId, getDocuments, getFolders);
@@ -776,12 +855,14 @@ function FolderItem({
   const folderFullRowAccent = folderRowActive && !folderIconPrimaryOnly;
 
   const handleFolderDragOver = (e: React.DragEvent) => {
+    if (!isTreeDrag(e)) {
+      setFolderDragOver(false);
+      return;
+    }
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    if (isTreeDrag(e)) {
-      ensureWorkspaceExpanded(workspaceId);
-      ensureFolderExpanded(folder.id);
-    }
+    ensureWorkspaceExpanded(workspaceId);
+    ensureFolderExpanded(folder.id);
     setFolderDragOver(true);
   };
 
@@ -804,20 +885,33 @@ function FolderItem({
 
   const hasNestedItems = subfolders.length > 0 || docs.length > 0;
 
+  const folderActionsRef = useRef<HTMLDivElement>(null);
+
   const handleFolderDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData(DRAG_TYPE_FOLDER, folder.id);
     e.dataTransfer.effectAllowed = "move";
+    const box = folderActionsRef.current;
+    if (box) box.style.display = "none";
+  };
+
+  const handleFolderDragEnd = () => {
+    const box = folderActionsRef.current;
+    if (box) box.style.display = "";
   };
 
   return (
-    <AccordionItem value={folder.id} variant="nested">
+    <AccordionItem
+      value={folder.id}
+      variant="nested"
+      className={cn(folderHighlighted && DRAG_SECTION_LEFT_STRIPE)}
+    >
       <AccordionTrigger
         triggerVariant="tree"
         isActive={folderFullRowAccent}
         hideTriggerChevron
         className={cn(
           "group/folder min-h-8 hover:no-underline !border-0 !bg-transparent !p-0 !pl-1 !pr-0 !shadow-none hover:!bg-transparent",
-          folderHighlighted && DRAG_OVER_CLASS
+          folderHighlighted && DRAG_ROW_TINT_CLASS
         )}
         onDragOver={handleFolderDragOver}
         onDragLeave={handleFolderDragLeave}
@@ -826,6 +920,7 @@ function FolderItem({
         <div
           draggable
           onDragStart={handleFolderDragStart}
+          onDragEnd={handleFolderDragEnd}
           className={cn(
             "flex min-h-8 min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded-[5px] py-0.5 pl-1 pr-0",
             folderRowActive ? "opacity-100" : "opacity-[0.85]",
@@ -862,6 +957,7 @@ function FolderItem({
               )}
             />
             <div
+              ref={folderActionsRef}
               className={cn(
                 "flex h-5 w-0 shrink-0 items-center justify-end overflow-hidden opacity-0 transition-[width,opacity] duration-200",
                 "group-hover/folder:w-5 group-hover/folder:opacity-100",
@@ -944,7 +1040,7 @@ function FolderItem({
             "ml-1 flex flex-col gap-0.5 pl-1",
             hasNestedItems
               ? "border-l-2 border-[color:var(--sidebar-guide)] pb-0.5 pt-0"
-              : "min-h-1 py-0.5"
+              : "min-h-8 py-0.5"
           )}
         >
           {subfolders.length > 0 && (
@@ -966,6 +1062,7 @@ function FolderItem({
                   getDocuments={getDocuments}
                   currentId={currentId}
                   suppressDocHighlights={suppressDocHighlights}
+                  treeReorderDragActive={treeReorderDragActive}
                   onTreeMenuOpenChange={onTreeMenuOpenChange}
                   ensureWorkspaceExpanded={ensureWorkspaceExpanded}
                   ensureFolderExpanded={ensureFolderExpanded}
@@ -979,6 +1076,7 @@ function FolderItem({
                   onRenameFolder={onRenameFolder}
                   onDeleteFolder={onDeleteFolder}
                   onRenameDocument={onRenameDocument}
+                  registerWorkspaceFolderDragTarget={registerWorkspaceFolderDragTarget}
                 />
                 ))}
               </Accordion>
@@ -989,6 +1087,7 @@ function FolderItem({
               doc={doc}
               isActive={currentId === doc.id}
               suppressDocHighlights={suppressDocHighlights}
+              treeReorderDragActive={treeReorderDragActive}
               onTreeMenuOpenChange={onTreeMenuOpenChange}
               onSelect={() => onSelectDocument(doc)}
               onDelete={() => onDeleteDocument(doc.id, doc.title)}
@@ -1006,6 +1105,7 @@ function FileItem({
   doc,
   isActive,
   suppressDocHighlights,
+  treeReorderDragActive,
   onTreeMenuOpenChange,
   onSelect,
   onDelete,
@@ -1015,6 +1115,7 @@ function FileItem({
   doc: Document;
   isActive: boolean;
   suppressDocHighlights: boolean;
+  treeReorderDragActive: boolean;
   onTreeMenuOpenChange: (open: boolean) => void;
   onSelect: () => void;
   onDelete: () => void;
@@ -1026,16 +1127,29 @@ function FileItem({
   const [fileMenuOpen, setFileMenuOpen] = useState(false);
   const fileLooksSelected = isActive && !suppressDocHighlights;
   const fileTintPrimary = fileLooksSelected || fileMenuOpen;
+  /** Full row pill (border/background) — off for the open doc while reordering so only the title stays emphasized. */
+  const activeDocHeavyChrome =
+    fileTintPrimary && !(treeReorderDragActive && fileLooksSelected);
+
+  const fileActionsRef = useRef<HTMLDivElement>(null);
 
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData(DRAG_TYPE, doc.id);
     e.dataTransfer.effectAllowed = "move";
+    const box = fileActionsRef.current;
+    if (box) box.style.display = "none";
+  };
+
+  const handleDragEnd = () => {
+    const box = fileActionsRef.current;
+    if (box) box.style.display = "";
   };
 
   return (
     <div
       draggable
       onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       className="group/file flex cursor-pointer items-center rounded-md py-0.5 pl-1 pr-0"
       onClick={(e) => {
         if (!(e.target as HTMLElement).closest("[data-slot='dropdown-menu-trigger']")) {
@@ -1046,7 +1160,9 @@ function FileItem({
       <div
         className={cn(
           "flex min-h-6 min-w-0 flex-1 items-center gap-2 rounded-[5px] py-0 pl-1 pr-0 transition-colors hover:!text-primary group-hover/file:!text-primary",
-          fileTintPrimary && "text-primary"
+          fileTintPrimary &&
+            !(treeReorderDragActive && fileLooksSelected) &&
+            "text-primary"
         )}
       >
         <Tooltip delayDuration={1000}>
@@ -1057,8 +1173,13 @@ function FileItem({
                 "flex min-h-6 min-w-0 flex-1 items-center justify-start gap-2 truncate border-0 bg-transparent text-left text-base font-base transition-colors hover:bg-transparent",
                 fileTintPrimary ? "opacity-100" : "opacity-[0.85]",
                 fileLooksSelected && "font-medium",
-                fileTintPrimary && "text-foreground bg-primary/20 hover:bg-transparent border-1 hover:border-0 rounded-base",
-                !fileTintPrimary && "text-muted",
+                activeDocHeavyChrome &&
+                  "text-foreground bg-primary/20 hover:bg-transparent border-1 hover:border-0 rounded-base",
+                fileLooksSelected &&
+                  treeReorderDragActive &&
+                  "!bg-transparent !border-0 shadow-none rounded-none hover:!bg-transparent",
+                !activeDocHeavyChrome && !fileLooksSelected && "text-muted",
+                !activeDocHeavyChrome && fileMenuOpen && "text-foreground",
                 "group-hover/file:!text-primary",
                 nameTruncated && "min-w-0"
               )}
@@ -1066,10 +1187,17 @@ function FileItem({
               <FileBraces
                 className={cn(
                   "size-4 shrink-0 transition-colors group-hover/file:!text-primary",
-                  fileTintPrimary ? "text-foreground" : "text-muted"
+                  activeDocHeavyChrome ? "text-foreground" : "text-muted"
                 )}
               />
-              <span className="min-w-0 flex-1 truncate">{displayName}</span>
+              <span
+                className={cn(
+                  "min-w-0 flex-1 truncate",
+                  treeReorderDragActive && fileLooksSelected && "font-medium text-primary"
+                )}
+              >
+                {displayName}
+              </span>
             </button>
           </TooltipTrigger>
           <TooltipContent side="right" align="start" className="max-w-md">
@@ -1077,6 +1205,7 @@ function FileItem({
           </TooltipContent>
         </Tooltip>
         <div
+          ref={fileActionsRef}
           className={cn(
             "ml-1 flex shrink-0 opacity-0 transition-opacity group-hover/file:opacity-100",
             fileMenuOpen && "opacity-100"
@@ -1099,7 +1228,7 @@ function FileItem({
                     aria-label="Document actions"
                     className={cn(
                       "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
-                      fileTintPrimary ? "text-primary" : "text-muted",
+                      activeDocHeavyChrome ? "text-primary" : "text-muted",
                       "group-hover/file:!text-primary"
                     )}
                     onKeyDown={(e) => {
