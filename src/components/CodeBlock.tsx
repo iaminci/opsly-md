@@ -1,7 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
 import { cn, reactNodeToPlainText } from "@/lib/utils";
+import {
+  FENCED_CODE_INNER_CODE_CLASSNAME,
+  FencedCodeShell,
+  ToolbarCopyButton,
+} from "./secure-fence";
 
 interface CodeBlockProps {
   className?: string;
@@ -10,34 +14,21 @@ interface CodeBlockProps {
 }
 
 export function CodeBlock({ className, children }: CodeBlockProps) {
-  const [copied, setCopied] = useState(false);
   const code = reactNodeToPlainText(children).replace(/\n$/, "");
 
-  const copy = useCallback(async () => {
-    await navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }, [code]);
-
   return (
-    <div className="group relative my-4 max-w-full min-w-0">
-      <pre className="overflow-x-auto rounded-md border-2 border-border p-0">
-        <code
-          className={cn(
-            "block w-full p-5 text-sm font-mono whitespace-pre",
-            className
-          )}
-        >
-          {children}
-        </code>
-      </pre>
-      <button
-        type="button"
-        onClick={copy}
-        className="absolute right-4 top-4 z-10 rounded border border-zinc-600 bg-zinc-800 px-2 py-1 text-xs text-zinc-300 opacity-0 transition-opacity hover:bg-zinc-700 group-hover:opacity-100 dark:border-zinc-500 dark:bg-zinc-700 dark:text-zinc-200"
-      >
-        {copied ? "Copied!" : "Copy"}
-      </button>
-    </div>
+    <FencedCodeShell
+      toolbarRight={<ToolbarCopyButton textToCopy={code} />}
+      preProps={{
+        className: "overflow-x-auto p-0",
+        children: (
+          <code
+            className={cn(FENCED_CODE_INNER_CODE_CLASSNAME, className)}
+          >
+            {children}
+          </code>
+        ),
+      }}
+    />
   );
 }

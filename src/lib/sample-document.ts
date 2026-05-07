@@ -1,6 +1,6 @@
 export const SAMPLE_MARKDOWN = `# Welcome to Opsly MD
 
-A minimal viewer that supports **tables**, \`inline code\`, code blocks, math, and Mermaid diagrams.
+A minimal viewer that supports **tables**, \`inline code\`, code blocks, masked \`secure\` fences, math, and Mermaid diagrams.
 
 ## Features
 
@@ -8,6 +8,7 @@ A minimal viewer that supports **tables**, \`inline code\`, code blocks, math, a
 |---------|-----------|
 | \`Tables\` | GFM tables |
 | Code blocks | Syntax highlighting |
+| \`secure\` fences | Masked until revealed (example below) |
 | LaTeX | Inline and block math |
 | Mermaid | Flowcharts, diagrams |
 
@@ -15,6 +16,18 @@ A minimal viewer that supports **tables**, \`inline code\`, code blocks, math, a
 
 \`\`\`bash
 echo "Hello, Markdown!"
+\`\`\`
+
+## Secure fence (opsly-mask)
+
+Use a \`secure\` language tag for values you want masked by default—hover to copy, or use the eye control to reveal:
+
+\`\`\`secure
+API_KEY=sk-live-example-0000
+INTERNAL_URL=https://private.example.internal/v1
+multi
+line
+payload
 \`\`\`
 
 ## Math Example

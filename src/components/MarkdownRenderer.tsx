@@ -1,9 +1,17 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, type ComponentProps, createElement } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
+import {
+  OPSLY_MASK_DATA_ATTR,
+  SecureBlock,
+  createSafeCodeComponent,
+  type MarkdownCodeProps,
+  opslyMaskRemarkPlugins,
+  opslyMaskRemarkRehypeOptions,
+} from "opsly-mask";
 import { remarkTreeStructure } from "@/lib/remark-tree-structure";
 import { remarkCodeBlockLang } from "@/lib/remark-code-block-lang";
 import { remarkPrettyJsonBlocks } from "@/lib/remark-pretty-json-blocks";
@@ -18,6 +26,11 @@ import rehypeRaw from "rehype-raw";
 import rehypeSanitize, { defaultSchema, type Options as RehypeSanitizeSchema } from "rehype-sanitize";
 import { cn, normalizeInvalidAtxParagraphBreaks, reactNodeToPlainText } from "@/lib/utils";
 import { CodeBlock } from "./CodeBlock";
+import {
+  FENCED_CODE_INNER_CODE_CLASSNAME,
+  SecureFenceExtrasContext,
+  SecureFencePreChrome,
+} from "./secure-fence";
 import { MermaidDiagram } from "./MermaidDiagram";
 import type { Components } from "react-markdown";
 
@@ -36,7 +49,7 @@ const markdownRehypeSanitizeSchema: RehypeSanitizeSchema = {
   attributes: {
     ...defaultSchema.attributes,
     a: [...(defaultSchema.attributes?.a ?? []), "target", "rel"],
-    div: [...(defaultSchema.attributes?.div ?? []), "className"],
+    div: [...(defaultSchema.attributes?.div ?? []), "className", "dataOpslyMask"],
     span: ["className", "style"],
     svg: [
       "xmlns",
@@ -97,6 +110,59 @@ function classifyCtaLink(href: string | undefined): string | undefined {
   return undefined;
 }
 
+function isSecureFenceHostDiv(props: object): boolean {
+  const p = props as Record<string, unknown>;
+  const set = (v: unknown) => v !== undefined && v !== false && v !== null;
+  const camel = p.dataOpslyMask;
+  const hyphen = p[OPSLY_MASK_DATA_ATTR];
+  return set(camel) || set(hyphen);
+}
+
+/**
+ * Mirrors opsly-mask's createOpslyMarkdownComponents, wires ```secure``` to {@link SecureFencePreChrome},
+ * Copy text is supplied via {@link SecureFenceExtrasContext} on the fenced-body host `div`.
+ */
+function mergeOpslyMarkdownComponentsWithSecureCopy(base: Components | undefined): Components {
+  const userDiv = base?.div;
+  const userPre = base?.pre;
+  const rawCode = base?.code;
+  const safeCode = createSafeCodeComponent(rawCode, userPre);
+
+  return {
+    ...(base ?? {}),
+    code: safeCode,
+    div(props) {
+      const { className, children, ...rest } = props;
+      if (isSecureFenceHostDiv(props)) {
+        const copyPlain = reactNodeToPlainText(children).replace(/\n$/, "");
+        return (
+          <SecureFenceExtrasContext.Provider value={{ copyPlain }}>
+            <SecureBlock pre={SecureFencePreChrome} code={safeCode}>
+              {children}
+            </SecureBlock>
+          </SecureFenceExtrasContext.Provider>
+        );
+      }
+      if (typeof userDiv === "function") {
+        const Comp = userDiv;
+        return (
+          <Comp className={className} {...rest}>
+            {children}
+          </Comp>
+        );
+      }
+      if (typeof userDiv === "string") {
+        return createElement(userDiv, { className, ...rest }, children);
+      }
+      return (
+        <div className={className} {...rest}>
+          {children}
+        </div>
+      );
+    },
+  };
+}
+
 export function MarkdownRenderer({ content, ctaLinks = false }: MarkdownRendererProps) {
   /** Same normalization pipeline as TOC (`buildHeadingManifest` normalizes again; cheap and idempotent). */
   const normalizedContent = useMemo(
@@ -112,8 +178,8 @@ export function MarkdownRenderer({ content, ctaLinks = false }: MarkdownRenderer
   const consumedIdsRef = useRef(new Map<string, number>());
   consumedIdsRef.current = new Map();
 
-  const components: Components = useMemo(
-    () => ({
+  const baseComponents = useMemo(
+    (): Components => ({
       a({ href, className, children, ...props }) {
         const ctaClass = ctaLinks ? classifyCtaLink(href) : undefined;
         return (
@@ -126,7 +192,8 @@ export function MarkdownRenderer({ content, ctaLinks = false }: MarkdownRenderer
           </a>
         );
       },
-      code({ node, className, children, ...props }) {
+      code(codeProps: MarkdownCodeProps) {
+        const { node, className, children, inline: _inline, ...props } = codeProps;
         const match = /language-(\w+)/.exec(className ?? "");
         const lang = match?.[1];
         const code = reactNodeToPlainText(children).replace(/\n$/, "");
@@ -136,6 +203,18 @@ export function MarkdownRenderer({ content, ctaLinks = false }: MarkdownRenderer
 
         if (isBlock && isMermaidCode(lang)) {
           return <MermaidDiagram chart={code} />;
+        }
+
+        /* Secure fences: identical inner surface to {@link CodeBlock} / hljs fences. */
+        if (isBlock && lang?.toLowerCase() === "secure") {
+          return (
+            <code
+              className={cn(FENCED_CODE_INNER_CODE_CLASSNAME, className)}
+              {...props}
+            >
+              {children}
+            </code>
+          );
         }
 
         if (isBlock) {
@@ -152,8 +231,11 @@ export function MarkdownRenderer({ content, ctaLinks = false }: MarkdownRenderer
           </code>
         );
       },
-      pre({ children }) {
-        return <>{children}</>;
+      pre(props: ComponentProps<"pre"> & { "data-opsly-mask"?: boolean }) {
+        if (props["data-opsly-mask"]) {
+          return <SecureFencePreChrome {...props} />;
+        }
+        return <>{props.children}</>;
       },
       h1: ({ id: idProp, children, node: _node, ...rest }) => {
         const id =
@@ -219,6 +301,8 @@ export function MarkdownRenderer({ content, ctaLinks = false }: MarkdownRenderer
     [idQueueMap, ctaLinks]
   );
 
+  const components = useMemo(() => mergeOpslyMarkdownComponentsWithSecureCopy(baseComponents), [baseComponents]);
+
   return (
     <article
       className={cn(
@@ -238,11 +322,13 @@ export function MarkdownRenderer({ content, ctaLinks = false }: MarkdownRenderer
       <ReactMarkdown
         remarkPlugins={[
           remarkGfm,
+          ...opslyMaskRemarkPlugins.slice(1),
           remarkMath,
           remarkCodeBlockLang,
           remarkPrettyJsonBlocks,
           remarkTreeStructure,
         ]}
+        remarkRehypeOptions={opslyMaskRemarkRehypeOptions()}
         rehypePlugins={[
           rehypeKatex,
           [rehypeHighlight, { plainText: ["text", "plaintext", "txt", "tree"] }],
