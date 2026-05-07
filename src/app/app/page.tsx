@@ -93,6 +93,7 @@ const RIGHT_TOC_OPEN_KEY = "md-viewer-right-toc-open";
 const DOC_STACK_ENABLED_KEY = "md-viewer-doc-stack-enabled";
 const GITHUB_URL = "https://github.com/iaminci/opsly-md";
 const DEFAULT_NEW_DOCUMENT_TITLE = "Untitled";
+const EDIT_AUTOSAVE_INTERVAL_SEC = 60;
 
 /** Normalized title when creating a document (empty input → default). */
 function resolveNewDocumentTitle(titleInput: string): string {
@@ -544,6 +545,8 @@ function AppContent() {
   const [createMarkdown, setCreateMarkdown] = useState("");
   const [inlineCreateHideLocationSelectors, setInlineCreateHideLocationSelectors] =
     useState(false);
+  const [editAutosaveUi, setEditAutosaveUi] = useState<"idle" | "saving" | "saved">("idle");
+  const [editAutosaveSecs, setEditAutosaveSecs] = useState<number | null>(null);
 
   const editDirty =
     editMode &&
@@ -796,25 +799,98 @@ function AppContent() {
     setEditMode(false);
   }, []);
 
-  const handleEditSave = useCallback(async () => {
-    if (!currentDoc) return;
-    try {
-      const updated = await updateDocument(currentDoc.id, {
-        content: draftContent,
-      });
-      if (updated) {
-        setCurrentDoc(updated);
-        await refresh();
-      }
-      handleExitEditMode(true);
-    } catch (err) {
-      if (err instanceof DuplicateNameError) {
-        toast.error(err.message);
-      } else {
-        toast.error("Failed to save document.");
-      }
+  useEffect(() => {
+    if (!editMode) setEditAutosaveUi("idle");
+  }, [editMode]);
+
+  useEffect(() => {
+    if (editAutosaveUi !== "saved") return;
+    const t = window.setTimeout(() => setEditAutosaveUi("idle"), 4000);
+    return () => window.clearTimeout(t);
+  }, [editAutosaveUi]);
+
+  useEffect(() => {
+    if (editAutosaveUi === "saved" && editDirty) {
+      setEditAutosaveUi("idle");
     }
-  }, [currentDoc, draftContent, refresh, handleExitEditMode]);
+  }, [editDirty, editAutosaveUi]);
+
+  const handleEditSave = useCallback(
+    async (options?: { exitEditAfter?: boolean }) => {
+      const exitEditAfter = options?.exitEditAfter ?? true;
+      if (!currentDoc) return;
+      if (!exitEditAfter) {
+        setEditAutosaveUi("saving");
+      }
+      try {
+        const updated = await updateDocument(currentDoc.id, {
+          content: draftContent,
+        });
+        if (updated) {
+          setCurrentDoc(updated);
+          await refresh();
+        }
+        if (exitEditAfter) {
+          handleExitEditMode(true);
+        } else {
+          setEditAutosaveUi("saved");
+        }
+      } catch (err) {
+        if (!exitEditAfter) {
+          setEditAutosaveUi("idle");
+        }
+        if (err instanceof DuplicateNameError) {
+          toast.error(err.message);
+        } else {
+          toast.error("Failed to save document.");
+        }
+      }
+    },
+    [currentDoc, draftContent, refresh, handleExitEditMode]
+  );
+
+  const handleEditSaveRef = useRef(handleEditSave);
+  handleEditSaveRef.current = handleEditSave;
+
+  const editAutosaveLatestRef = useRef({
+    draft: "",
+    savedContent: "",
+  });
+  editAutosaveLatestRef.current = {
+    draft: draftContent,
+    savedContent: currentDoc?.content ?? "",
+  };
+
+  useEffect(() => {
+    if (!editMode || !currentDoc) {
+      setEditAutosaveSecs(null);
+      return;
+    }
+    let secCount = 0;
+    const latest0 = editAutosaveLatestRef.current;
+    setEditAutosaveSecs(
+      latest0.draft !== latest0.savedContent ? EDIT_AUTOSAVE_INTERVAL_SEC : null
+    );
+
+    const id = window.setInterval(() => {
+      secCount += 1;
+      const latest = editAutosaveLatestRef.current;
+      const dirty = latest.draft !== latest.savedContent;
+      if (secCount % EDIT_AUTOSAVE_INTERVAL_SEC === 0 && dirty) {
+        void handleEditSaveRef.current({ exitEditAfter: false });
+      }
+      const rem =
+        secCount % EDIT_AUTOSAVE_INTERVAL_SEC === 0
+          ? EDIT_AUTOSAVE_INTERVAL_SEC
+          : EDIT_AUTOSAVE_INTERVAL_SEC - (secCount % EDIT_AUTOSAVE_INTERVAL_SEC);
+      setEditAutosaveSecs(dirty ? rem : null);
+    }, 1000);
+
+    return () => {
+      window.clearInterval(id);
+      setEditAutosaveSecs(null);
+    };
+  }, [editMode, currentDoc?.id]);
 
   const performDownload = useCallback(() => {
     if (!currentDoc) return;
@@ -1043,10 +1119,22 @@ function AppContent() {
                             variant="neutral"
                             size="sm"
                             className="shrink-0 bg-primary/90 text-background"
-                            onClick={handleEditSave}
+                            onClick={() => void handleEditSave()}
                           >
-                            Save
+                            {editAutosaveUi === "saving"
+                              ? "Save · …"
+                              : editAutosaveSecs !== null
+                                ? `Save (${editAutosaveSecs}s)`
+                                : "Save"}
                           </Button>
+                          {(editAutosaveUi === "saving" || editAutosaveUi === "saved") && (
+                            <span
+                              className="min-w-0 max-w-full basis-full pt-1 text-left text-xs text-muted-foreground sm:basis-auto sm:pt-0 sm:text-right"
+                              aria-live="polite"
+                            >
+                              {editAutosaveUi === "saving" ? "Saving…" : "Auto-saved."}
+                            </span>
+                          )}
                         </>
                       ) : (
                         <>
