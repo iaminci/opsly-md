@@ -813,14 +813,14 @@ export function Sidebar({
           <AlertDialogHeader>
             <AlertDialogTitle>
               {selectedWorkspaceId
-                ? `Delete "${selectedWorkspaceName}" and all its contents?`
+                ? <>Delete &quot;{selectedWorkspaceName}&quot; and all its contents?</>
                 : "Delete all workspaces, folders, and documents?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {selectedWorkspaceId ? (
                 <>
-                  This will permanently delete the workspace "{selectedWorkspaceName}" and everything
-                  inside it (folders and documents). This action cannot be undone.
+                  This will permanently delete the workspace &quot;{selectedWorkspaceName}&quot; and
+                  everything inside it (folders and documents). This action cannot be undone.
                 </>
               ) : (
                 <>
