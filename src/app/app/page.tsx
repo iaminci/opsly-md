@@ -69,13 +69,13 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Github as GitHubIcon,
   Pencil,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
 import { Feedback } from "@/components/Feedback";
+import { GitHubIcon } from "@/components/GitHubIcon";
 import { WorkspaceTreeProvider, useWorkspaceTree } from "@/context/WorkspaceTreeContext";
 import {
   workspacePairTabClassName,
