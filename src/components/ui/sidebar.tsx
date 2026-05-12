@@ -569,6 +569,7 @@ function SidebarMenuAction({
   asChild?: boolean
   showOnHover?: boolean
 }) {
+  void showOnHover
   const Comp = asChild ? Slot : "button"
 
   return (

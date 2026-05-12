@@ -6,8 +6,6 @@ import type { Folder } from "@/types/workspace";
 import { WorkspaceTree } from "./WorkspaceTree";
 import { Search } from "./Search";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Sidebar as ShadcnSidebar,
   SidebarContent,
@@ -1009,56 +1007,5 @@ export function Sidebar({
         }}
       />
     </>
-  );
-}
-
-function PasteInput({
-  onClose,
-  onSubmit,
-}: {
-  onClose: () => void;
-  onSubmit: (title: string, content: string) => void;
-}) {
-  const [value, setValue] = useState("");
-
-  const handleSubmit = () => {
-    const trimmed = value.trim();
-    if (!trimmed) return;
-    const firstLine = trimmed.split("\n")[0]?.trim() || "";
-    const title = firstLine || "Untitled";
-    onSubmit(title, trimmed);
-    setValue("");
-    onClose();
-  };
-
-  return (
-    <Card className="mt-3 rounded-xl shadow-sm ring-1 ring-main/20 ">
-      <CardContent className="pt-4">
-        <Textarea
-          placeholder="Enter markdown here..."
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          rows={4}
-          className="mb-2 border-main focus-visible:border-main focus-visible:ring-main/20"
-        />
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="neutral"
-            className="bg-background text-primary hover:text-primary-hover"
-            onClick={onClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="neutral"
-            onClick={handleSubmit}
-            disabled={!value.trim()}
-            className="bg-primary/90 text-background hover:bg-primary/90"
-          >
-            Add
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
   );
 }

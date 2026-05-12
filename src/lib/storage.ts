@@ -555,7 +555,6 @@ export async function importWorkspaceData(
     }
 
     const oldToNewFolderId = new Map<string, string>();
-    const folderById = new Map(data.folders.map((f) => [f.id, f]));
     const childrenByParent = new Map<string | null, Folder[]>();
     for (const f of data.folders) {
       const key = f.parentFolderId;

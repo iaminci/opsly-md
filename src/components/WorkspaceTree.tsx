@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import type { Document } from "@/types/document";
 import type { Workspace } from "@/types/workspace";
 import type { Folder } from "@/types/workspace";
@@ -138,7 +138,11 @@ export function WorkspaceTree({
   flatDocuments,
   getFoldersFlat,
 }: WorkspaceTreeProps) {
-  const workspaceIds = workspaces.map((w) => w.id);
+  void onAddWorkspace;
+  const workspaceIds = useMemo(
+    () => workspaces.map((w) => w.id),
+    [workspaces]
+  );
 
   const [expandedWorkspaces, setExpandedWorkspaces] = useState<string[]>(() => {
     if (typeof window === "undefined" || workspaceIds.length === 0) return workspaceIds;
@@ -241,7 +245,7 @@ export function WorkspaceTree({
       }
       return prev.length > 0 ? prev : workspaceIds;
     });
-  }, [workspaceIds.join(",")]);
+  }, [workspaceIds]);
 
   const workspaceValue = expandedWorkspaces.filter((id) => workspaceIds.includes(id));
 
@@ -515,7 +519,6 @@ function WorkspaceSection({
           onSelect={() => onSelectDocument(doc)}
           onDelete={() => onDeleteDocument(doc.id, doc.title)}
           onRename={() => onRenameDocument(doc.id, doc.title)}
-          onMoveDocument={onMoveDocument}
         />
       ))}
       {hideWorkspaceHeader && !hasTreeItems && (
@@ -1092,7 +1095,6 @@ function FolderItem({
               onSelect={() => onSelectDocument(doc)}
               onDelete={() => onDeleteDocument(doc.id, doc.title)}
               onRename={() => onRenameDocument(doc.id, doc.title)}
-              onMoveDocument={onMoveDocument}
             />
           ))}
         </WorkspaceDropArea>
@@ -1110,7 +1112,6 @@ function FileItem({
   onSelect,
   onDelete,
   onRename,
-  onMoveDocument,
 }: {
   doc: Document;
   isActive: boolean;
@@ -1120,7 +1121,6 @@ function FileItem({
   onSelect: () => void;
   onDelete: () => void;
   onRename: () => void;
-  onMoveDocument: (docId: string, workspaceId: string, folderId: string | null) => void;
 }) {
   const displayName = doc.title.trim() || "Untitled";
   const nameTruncated = false;
