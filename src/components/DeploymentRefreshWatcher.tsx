@@ -28,13 +28,6 @@ const debugDeploymentPrompt =
   process.env.NEXT_PUBLIC_DEBUG_DEPLOYMENT_PROMPT === "1" ||
   process.env.NEXT_PUBLIC_DEBUG_DEPLOYMENT_PROMPT === "true";
 
-function remindAfterLabel(ms: number): string {
-  const m = Math.round(ms / 60_000);
-  if (m >= 60 && m % 60 === 0) return `${m / 60} hour${m === 60 ? "" : "s"}`;
-  if (m >= 60) return `${Math.round(m / 60)} hours`;
-  return `${m} min`;
-}
-
 export function DeploymentRefreshWatcher() {
   const blockCount = useDeploymentReloadBlockCount();
   const blockCountRef = useRef(blockCount);

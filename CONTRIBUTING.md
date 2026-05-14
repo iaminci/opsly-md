@@ -13,7 +13,7 @@ Please keep contributions focused, practical, and aligned with the local-first p
 Clone the repository:
 
 ```bash
-git clone https://github.com/<your-username>/opsly-md.git
+git clone https://github.com/iaminci/opsly-md.git
 cd opsly-md
 ```
 

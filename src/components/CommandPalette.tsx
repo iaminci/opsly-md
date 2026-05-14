@@ -10,7 +10,6 @@ import {
   CommandItem,
 } from "@/components/ui/command";
 import {
-  FileText,
   FolderPlus,
   Search,
   FolderOpen,

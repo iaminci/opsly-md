@@ -69,13 +69,13 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Github as GitHubIcon,
   Pencil,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
 import { Feedback } from "@/components/Feedback";
+import { GitHubIcon } from "@/components/GitHubIcon";
 import { WorkspaceTreeProvider, useWorkspaceTree } from "@/context/WorkspaceTreeContext";
 import {
   workspacePairTabClassName,
@@ -604,8 +604,10 @@ function AppContent() {
 
   /** Seed stack when a doc is shown from URL/storage but stack is still empty. */
   useEffect(() => {
-    if (!documentStackEnabled || !currentDoc) return;
-    setDocStackIds((prev) => (prev.length === 0 ? [currentDoc.id] : prev));
+    if (!documentStackEnabled) return;
+    const docId = currentDoc?.id;
+    if (!docId) return;
+    setDocStackIds((prev) => (prev.length === 0 ? [docId] : prev));
   }, [documentStackEnabled, currentDoc?.id]);
 
   useEffect(() => {
@@ -627,7 +629,6 @@ function AppContent() {
     // Skip URL→state sync when user just selected/added a doc; trust onSelectDocument/handleAddDocument.
     // Defer clearing so React Strict Mode's double effect run doesn't override.
     if (justSelectedDocIdRef.current) {
-      const id = justSelectedDocIdRef.current;
       queueMicrotask(() => {
         justSelectedDocIdRef.current = null;
       });
@@ -665,8 +666,9 @@ function AppContent() {
   }, [editMode]);
 
   useEffect(() => {
-    if (!currentDoc || typeof window === "undefined") return;
-    localStorage.setItem(CURRENT_DOC_KEY, currentDoc.id);
+    const docId = currentDoc?.id;
+    if (!docId || typeof window === "undefined") return;
+    localStorage.setItem(CURRENT_DOC_KEY, docId);
     // Do NOT sync currentDoc→URL here. That causes a race: router.replace is async,
     // so Effect 1 can run with stale searchParams and revert the user's selection.
     // URL is updated only in onSelectDocument.
@@ -862,7 +864,7 @@ function AppContent() {
   };
 
   useEffect(() => {
-    if (!editMode || !currentDoc) {
+    if (!editMode || !currentDoc?.id) {
       setEditAutosaveSecs(null);
       return;
     }

@@ -193,7 +193,8 @@ export function MarkdownRenderer({ content, ctaLinks = false }: MarkdownRenderer
         );
       },
       code(codeProps: MarkdownCodeProps) {
-        const { node, className, children, inline: _inline, ...props } = codeProps;
+        const { node, className, children, inline, ...props } = codeProps;
+        void inline;
         const match = /language-(\w+)/.exec(className ?? "");
         const lang = match?.[1];
         const code = reactNodeToPlainText(children).replace(/\n$/, "");
@@ -237,7 +238,8 @@ export function MarkdownRenderer({ content, ctaLinks = false }: MarkdownRenderer
         }
         return <>{props.children}</>;
       },
-      h1: ({ id: idProp, children, node: _node, ...rest }) => {
+      h1: ({ id: idProp, children, node, ...rest }) => {
+        void node;
         const id =
           (typeof idProp === "string" && idProp) ||
           takeNextHeadingId(
