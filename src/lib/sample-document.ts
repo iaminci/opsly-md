@@ -18,16 +18,13 @@ A minimal viewer that supports **tables**, \`inline code\`, code blocks, masked 
 echo "Hello, Markdown!"
 \`\`\`
 
-## Secure fence (opsly-mask)
+## Opsly Mask: Secure fence (Experimental Feature)
 
 Use a \`secure\` language tag for values you want masked by default—hover to copy, or use the eye control to reveal:
 
 \`\`\`secure
-API_KEY=sk-live-example-0000
-INTERNAL_URL=https://private.example.internal/v1
-multi
-line
-payload
+password=example@123
+api_key: AKtWVlxeYcVjZlFHOWnKZuVxEUjXggDf
 \`\`\`
 
 ## Math Example
