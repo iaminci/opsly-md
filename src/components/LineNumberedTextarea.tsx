@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { Textarea } from "@/components/ui/textarea";
+import { applyMarkdownTabKey } from "@/lib/markdown-editor-tab";
 import { cn } from "@/lib/utils";
 
 const textareaChromeClasses = [
@@ -113,11 +114,15 @@ export const LineNumberedTextarea = React.forwardRef<
   HTMLTextAreaElement,
   LineNumberedTextareaProps
 >(function LineNumberedTextarea(
-  { className, textareaClassName, value, onScroll, ...props },
+  { className, textareaClassName, value, onScroll, onKeyDown, onChange, ...props },
   ref,
 ) {
   const gutterRef = React.useRef<HTMLDivElement>(null);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const pendingSelectionRef = React.useRef<{
+    start: number;
+    end: number;
+  } | null>(null);
   const text = value == null ? "" : String(value);
 
   const logicalLineCount = Math.max(1, text.split("\n").length);
@@ -138,6 +143,15 @@ export const LineNumberedTextarea = React.forwardRef<
   const [gutterTypography, setGutterTypography] = React.useState<
     Pick<React.CSSProperties, "font" | "lineHeight" | "letterSpacing">
   >({});
+
+  React.useLayoutEffect(() => {
+    const el = textareaRef.current;
+    const pending = pendingSelectionRef.current;
+    if (el && pending) {
+      el.setSelectionRange(pending.start, pending.end);
+      pendingSelectionRef.current = null;
+    }
+  }, [text]);
 
   React.useLayoutEffect(() => {
     const el = textareaRef.current;
@@ -176,6 +190,35 @@ export const LineNumberedTextarea = React.forwardRef<
     if (g) g.scrollTop = e.currentTarget.scrollTop;
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    onKeyDown?.(e);
+    if (e.defaultPrevented || e.key !== "Tab") return;
+
+    // Tab / Shift+Tab stay in the editor (no browser focus cycling).
+    e.preventDefault();
+
+    const textarea = e.currentTarget;
+    const result = applyMarkdownTabKey(
+      textarea.value,
+      textarea.selectionStart,
+      textarea.selectionEnd,
+      e.shiftKey,
+    );
+
+    if (result.value === textarea.value) return;
+
+    pendingSelectionRef.current = {
+      start: result.selectionStart,
+      end: result.selectionEnd,
+    };
+
+    onChange?.({
+      ...e,
+      target: { ...textarea, value: result.value },
+      currentTarget: { ...textarea, value: result.value },
+    } as React.ChangeEvent<HTMLTextAreaElement>);
+  };
+
   return (
     <div
       className={cn(
@@ -203,6 +246,8 @@ export const LineNumberedTextarea = React.forwardRef<
         ref={mergedRef}
         value={value}
         onScroll={handleScroll}
+        onKeyDown={handleKeyDown}
+        onChange={onChange}
         className={cn(
           "min-h-0 min-w-0 flex-1 resize-y rounded-none border-0 bg-transparent px-2 py-2 pr-3 shadow-none",
           "focus-visible:ring-0 focus-visible:ring-offset-0",
