@@ -6,12 +6,6 @@
     "node": ">=20.9.0"
   },
   "packageManager": "pnpm@10.29.2",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "sharp",
-      "unrs-resolver"
-    ]
-  },
   "scripts": {
     "dev": "next dev",
     "build": "node scripts/write-deployment-id.mjs && next build",
