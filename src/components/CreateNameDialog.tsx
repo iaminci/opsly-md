@@ -111,7 +111,7 @@ export function CreateNameDialog({
               type="submit"
               disabled={!value.trim()}
               className={cn(
-                "bg-background text-foreground hover:bg-main"
+                "bg-background text-foreground hover:bg-main hover:text-black"
               )}
             >
               {submitLabel}

@@ -345,7 +345,7 @@ function InlineCreateMarkdownForm({
                   type="button"
                   variant="neutral"
                   size="sm"
-                  className="shrink-0 bg-background hover:bg-main"
+                  className="shrink-0 bg-background hover:bg-main hover:text-black"
                   onClick={() => void onSubmit()}
                   disabled={!createMarkdown.trim() || !createSelectedWorkspaceId}
                 >
@@ -1149,7 +1149,7 @@ function AppContent() {
                             type="button"
                             variant="neutral"
                             size="sm"
-                            className="shrink-0 bg-background hover:bg-main"
+                            className="shrink-0 bg-background hover:bg-main hover:text-black"
                             onClick={() => setDownloadConfirmOpen(true)}
                           >
                             Download
@@ -1263,7 +1263,7 @@ function AppContent() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="hover:!bg-primary border-2 text-foreground"
+              className="hover:!bg-primary hover:!text-black border-2 text-foreground"
               onClick={() => performDownload()}
             >
               Download

@@ -198,7 +198,7 @@ body {
 }
 
 .dark {
-  --background: #1a1b26;
+  --background: #24283b;
   --secondary-background: #22293d;
   --sidebar: #1d2333;
   --card: #272f45;
@@ -206,32 +206,30 @@ body {
   --input: #32384d;
   --muted: #2a3158;
   --foreground: #c0caf5;
-  --main-foreground: #ffffff;
-  --main: #a855f7;
-  --primary: #a855f7;
-  --primary-hover: #9d7cd8;
-  --primary-foreground: #ffffff;
-  --border: #4b5275;
-  --sidebar-border: #4b5275;
-  --ring: #7aa2f7;
-  --shadow: 2px 2px 0px 0px var(--main);
-  --radius: 0.5rem;
   --muted-foreground: #9aa5ce;
+  --main: #34D399;
+  --primary: #34D399;
+  --primary-hover: #10B981;
+  --primary-foreground: #111111;
+  --secondary: #FFD866;
+  --secondary-hover: #F4C94A;
+  --secondary-foreground: #111111;
+  --accent: #363B54;
+  --accent-foreground: #c0caf5;
+  --border: #0b0f14;
+  --sidebar-border: #0b0f14;
+  --ring: #34D399;
+  --sidebar-ring: #34D399;
+  --shadow: 2px 2px 0px 0px #34D399;
   --card-foreground: #c0caf5;
   --popover-foreground: #c0caf5;
-  --secondary: #f7768e;
-  --secondary-hover: #e06c85;
-  --secondary-foreground: #ffffff;
-  --accent: #2a3158;
-  --accent-foreground: #c0caf5;
-  --destructive: #f7768e;
-  --destructive-foreground: #ffffff;
   --sidebar-foreground: #c0caf5;
-  --sidebar-accent: #2a3158;
-  --sidebar-accent-foreground: #c0caf5;
-  --sidebar-ring: #7aa2f7;
+  --sidebar-accent: rgb(169 220 118 / 0.12);
+  --sidebar-accent-foreground: #34D399;
+  --destructive: #FF6188;
+  --destructive-foreground: #ffffff;
   --sidebar-guide: rgb(154 165 206 / 0.25);
-  --prose-blockquote-caution-icon: #a855f7;
+  --prose-blockquote-caution-icon: #FFD866;
 }
 
 /* Unlayered: in-app ::selection must not live only in @layer base (Tailwind v4 can cascade it below preflight
