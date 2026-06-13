@@ -62,6 +62,16 @@ export function normalizeInvalidAtxParagraphBreaks(content: string): string {
   return out.join("\n");
 }
 
+/** First non-empty line of markdown, with ATX `#` heading markers stripped. */
+export function titleFromMarkdownContent(content: string): string {
+  const line =
+    content.trim().split("\n").find((l) => l.trim().length > 0)?.trim() ?? "";
+  if (!line) return "Untitled";
+  const match = line.match(/^\s{0,3}#{1,6}\s+(.+)$/);
+  if (match) return match[1]!.replace(/#+\s*$/, "").trim() || "Untitled";
+  return line;
+}
+
 /** Safe `.md` download name: strip extension, whitespace → underscores, lowercase stem. */
 export function toMarkdownDownloadFilename(title: string): string {
   const base = title.replace(/\.md$/i, "").trim();

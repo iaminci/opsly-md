@@ -36,6 +36,7 @@ import {
   type WorkspaceExport,
   type AllWorkspacesExport,
 } from "@/lib/storage";
+import { titleFromMarkdownContent } from "@/lib/utils";
 import { CreateNameDialog } from "./CreateNameDialog";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import {
@@ -240,10 +241,9 @@ export function Sidebar({
     });
     const stem = file.name.replace(/\.(md|markdown)$/i, "").trim();
     const isReadmeName = stem.toLowerCase() === "readme";
-    const trimmed = content.trim();
-    const titleFromBody =
-      trimmed.split("\n").find((l) => l.trim().length > 0)?.trim() || "Untitled";
-    const title = isReadmeName ? titleFromBody : stem || "Untitled";
+    const title = isReadmeName
+      ? titleFromMarkdownContent(content)
+      : stem || "Untitled";
     await onAddDocument(title, content, target.workspaceId, target.folderId);
     setUploadTarget(null);
     e.target.value = "";
