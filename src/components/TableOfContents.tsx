@@ -147,9 +147,6 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
 
   return (
     <nav className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
-      <h3 className="mb-2 shrink-0 pr-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-        On this page
-      </h3>
       <ScrollArea
         ref={tocScrollRef}
         className="min-h-0 min-w-0 w-full flex-1"
@@ -169,8 +166,8 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
                 className={cn(
                   "block w-full max-w-full min-w-0 rounded-md border-2 border-l-2 px-2 py-1 transition-colors [overflow-wrap:anywhere]",
                   activeId === id
-                    ? "border-border bg-primary/90 font-medium !text-background visited:!text-background"
-                    : "border-transparent text-muted hover:bg-primary/90 hover:!text-background"
+                    ? "border-transparent font-bold text-primary visited:!text-primary"
+                    : "border-transparent text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
                 )}
               >
                 {text}

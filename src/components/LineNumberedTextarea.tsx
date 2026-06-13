@@ -8,11 +8,7 @@ import { cn } from "@/lib/utils";
 
 const textareaChromeClasses = [
   "font-mono text-sm leading-normal",
-  "overflow-y-auto overflow-x-hidden",
-  "[scrollbar-width:thin] [scrollbar-color:var(--border)_var(--secondary-background)]",
-  "[&::-webkit-scrollbar]:w-2",
-  "[&::-webkit-scrollbar-track]:rounded-base [&::-webkit-scrollbar-track]:bg-secondary-background",
-  "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border",
+  "overflow-y-auto overflow-x-hidden native-scrollbar",
   "border-border text-foreground",
 ].join(" ");
 

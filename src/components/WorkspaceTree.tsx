@@ -36,9 +36,9 @@ import {
 const DRAG_TYPE = "application/x-md-viewer-document";
 const DRAG_TYPE_FOLDER = "application/x-md-viewer-folder";
 
-/** Full-height primary stripe on accordion section (header + expanded drop area). */
+/** Full-height stripe on accordion section (header + expanded drop area). */
 const DRAG_SECTION_LEFT_STRIPE =
-  "relative before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:z-[5] before:w-0.5 before:bg-primary/40";
+  "relative before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:z-[5] before:w-0.5 before:bg-border";
 
 /** Row tint during tree drag; vertical stripe is on the accordion section wrapper. */
 const DRAG_ROW_TINT_CLASS =
@@ -49,12 +49,12 @@ const DROP_ZONE_BG_CLASS = "rounded-md bg-muted/25";
 
 /** Workspace name strip (tree rows) — borderless; name, chevron, and Layers use foreground when accent/path-highlighted. */
 const WORKSPACE_TAB_CORAL_PILL = cn(
-  "!flex !h-8 !min-h-8 !min-w-0 !flex-1 !items-center !gap-2 !rounded-md !border-0 !bg-transparent !py-1 !pl-3 !pr-0 !text-left !font-heading !font-bold !text-foreground !shadow-none !outline-none !ring-0 !transition-colors hover:!text-primary focus-visible:!ring-0 focus-visible:!ring-ring"
+  "!flex !h-8 !min-h-8 !min-w-0 !flex-1 !items-center !gap-2 !rounded-md !border-0 !bg-transparent !py-1 !pl-3 !pr-0 !text-left !font-heading !font-bold !text-primary !shadow-none !outline-none !ring-0 !transition-colors focus-visible:!ring-0 focus-visible:!ring-ring"
 );
 
 /** Inactive workspace row — label uses muted (icons override when path-highlighted). */
 const WORKSPACE_TAB_MUTED_PILL = cn(
-  "!flex !h-8 !min-h-8 !min-w-0 !flex-1 !items-center !gap-2 !rounded-md !border-0 !bg-transparent !py-1 !pl-3 !pr-0 !text-left !font-heading !font-normal !text-muted !shadow-none !outline-none !ring-0 !transition-colors hover:!text-primary"
+  "!flex !h-8 !min-h-8 !min-w-0 !flex-1 !items-center !gap-2 !rounded-md !border-0 !bg-transparent !py-1 !pl-3 !pr-0 !text-left !font-heading !font-normal !text-muted-foreground !shadow-none !outline-none !ring-0 !transition-colors hover:!text-primary-hover"
 );
 
 function useClearDragStateOnDragEnd(setDragOver: (v: boolean) => void) {
@@ -515,6 +515,7 @@ function WorkspaceSection({
           isActive={currentId === doc.id}
           suppressDocHighlights={suppressDocHighlights}
           treeReorderDragActive={treeReorderDragActive}
+          treeGuideInset={!hideWorkspaceHeader}
           onTreeMenuOpenChange={onTreeMenuOpenChange}
           onSelect={() => onSelectDocument(doc)}
           onDelete={() => onDeleteDocument(doc.id, doc.title)}
@@ -592,8 +593,8 @@ function WorkspaceSection({
                 "size-4 shrink-0 transition-colors",
                 workspaceFullRowAccent || workspaceIconPrimaryOnly
                   ? "text-foreground"
-                  : "text-muted",
-                "group-hover/ws:text-primary"
+                  : "text-muted-foreground",
+                "group-hover/ws:text-primary-hover"
               )}
             />
             <span
@@ -602,7 +603,7 @@ function WorkspaceSection({
                 workspaceIconPrimaryOnly &&
                   !workspaceFullRowAccent &&
                   "!text-foreground",
-                "group-hover/ws:!text-primary"
+                "group-hover/ws:!text-primary-hover"
               )}
             >
               {workspace.name}
@@ -612,8 +613,8 @@ function WorkspaceSection({
                 aria-hidden
                 className={cn(
                   "pointer-events-none size-[1.125rem] shrink-0 transition-[transform,color] duration-200",
-                  workspaceFullRowAccent ? "text-inherit" : "text-muted",
-                  "group-hover/ws:text-primary",
+                  workspaceFullRowAccent ? "text-inherit" : "text-muted-foreground",
+                  "group-hover/ws:text-primary-hover",
                   "group-data-[state=open]/ws:rotate-90",
                 )}
               />
@@ -641,9 +642,9 @@ function WorkspaceSection({
                         tabIndex={0}
                         aria-label="Workspace actions"
                         className={cn(
-                          "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
-                          workspaceFullRowAccent ? "text-foreground" : "text-muted",
-                          "group-hover/ws:text-primary"
+                          "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary-hover focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
+                          workspaceFullRowAccent ? "text-foreground" : "text-muted-foreground",
+                          "group-hover/ws:text-primary-hover"
                         )}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") e.preventDefault();
@@ -660,7 +661,7 @@ function WorkspaceSection({
                 <DropdownMenuContent
                   align="end"
                   sideOffset={4}
-                  className="min-w-0 w-max whitespace-nowrap rounded-md border-border-2 bg-background p-1 font-heading text-foreground shadow-sm"
+                  className="min-w-0 w-max whitespace-nowrap rounded-md border-border-2 bg-popover p-1 font-heading text-popover-foreground shadow-sm"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <DropdownMenuItem onClick={() => onAddFile(workspace.id, null)}>
@@ -929,24 +930,24 @@ function FolderItem({
             folderRowActive ? "opacity-100" : "opacity-[0.85]",
             folderFullRowAccent &&
               !folderHighlighted &&
-              "text-foreground hover:text-primary",
+              "text-foreground hover:text-foreground",
             folderIconPrimaryOnly &&
               !folderHighlighted &&
-              "text-foreground hover:text-primary",
-            !folderRowActive && "text-muted hover:text-primary"
+              "text-foreground hover:text-foreground",
+            !folderRowActive && "text-muted-foreground hover:text-foreground"
           )}
         >
           <FolderIcon
             className={cn(
-              "size-4 shrink-0 transition-colors group-hover/folder:!text-primary",
-              folderRowActive ? "text-foreground" : "text-muted"
+              "size-4 shrink-0 transition-colors group-hover/folder:!text-primary-hover",
+              folderRowActive ? "text-foreground" : "text-muted-foreground"
             )}
           />
           <span
             className={cn(
               "min-w-0 flex-1 truncate text-left font-heading text-base transition-colors",
               folderRowActive && "!text-foreground",
-              "group-hover/folder:!text-primary"
+              "group-hover/folder:!text-primary-hover"
             )}
           >
             {folder.name}
@@ -955,7 +956,7 @@ function FolderItem({
             <ChevronRight
               aria-hidden
               className={cn(
-                "pointer-events-none size-[1.125rem] shrink-0 text-inherit transition-[transform,color] duration-200 group-hover/folder:text-primary",
+                "pointer-events-none size-[1.125rem] shrink-0 text-inherit transition-[transform,color] duration-200 group-hover/folder:text-primary-hover",
                 "group-data-[state=open]/folder:rotate-90",
               )}
             />
@@ -984,9 +985,9 @@ function FolderItem({
                       tabIndex={0}
                       aria-label="Folder actions"
                       className={cn(
-                        "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
-                        folderRowActive ? "text-foreground" : "text-muted",
-                        "group-hover/folder:text-primary"
+                        "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary-hover focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
+                        folderRowActive ? "text-foreground" : "text-muted-foreground",
+                        "group-hover/folder:text-primary-hover"
                       )}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") e.preventDefault();
@@ -1003,7 +1004,7 @@ function FolderItem({
               <DropdownMenuContent
                 align="end"
                 sideOffset={4}
-                className="min-w-0 w-max whitespace-nowrap rounded-md border-border-2 bg-background p-1 font-heading text-foreground shadow-sm"
+                className="min-w-0 w-max whitespace-nowrap rounded-md border-border-2 bg-popover p-1 font-heading text-popover-foreground shadow-sm"
                 onClick={(e) => e.stopPropagation()}
               >
                 <DropdownMenuItem onClick={() => onAddFile(workspaceId, folder.id)}>
@@ -1108,6 +1109,7 @@ function FileItem({
   isActive,
   suppressDocHighlights,
   treeReorderDragActive,
+  treeGuideInset = true,
   onTreeMenuOpenChange,
   onSelect,
   onDelete,
@@ -1117,6 +1119,8 @@ function FileItem({
   isActive: boolean;
   suppressDocHighlights: boolean;
   treeReorderDragActive: boolean;
+  /** When the parent drop area has `pl-1`, offset the guide highlight to align with its left border. */
+  treeGuideInset?: boolean;
   onTreeMenuOpenChange: (open: boolean) => void;
   onSelect: () => void;
   onDelete: () => void;
@@ -1127,9 +1131,8 @@ function FileItem({
   const [fileMenuOpen, setFileMenuOpen] = useState(false);
   const fileLooksSelected = isActive && !suppressDocHighlights;
   const fileTintPrimary = fileLooksSelected || fileMenuOpen;
-  /** Full row pill (border/background) — off for the open doc while reordering so only the title stays emphasized. */
-  const activeDocHeavyChrome =
-    fileTintPrimary && !(treeReorderDragActive && fileLooksSelected);
+  const showGuideHighlight =
+    fileLooksSelected && !(treeReorderDragActive && fileLooksSelected);
 
   const fileActionsRef = useRef<HTMLDivElement>(null);
 
@@ -1150,7 +1153,15 @@ function FileItem({
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      className="group/file flex cursor-pointer items-center rounded-md py-0.5 pl-1 pr-0"
+      className={cn(
+        "group/file flex cursor-pointer items-center rounded-md py-0.5 pl-1 pr-0",
+        showGuideHighlight &&
+          "relative before:pointer-events-none before:absolute before:inset-y-0 before:z-[1] before:w-0.5 before:bg-primary",
+        showGuideHighlight &&
+          treeGuideInset &&
+          "before:-left-[calc(0.25rem+2px)]",
+        showGuideHighlight && !treeGuideInset && "before:-left-0.5"
+      )}
       onClick={(e) => {
         if (!(e.target as HTMLElement).closest("[data-slot='dropdown-menu-trigger']")) {
           onSelect();
@@ -1159,8 +1170,8 @@ function FileItem({
     >
       <div
         className={cn(
-          "flex min-h-6 min-w-0 flex-1 items-center gap-2 rounded-[5px] py-0 pl-1 pr-0 transition-colors hover:!text-primary group-hover/file:!text-primary",
-          fileTintPrimary &&
+          "flex min-h-6 min-w-0 flex-1 items-center gap-2 rounded-[5px] py-0 pl-1 pr-0 transition-colors group-hover/file:!text-primary-hover",
+          fileLooksSelected &&
             !(treeReorderDragActive && fileLooksSelected) &&
             "text-primary"
         )}
@@ -1170,30 +1181,24 @@ function FileItem({
             <button
               type="button"
               className={cn(
-                "flex min-h-6 min-w-0 flex-1 items-center justify-start gap-2 truncate border-0 bg-transparent text-left text-base font-base transition-colors hover:bg-transparent",
+                "flex min-h-6 min-w-0 flex-1 items-center justify-start gap-2 truncate border-0 bg-transparent text-left text-base font-base transition-colors hover:bg-transparent group-hover/file:!text-primary-hover",
                 fileTintPrimary ? "opacity-100" : "opacity-[0.85]",
-                fileLooksSelected && "font-medium",
-                activeDocHeavyChrome &&
-                  "text-foreground bg-primary/20 hover:bg-transparent border-1 hover:border-0 rounded-base",
-                fileLooksSelected &&
-                  treeReorderDragActive &&
-                  "!bg-transparent !border-0 shadow-none rounded-none hover:!bg-transparent",
-                !activeDocHeavyChrome && !fileLooksSelected && "text-muted",
-                !activeDocHeavyChrome && fileMenuOpen && "text-foreground",
-                "group-hover/file:!text-primary",
+                fileLooksSelected && "font-bold text-primary",
+                !fileLooksSelected && !fileMenuOpen && "text-muted-foreground",
+                !fileLooksSelected && fileMenuOpen && "text-foreground",
                 nameTruncated && "min-w-0"
               )}
             >
               <FileBraces
                 className={cn(
-                  "size-4 shrink-0 transition-colors group-hover/file:!text-primary",
-                  activeDocHeavyChrome ? "text-foreground" : "text-muted"
+                  "size-4 shrink-0 transition-colors group-hover/file:!text-primary-hover",
+                  fileLooksSelected ? "text-primary" : "text-muted-foreground"
                 )}
               />
               <span
                 className={cn(
-                  "min-w-0 flex-1 truncate",
-                  treeReorderDragActive && fileLooksSelected && "font-medium text-primary"
+                  "min-w-0 flex-1 truncate group-hover/file:!text-primary-hover",
+                  treeReorderDragActive && fileLooksSelected && "font-bold text-primary"
                 )}
               >
                 {displayName}
@@ -1227,9 +1232,8 @@ function FileItem({
                     tabIndex={0}
                     aria-label="Document actions"
                     className={cn(
-                      "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
-                      activeDocHeavyChrome ? "text-primary" : "text-muted",
-                      "group-hover/file:!text-primary"
+                      "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary-hover focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
+                      "text-muted-foreground group-hover/file:text-primary-hover"
                     )}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") e.preventDefault();
@@ -1246,7 +1250,7 @@ function FileItem({
             <DropdownMenuContent
               align="end"
               sideOffset={4}
-              className="min-w-0 w-max whitespace-nowrap rounded-md border-border-2 bg-background p-1 font-heading text-foreground shadow-sm"
+              className="min-w-0 w-max whitespace-nowrap rounded-md border-border-2 bg-popover p-1 font-heading text-popover-foreground shadow-sm"
             >
               <DropdownMenuItem onClick={onRename}>
                 <Pencil className="mr-2 size-4" />

@@ -88,7 +88,7 @@ export function CreateNameDialog({
               }}
               placeholder={placeholder}
               className={cn(
-                "h-10 rounded-md border-border bg-background",
+                "h-10 rounded-md border-border",
                 "ring-0 ring-foreground ring-offset-0",
                 error && "border-border ring-border",
               )}
@@ -103,9 +103,7 @@ export function CreateNameDialog({
               type="button"
               variant="neutral"
               onClick={() => onOpenChange(false)}
-              className={cn(
-                "bg-background text-primary hover:text-primary-hover"
-              )}
+              className="bg-background"
             >
               Cancel
             </Button>
@@ -113,7 +111,7 @@ export function CreateNameDialog({
               type="submit"
               disabled={!value.trim()}
               className={cn(
-                "bg-main text-background hover:bg-main"
+                "bg-background text-foreground hover:bg-main hover:text-black"
               )}
             >
               {submitLabel}

@@ -24,13 +24,10 @@
   --font-weight-heading: 700;
   --font-sans: var(--font-fira-code), ui-monospace, monospace;
   --font-mono: var(--font-fira-code), ui-monospace, monospace;
-  /* --font-sidebar: var(--font-fira-code), ui-monospace, monospace; */
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
   --color-input: var(--input);
@@ -45,6 +42,9 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-hover: var(--primary-hover);
   --color-primary: var(--primary);
+  --color-selection-bg: var(--selection-bg);
+  --color-selection-bg-soft: var(--selection-bg-soft);
+  --color-selection-border: var(--selection-border);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
@@ -73,11 +73,7 @@ body {
 }
 
 .prose th {
-  @apply font-semibold text-zinc-900 dark:text-zinc-100;
-}
-
-.prose td {
-  @apply text-zinc-700 dark:text-zinc-300;
+  @apply font-semibold;
 }
 
 /* Code blocks: monospace + preserve whitespace for ASCII trees */
@@ -93,13 +89,13 @@ body {
 
 /* Inline code: neutral chip; label text uses muted-foreground (not amber / accent ink) */
 .prose :not(pre) > code {
-  @apply rounded border border-black/20 bg-secondary-background px-1.5 py-0.5 font-mono text-sm before:content-none after:content-none;
+  @apply rounded border border-black/20 bg-muted px-1.5 py-0.5 font-mono text-sm before:content-none after:content-none;
   color: var(--muted-foreground) !important;
 }
 .dark .prose :not(pre) > code {
-  background-color: var(--secondary-background);
+  background-color: var(--card);
   color: var(--muted-foreground) !important;
-  border: 1px solid oklch(100% 0 0 / 0.14);
+  border: 1px solid color-mix(in srgb, var(--border) 25%, transparent);
 }
 
 /* Blockquote: caution callout — amber warning icon, destructive body text (see content/why.md) */
@@ -162,82 +158,78 @@ body {
 }
 
 :root {
-  --background: oklch(95.38% 0.0357 72.89);
-  --secondary-background: oklch(98% 0.015 72.89);
-  --foreground: oklch(0% 0 0);
-  --main-foreground: oklch(0% 0 0);
-  --main: oklch(72.27% 0.1894 50.19);
-  --border: oklch(0% 0 0);
-  --ring: oklch(0% 0 0);
-  --shadow: 2px 2px 0px 0px var(--border);
-  --radius: 0.5rem;
-  --muted: #838383;
-  --muted-foreground: #a42439;
+  --background: #fafaf7;
+  --secondary-background: #ffffff;
+  --sidebar: #edf0f2;
   --card: #ffffff;
-  --card-foreground: #000000;
   --popover: #ffffff;
-  --popover-foreground: #000000;
-  --input: #ffffff;
-  --primary: oklch(72.27% 0.1894 50.19);
-  --primary-hover: #d00000;
+  --input: #fcfcfd;
+  --muted: #e6e9ed;
+  --foreground: #17181b;
+  --main-foreground: #ffffff;
+  --main: #8b5cf6;
+  --border: #1f1f1f;
+  --ring: #1f1f1f;
+  --shadow: 4px 4px 0px 0px var(--main);
+  --radius: 0.5rem;
+  --muted-foreground: #667085;
+  --card-foreground: #17181b;
+  --popover-foreground: #17181b;
+  --primary: #8b5cf6;
+  --primary-hover: #7c3aed;
   --primary-foreground: #ffffff;
-  --secondary: #ffda5c;
-  --secondary-hover: #f0c030;
-  --secondary-foreground: #000000;
-  --accent: #ceebfc;
-  --accent-foreground: #000000;
+  --secondary: #ede9fe;
+  --secondary-hover: #ddd6fe;
+  --secondary-foreground: #5b21b6;
+  --accent: #f5f3ff;
+  --accent-foreground: #5b21b6;
   --destructive: #d00000;
   --destructive-foreground: #ffffff;
-  --sidebar: #ffffff;
-  --sidebar-foreground: oklch(0% 0 0);
-  --sidebar-primary: oklch(72.27% 0.1894 50.19);
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: oklch(0.96 0 0);
-  --sidebar-accent-foreground: oklch(0.145 0 0);
-  --sidebar-border: oklch(0% 0 0);
-  --sidebar-ring: oklch(0% 0 0);
-  --sidebar-guide: oklch(72% 0 0 / 0.35);
-  /* Warning / caution glyph — standard amber, not destructive */
-  --prose-blockquote-caution-icon: #ca8a04;
+  --sidebar-foreground: #1c1c1e;
+  --sidebar-accent: #ede9fe;
+  --sidebar-accent-foreground: #5b21b6;
+  --sidebar-border: #1f1f1f;
+  --sidebar-ring: #1f1f1f;
+  --sidebar-guide: rgb(33 33 33 / 0.35);
+  --prose-blockquote-caution-icon: #7c3aed;
+  --selection-bg: color-mix(in srgb, var(--primary) 12%, transparent);
+  --selection-bg-soft: color-mix(in srgb, var(--primary) 8%, transparent);
+  --selection-border: var(--primary);
 }
 
 .dark {
-  --background: oklch(26.86% 0.0327 60.06);
-  --secondary-background: oklch(23.93% 0 0);
-  --foreground: oklch(92.49% 0 0);
-  --main-foreground: oklch(0% 0 0);
-  --main: oklch(67.56% 0.1796 49.61);
-  --border: oklch(0% 0 0);
-  --ring: oklch(100% 0 0);
-  --shadow: 2px 2px 0px 0px var(--border);
-  --radius: 0.5rem;
-  --muted: #a6a5a5;
-  --muted-foreground: oklch(67.689% 0.17957 49.736 / 0.617);
-  --card: #1a1a1a;
-  --card-foreground: #959595;
-  --popover: #1a1a1a;
-  --popover-foreground: #959595;
-  --input: #2a2a2a;
-  --primary: oklch(67.56% 0.1796 49.61);
-  --primary-hover: #ff6a1a;
-  --primary-foreground: #fdead9;
-  --secondary: #2a2a2a;
-  --secondary-hover: #d97820;
-  --secondary-foreground: #000000;
-  --accent: #2a2a2a;
-  --accent-foreground: #000000;
-  --destructive: #d00000;
-  --destructive-foreground: #959595;
-  --sidebar: #1a1a1a;
-  --sidebar-foreground: #959595;
-  --sidebar-primary: oklch(67.56% 0.1796 49.61);
-  --sidebar-primary-foreground: #141414;
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0% 0 0);
-  --sidebar-ring: oklch(100% 0 0);
-  --sidebar-guide: oklch(48% 0 0 / 0.35);
-  --prose-blockquote-caution-icon: #eab308;
+  --background: #24283b;
+  --secondary-background: #22293d;
+  --sidebar: #1d2333;
+  --card: #272f45;
+  --popover: #2d3750;
+  --input: #32384d;
+  --muted: #2a3158;
+  --foreground: #c0caf5;
+  --muted-foreground: #9aa5ce;
+  --main: #34D399;
+  --primary: #34D399;
+  --primary-hover: #10B981;
+  --primary-foreground: #111111;
+  --secondary: #FFD866;
+  --secondary-hover: #F4C94A;
+  --secondary-foreground: #111111;
+  --accent: #363B54;
+  --accent-foreground: #c0caf5;
+  --border: #0b0f14;
+  --sidebar-border: #0b0f14;
+  --ring: #34D399;
+  --sidebar-ring: #34D399;
+  --shadow: 2px 2px 0px 0px #34D399;
+  --card-foreground: #c0caf5;
+  --popover-foreground: #c0caf5;
+  --sidebar-foreground: #c0caf5;
+  --sidebar-accent: rgb(169 220 118 / 0.12);
+  --sidebar-accent-foreground: #34D399;
+  --destructive: #FF6188;
+  --destructive-foreground: #ffffff;
+  --sidebar-guide: rgb(154 165 206 / 0.25);
+  --prose-blockquote-caution-icon: #FFD866;
 }
 
 /* Unlayered: in-app ::selection must not live only in @layer base (Tailwind v4 can cascade it below preflight
@@ -245,8 +237,7 @@ body {
 ::selection,
 ::-moz-selection {
   color: var(--primary-foreground);
-  /* #ef4400 at ~90% — works even when color-mix is ignored on ::selection */
-  background-color: rgb(239 68 0 / 0.9);
+  background-color: rgb(139 92 246 / 0.7);
 }
 @supports (background-color: color-mix(in srgb, red, blue)) {
   ::selection,
@@ -268,104 +259,6 @@ html[data-window-inactive].dark *::-moz-selection {
   background-color: #5a5a5a;
 }
 
-/* Dark mode accent variables - only affect dark mode, light mode untouched */
-.dark[data-dark-accent="sky"] {
-  --dm-text: #38bdf8;
-  --dm-text-muted: rgb(14 165 233 / 0.7);
-  --dm-text-hover: #7dd3fc;
-  --dm-bg: rgb(7 89 133 / 0.5);
-  --dm-bg-hover: rgb(8 47 73 / 0.5);
-  --dm-bg-line: rgb(56 189 248 / 0.4);
-  --dm-border: rgb(56 189 248 / 0.5);
-  --dm-border-strong: #0284c7;
-  --dm-focus-ring: rgb(56 189 248 / 0.5);
-  --dm-btn: #0284c7;
-  --dm-btn-hover: #0369a1;
-  --dm-prose-bg: rgb(12 74 110 / 0.4);
-  --dm-prose-text: #bae6fd;
-  --dm-prose-border: #0284c7;
-}
-.dark[data-dark-accent="emerald"] {
-  --dm-text: #34d399;
-  --dm-text-muted: rgb(16 185 129 / 0.7);
-  --dm-text-hover: #6ee7b7;
-  --dm-bg: rgb(6 95 70 / 0.5);
-  --dm-bg-hover: rgb(2 44 34 / 0.5);
-  --dm-bg-line: rgb(52 211 153 / 0.4);
-  --dm-border: rgb(52 211 153 / 0.5);
-  --dm-border-strong: #059669;
-  --dm-focus-ring: rgb(52 211 153 / 0.5);
-  --dm-btn: #059669;
-  --dm-btn-hover: #047857;
-  --dm-prose-bg: rgb(6 78 59 / 0.4);
-  --dm-prose-text: #a7f3d0;
-  --dm-prose-border: #059669;
-}
-.dark[data-dark-accent="violet"] {
-  --dm-text: #a78bfa;
-  --dm-text-muted: rgb(139 92 246 / 0.7);
-  --dm-text-hover: #c4b5fd;
-  --dm-bg: rgb(91 33 182 / 0.5);
-  --dm-bg-hover: rgb(46 16 101 / 0.5);
-  --dm-bg-line: rgb(167 139 250 / 0.4);
-  --dm-border: rgb(167 139 250 / 0.5);
-  --dm-border-strong: #7c3aed;
-  --dm-focus-ring: rgb(167 139 250 / 0.5);
-  --dm-btn: #7c3aed;
-  --dm-btn-hover: #6d28d9;
-  --dm-prose-bg: rgb(76 29 149 / 0.4);
-  --dm-prose-text: #ddd6fe;
-  --dm-prose-border: #7c3aed;
-}
-.dark[data-dark-accent="rose"] {
-  --dm-text: #fb7185;
-  --dm-text-muted: rgb(225 29 72 / 0.7);
-  --dm-text-hover: #fda4af;
-  --dm-bg: rgb(159 18 57 / 0.5);
-  --dm-bg-hover: rgb(136 19 55 / 0.5);
-  --dm-bg-line: rgb(251 113 133 / 0.4);
-  --dm-border: rgb(251 113 133 / 0.5);
-  --dm-border-strong: #e11d48;
-  --dm-focus-ring: rgb(251 113 133 / 0.5);
-  --dm-btn: #e11d48;
-  --dm-btn-hover: #be123c;
-  --dm-prose-bg: rgb(136 19 55 / 0.4);
-  --dm-prose-text: #fecdd3;
-  --dm-prose-border: #e11d48;
-}
-.dark[data-dark-accent="indigo"] {
-  --dm-text: #818cf8;
-  --dm-text-muted: rgb(79 70 229 / 0.7);
-  --dm-text-hover: #a5b4fc;
-  --dm-bg: rgb(55 48 163 / 0.5);
-  --dm-bg-hover: rgb(49 46 129 / 0.5);
-  --dm-bg-line: rgb(129 140 248 / 0.4);
-  --dm-border: rgb(129 140 248 / 0.5);
-  --dm-border-strong: #4f46e5;
-  --dm-focus-ring: rgb(129 140 248 / 0.5);
-  --dm-btn: #4f46e5;
-  --dm-btn-hover: #4338ca;
-  --dm-prose-bg: rgb(55 48 163 / 0.4);
-  --dm-prose-text: #c7d2fe;
-  --dm-prose-border: #4f46e5;
-}
-.dark[data-dark-accent="orange"] {
-  --dm-text: #fb923c;
-  --dm-text-muted: rgb(234 88 12 / 0.7);
-  --dm-text-hover: #fdba74;
-  --dm-bg: rgb(154 52 18 / 0.5);
-  --dm-bg-hover: rgb(124 45 18 / 0.5);
-  --dm-bg-line: rgb(251 146 60 / 0.4);
-  --dm-border: rgb(251 146 60 / 0.5);
-  --dm-border-strong: #ea580c;
-  --dm-focus-ring: rgb(251 146 60 / 0.5);
-  --dm-btn: #ea580c;
-  --dm-btn-hover: #c2410c;
-  --dm-prose-bg: rgb(154 52 18 / 0.4);
-  --dm-prose-text: #fed7aa;
-  --dm-prose-border: #ea580c;
-}
-
 @layer utilities {
   .no-scrollbar {
     -ms-overflow-style: none;
@@ -373,6 +266,37 @@ html[data-window-inactive].dark *::-moz-selection {
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+
+  .native-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) var(--secondary-background);
+  }
+  .native-scrollbar::-webkit-scrollbar {
+    width: 0.5rem;
+  }
+  .native-scrollbar::-webkit-scrollbar-track {
+    border-radius: var(--radius-base);
+    background-color: var(--secondary-background);
+  }
+  .native-scrollbar::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background-color: var(--border);
+  }
+
+  .native-scrollbar-transparent-track {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .native-scrollbar-transparent-track::-webkit-scrollbar {
+    width: 0.625rem;
+  }
+  .native-scrollbar-transparent-track::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+  .native-scrollbar-transparent-track::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background-color: var(--border);
   }
 }
 
@@ -393,8 +317,44 @@ html[data-window-inactive].dark *::-moz-selection {
 }
 
 /*
- * Encatch SDK iframe — inline radius + soft shadow from Encatch; dashboard CSS cannot target this node.
- * Duplicated in comments for “combined Encatch paste” docs; source of truth for the app is here.
+ * Surface hierarchy — components share Tailwind surface classes; map layers here
+ * so sidebar, editor, cards, inputs, and TOC read as distinct stacked surfaces.
+ * Borders and shadows unchanged. Accent orange stays on primary / active states only.
+ */
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+[data-slot="sidebar-inner"],
+[data-slot="sidebar"] {
+  background-color: var(--sidebar) !important;
+}
+
+[data-slot="sidebar-inset"] {
+  background-color: var(--secondary-background) !important;
+}
+
+#document-outline-panel {
+  background-color: var(--card);
+}
+
+[data-slot="input"],
+[data-sidebar="input"],
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]),
+textarea {
+  background-color: var(--input);
+}
+
+[data-slot="dialog-content"],
+[data-slot="alert-dialog-content"],
+[data-slot="sheet-content"]:not([data-sidebar="sidebar"]),
+[data-slot="dropdown-menu-content"] {
+  background-color: var(--popover);
+}
+
+/*
+ * Encatch SDK iframe — dashboard CSS cannot target this node; form chrome is encatch-form.css (repo root).
+ * Iframe shell uses the same border/radius/shadow tokens as the app UI.
  */
 iframe[src*="app.encatch.com/s/web-sdk-form"],
 iframe[id^="encatch-iframe-"] {
@@ -468,22 +428,6 @@ iframe[id^="encatch-iframe-"] {
 }
 
 /*
- * Hero copy: the first paragraph of `hero.md` is promoted to display-size
- * so the hero reads as a clear entry point without any branding markup in
- * the markdown itself. Branding lives in SiteHeader. Scoped to `.hero` so
- * user markdown documents are unaffected.
- */
-.hero .prose > p:first-child {
-  max-width: 640px;
-  margin-top: 0 !important;
-  margin-block-start: 0 !important;
-  font-size: clamp(1.625rem, 3.2vw, 2.125rem);
-  font-weight: 600;
-  line-height: 1.25;
-  letter-spacing: -0.015em;
-}
-
-/*
  * Homepage CTA row. Tight, left-aligned block that closes the hero; extra
  * breathing room below is handled by `.cta-row + hr` further down.
  */
@@ -525,16 +469,15 @@ iframe[id^="encatch-iframe-"] {
   box-shadow: none;
 }
 
-/* Primary: explicit #ef4400 so it reads as the same accent in both themes. */
+/* Primary: theme token so accent tracks Paper / Deep Ocean palettes. */
 .prose a.cta-primary {
-  background: #ef4400;
-  color: #ffffff !important;
+  background: var(--primary);
+  color: var(--primary-foreground) !important;
 }
 
 .prose a.cta-secondary {
   background: var(--secondary-background);
-  /* Match Launch (`.cta-primary` bg) for label color */
-  color: #ef4400 !important;
+  color: var(--primary) !important;
 }
 
 /*
@@ -572,26 +515,6 @@ iframe[id^="encatch-iframe-"] {
   letter-spacing: -0.015em;
 }
 
-/*
- * Final CTA section. No extra border, no box — just extra breathing room
- * above and a beefier primary-button shadow so the closing beat reads as
- * the heaviest object on the page without contradicting the open layout.
- */
-.cta-section {
-  margin-top: 6rem !important;
-  padding-top: 5rem !important;
-  padding-bottom: 1rem;
-}
-
-.cta-section .prose a.cta-primary {
-  box-shadow: 5px 5px 0px 0px var(--border);
-}
-
-.cta-section .prose a.cta-primary:hover {
-  transform: translate(5px, 5px);
-  box-shadow: none;
-}
-
 /* Tighter, aligned lists — bullets and numbers sit flush to the text edge. */
 .prose ul,
 .prose ol {
@@ -610,28 +533,4 @@ iframe[id^="encatch-iframe-"] {
 
 .prose ul li::marker {
   color: var(--foreground);
-}
-
-/* Footer inside markdown — muted; separated by a thin divider, not a hard rule. */
-.prose .site-footer {
-  display: block;
-  margin-top: 3.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid color-mix(in srgb, var(--border) 20%, transparent);
-  font-size: 0.8125rem;
-  color: var(--muted) !important;
-  opacity: 0.8;
-}
-
-.prose .site-footer a,
-.prose .site-footer a.cta {
-  display: inline;
-  margin: 0;
-  padding: 0;
-  border: none;
-  box-shadow: none;
-  background: transparent !important;
-  font-weight: inherit;
-  color: var(--primary) !important;
-  text-decoration: underline !important;
 }

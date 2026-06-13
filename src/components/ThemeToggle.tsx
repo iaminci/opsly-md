@@ -3,13 +3,14 @@
 import { Sun, Moon } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
 
   return (
@@ -19,7 +20,7 @@ export function ThemeToggle() {
           type="button"
           variant="neutral"
           size="icon-sm"
-          className="bg-background text-primary hover:text-primary-hover"
+          className={cn("bg-background text-foreground hover:text-foreground", className)}
           onClick={(e) => {
             let { clientX, clientY } = e;
             if (clientX === 0 && clientY === 0) {
@@ -34,9 +35,6 @@ export function ThemeToggle() {
           {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
         </Button>
       </TooltipTrigger>
-      <TooltipContent side="bottom" align="center">
-        {theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-      </TooltipContent>
     </Tooltip>
   );
 }
