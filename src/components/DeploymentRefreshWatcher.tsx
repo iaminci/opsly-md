@@ -161,7 +161,7 @@ export function DeploymentRefreshWatcher() {
                 size="sm"
                 variant="neutral"
                 disabled={blockCount > 0}
-                className="bg-primary text-background hover:bg-primary/90 disabled:opacity-50"
+                className="hover:text-black hover:bg-primary-hover disabled:opacity-50"
                 onClick={() => void handleUpdate()}
               >
                 Update Now
