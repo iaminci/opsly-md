@@ -525,7 +525,7 @@ function FeatureSection({
     >
       <div className="min-w-0 space-y-4">
         <div className="flex items-center gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center border-2 border-border bg-primary font-heading text-sm font-bold text-primary-foreground shadow-shadow">
+          <span className="flex size-10 shrink-0 items-center justify-center border-2 border-border bg-background font-heading text-sm font-bold text-primary shadow-shadow">
             {number}
           </span>
           <h2 className="font-heading text-2xl font-bold uppercase tracking-tight text-foreground sm:text-3xl">
