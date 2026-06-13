@@ -53,7 +53,7 @@ export const workspaceNeutralChipClassName = cn(
 /** Single-workspace view: wide name + ⋯ as two matching “cards” (white fill, black border, hard shadow). */
 export const workspacePairTabClassName = cn(
   workspaceTabBaseClassName,
-  "!bg-primary/90 !text-background hover:!bg-primary/90 hover:!text-primary-foreground focus-visible:!bg-primary/90"
+  "!bg-background !text-foreground focus-visible:!bg-primary"
 );
 
 /** List panel under the workspace switcher trigger (and inline Create Markdown). */
