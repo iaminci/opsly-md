@@ -152,7 +152,7 @@ export function DeploymentRefreshWatcher() {
               <Button
                 variant="neutral"
                 size="sm"
-                className="bg-background text-primary hover:text-primary-hover"
+                className="bg-background"
                 onClick={handleRemindLater}
               >
                 Remind me later

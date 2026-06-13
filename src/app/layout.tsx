@@ -80,9 +80,6 @@ export default function RootLayout({
                 } else {
                   document.documentElement.classList.remove('dark');
                 }
-                var accent = localStorage.getItem('opsly-accent');
-                var valid = ['amber','sky','emerald','violet','rose','indigo','orange'].indexOf(accent) >= 0;
-                document.documentElement.setAttribute('data-dark-accent', valid ? accent : 'orange');
               } catch (e) {}
             `,
           }}

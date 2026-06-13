@@ -55,7 +55,7 @@ export function Search({ documents, onSelect }: SearchProps) {
           onFocus={() => query && setIsOpen(true)}
           onBlur={() => setTimeout(() => setIsOpen(false), 150)}
           className={
-            "!h-9 !border-2 !border-sidebar-border !bg-background text-sm font-medium !shadow-shadow !rounded-[5px] group-hover/search:!shadow-none focus-visible:!border-sidebar-ring focus-visible:!ring-1 focus-visible:!ring-sidebar-ring focus-visible:!ring-offset-0 pl-8 " +
+            "!h-9 !border-2 !border-sidebar-border !bg-input text-sm font-medium !shadow-shadow !rounded-[5px] group-hover/search:!shadow-none focus-visible:!border-sidebar-ring focus-visible:!ring-1 focus-visible:!ring-sidebar-ring focus-visible:!ring-offset-0 pl-8 " +
             (showClear ? "pr-9 " : "pr-2.5 ")
           }
           autoComplete="off"
@@ -64,7 +64,7 @@ export function Search({ documents, onSelect }: SearchProps) {
           <button
             type="button"
             aria-label="Clear search"
-            className="absolute right-2 top-1/2 z-10 flex size-7 -translate-y-1/2 items-center justify-center rounded-[4px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-primary"
+            className="absolute right-2 top-1/2 z-10 flex size-7 -translate-y-1/2 items-center justify-center rounded-[4px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => clear()}
           >
@@ -73,13 +73,13 @@ export function Search({ documents, onSelect }: SearchProps) {
         )}
       </div>
       {isOpen && results.length > 0 && (
-        <div className="no-scrollbar absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto overflow-x-hidden rounded-[5px] border-2 border-sidebar-border bg-background shadow-md">
+        <div className="no-scrollbar absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto overflow-x-hidden rounded-[5px] border-2 border-sidebar-border bg-popover text-popover-foreground shadow-md">
           {results.map((doc) => (
             <Button
               key={doc.id}
               type="button"
               variant="neutral"
-              className="h-auto w-full justify-start rounded-none border-1 px-3 py-2 font-normal shadow-none hover:translate-x-0 hover:translate-y-0 hover:bg-primary/35 hover:shadow-none"
+              className="h-auto w-full justify-start rounded-none border-1 px-3 py-2 font-normal shadow-none hover:translate-x-0 hover:translate-y-0 hover:bg-sidebar-accent hover:shadow-none"
               onClick={() => {
                 onSelect(doc);
                 setIsOpen(false);

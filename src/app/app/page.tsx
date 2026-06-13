@@ -36,7 +36,6 @@ import { EmptyState } from "@/components/EmptyState";
 import { HeaderLogo } from "@/components/HeaderLogo";
 import { Sidebar } from "@/components/Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
-// import { DarkAccentPicker } from "@/components/DarkAccentPicker";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { TableOfContents } from "@/components/TableOfContents";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -78,7 +77,7 @@ import { Feedback } from "@/components/Feedback";
 import { GitHubIcon } from "@/components/GitHubIcon";
 import { WorkspaceTreeProvider, useWorkspaceTree } from "@/context/WorkspaceTreeContext";
 import {
-  workspacePairTabClassName,
+  workspaceNeutralChipClassName,
   workspaceSwitcherDropdownContentClassName,
 } from "@/components/WorkspaceSwitcher";
 import {
@@ -337,7 +336,7 @@ function InlineCreateMarkdownForm({
                   type="button"
                   variant="neutral"
                   size="sm"
-                  className="shrink-0 bg-background text-primary hover:text-primary-hover"
+                  className="shrink-0 bg-background"
                   onClick={onCancel}
                 >
                   Cancel
@@ -346,7 +345,7 @@ function InlineCreateMarkdownForm({
                   type="button"
                   variant="neutral"
                   size="sm"
-                  className="shrink-0 bg-primary/90 text-background"
+                  className="shrink-0 bg-background hover:bg-main"
                   onClick={() => void onSubmit()}
                   disabled={!createMarkdown.trim() || !createSelectedWorkspaceId}
                 >
@@ -381,7 +380,7 @@ function InlineCreateMarkdownForm({
                         type="button"
                         id="inline-create-workspace"
                         className={cn(
-                          workspacePairTabClassName,
+                          workspaceNeutralChipClassName,
                           "flex w-full min-w-0 items-center gap-2 px-3 text-left"
                         )}
                       >
@@ -408,7 +407,7 @@ function InlineCreateMarkdownForm({
                               className={cn(
                                 "cursor-pointer",
                                 createSelectedWorkspaceId === ws.id &&
-                                  "bg-primary/90 font-semibold text-sidebar-accent-foreground"
+                                  "bg-sidebar-accent font-semibold text-primary"
                               )}
                             >
                               <span className="truncate">{ws.name}</span>
@@ -432,7 +431,7 @@ function InlineCreateMarkdownForm({
                         type="button"
                         id="inline-create-folder"
                         className={cn(
-                          workspacePairTabClassName,
+                          workspaceNeutralChipClassName,
                           "flex w-full min-w-0 items-center gap-2 px-3 text-left"
                         )}
                       >
@@ -454,7 +453,7 @@ function InlineCreateMarkdownForm({
                             className={cn(
                               "cursor-pointer",
                               createSelectedFolderId === null &&
-                                "bg-primary/70 border-border-2 font-semibold text-background"
+                                "bg-sidebar-accent font-semibold text-primary"
                             )}
                           >
                             <span className="truncate">None (workspace root)</span>
@@ -466,7 +465,7 @@ function InlineCreateMarkdownForm({
                               className={cn(
                                 "cursor-pointer",
                                 createSelectedFolderId === folder.id &&
-                                  "bg-primary/90 font-semibold text-sidebar-accent-foreground"
+                                  "bg-sidebar-accent font-semibold text-primary"
                               )}
                             >
                               <span className="truncate">{label}</span>
@@ -1027,7 +1026,7 @@ function AppContent() {
 
       <SidebarInset className="min-h-0 overflow-hidden">
         <header className="relative flex h-14.5 shrink-0 items-center gap-5 border-b-2 px-4">
-          <SidebarTrigger className="shrink-0 text-primary hover:text-primary-hover" />
+          <SidebarTrigger className="shrink-0 text-foreground hover:text-foreground" />
           <Link
             href="/"
             className="flex min-w-0 items-center leading-none no-underline cursor-pointer transition-opacity hover:opacity-80 shrink-0"
@@ -1075,11 +1074,7 @@ function AppContent() {
             className={cn(
               // Native overflow (not Radix ScrollArea): Radix wraps content in display:table + minWidth:100%,
               // which can grow wider than the grid column and clip right-aligned doc actions beside the TOC.
-              "relative z-[1] min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden font-base outline-none",
-              "[scrollbar-width:thin] [scrollbar-color:var(--border)_var(--secondary-background)]",
-              "[&::-webkit-scrollbar]:w-2",
-              "[&::-webkit-scrollbar-track]:rounded-base [&::-webkit-scrollbar-track]:bg-secondary-background",
-              "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border",
+              "relative z-[1] min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden font-base outline-none native-scrollbar",
               currentDoc &&
                 !createMode &&
                 "lg:col-span-1 lg:col-start-1 lg:row-start-1 lg:h-full lg:max-h-full lg:min-h-0"
@@ -1111,7 +1106,7 @@ function AppContent() {
                             type="button"
                             variant="neutral"
                             size="sm"
-                            className="shrink-0 bg-background text-primary hover:text-primary-hover"
+                            className="shrink-0 bg-background"
                             onClick={() => handleExitEditMode(true)}
                           >
                             Cancel
@@ -1120,7 +1115,7 @@ function AppContent() {
                             type="button"
                             variant="neutral"
                             size="sm"
-                            className="shrink-0 bg-primary/90 text-background"
+                            className="shrink-0 bg-background hover:bg-main"
                             onClick={() => void handleEditSave()}
                           >
                             {editAutosaveUi === "saving"
@@ -1144,7 +1139,7 @@ function AppContent() {
                             type="button"
                             variant="neutral"
                             size="sm"
-                            className="shrink-0 bg-background text-primary hover:text-primary-hover"
+                            className="shrink-0 bg-background"
                             onClick={handleEnterEditMode}
                           >
                             <Pencil className="size-4" />
@@ -1154,7 +1149,7 @@ function AppContent() {
                             type="button"
                             variant="neutral"
                             size="sm"
-                            className="shrink-0 bg-background text-primary"
+                            className="shrink-0 bg-background hover:bg-main"
                             onClick={() => setDownloadConfirmOpen(true)}
                           >
                             Download
@@ -1165,7 +1160,7 @@ function AppContent() {
                         <button
                           type="button"
                           aria-label="Close document and return to overview"
-                          className="flex size-7 shrink-0 items-center justify-center rounded-[4px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-primary print:hidden"
+                          className="flex size-7 shrink-0 items-center justify-center rounded-[4px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground print:hidden"
                           onClick={handleCloseDocument}
                         >
                           <X className="size-4 shrink-0" strokeWidth={2.5} aria-hidden />
@@ -1224,7 +1219,7 @@ function AppContent() {
                     aria-controls="document-outline-panel"
                     onClick={() => setRightTocOpen((o) => !o)}
                     className={cn(
-                      "fixed h-15 w-6 shadow-shadow-2 border-2 border-border bg-background top-[calc(50%-1rem)] z-30 hidden shrink-0 text-primary transition-[right] duration-150 ease-linear hover:text-primary-hover",
+                      "fixed h-15 w-6 shadow-shadow-2 border-2 border-border bg-background top-[calc(50%-1rem)] z-30 hidden shrink-0 text-primary-hover transition-[right] duration-150 ease-linear hover:text-background hover:bg-primary",
                       "print:hidden lg:inline-flex",
                       rightTocOpen ? "right-[13.3rem]" : "right-0"
                     )}
@@ -1268,7 +1263,7 @@ function AppContent() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="!bg-primary/90 hover:!bg-primary/90 !text-background border-2 border-border shadow-[2px_2px_0_0_#000] hover:!translate-x-0.5 hover:!translate-y-0.5 hover:!shadow-none"
+              className="hover:!bg-primary border-2 text-foreground"
               onClick={() => performDownload()}
             >
               Download

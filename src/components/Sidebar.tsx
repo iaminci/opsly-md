@@ -671,7 +671,7 @@ export function Sidebar({
                 type="button"
                 variant="neutral"
                 size="sm"
-                className="w-full min-w-0 shrink-0 gap-2 text-primary hover:text-background bg-background hover:bg-primary/80"
+                className="w-full min-w-0 shrink-0 gap-2 text-foreground bg-background hover:bg-sidebar-accent"
               >
                 Advanced Options
               </Button>
@@ -683,7 +683,7 @@ export function Sidebar({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="min-w-0 justify-center rounded-base border-2 border-border text-primary hover:border-border hover:bg-primary hover:text-background"
+                      className="min-w-0 justify-center rounded-base border-2 border-border text-foreground hover:border-border hover:bg-sidebar-accent"
                       onClick={() => {
                         setMoreMenuOpen(false);
                         window.setTimeout(() => importInputRef.current?.click(), 0);
@@ -695,7 +695,7 @@ export function Sidebar({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="min-w-0 justify-center rounded-base border-2 border-border text-primary hover:border-border hover:bg-primary hover:text-background"
+                      className="min-w-0 justify-center rounded-base border-2 border-border text-foreground hover:border-border hover:bg-sidebar-accent"
                       onClick={() => {
                         setMoreMenuOpen(false);
                         handleExportClick();
@@ -709,7 +709,7 @@ export function Sidebar({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="w-full min-w-0 justify-center rounded-base border-2 border-border text-primary hover:border-border hover:bg-primary hover:text-background focus-visible:ring-destructive [&_svg]:text-primary hover:[&_svg]:text-background"
+                    className="w-full min-w-0 justify-center rounded-base border-2 border-border text-foreground hover:border-border hover:bg-sidebar-accent focus-visible:ring-destructive [&_svg]:text-muted-foreground"
                     onClick={() => {
                       setMoreMenuOpen(false);
                       handleDeleteAllClick();
@@ -733,7 +733,6 @@ export function Sidebar({
         title="New workspace"
         placeholder="Workspace name"
         defaultValue="New Workspace"
-        closeButtonClassName="hover:text-destructive"
         onSubmit={handleWorkspaceSubmit}
       />
       <CreateNameDialog
@@ -745,7 +744,6 @@ export function Sidebar({
         title="New folder"
         placeholder="Folder name"
         defaultValue="New Folder"
-        closeButtonClassName="hover:text-destructive"
         onSubmit={handleFolderSubmit}
       />
       <CreateNameDialog
@@ -758,7 +756,6 @@ export function Sidebar({
         placeholder="Workspace name"
         defaultValue={renameWorkspaceTarget?.name ?? ""}
         submitLabel="Rename"
-        closeButtonClassName="hover:text-destructive"
         onSubmit={handleRenameWorkspaceSubmit}
       />
       <CreateNameDialog
@@ -771,7 +768,6 @@ export function Sidebar({
         placeholder="Folder name"
         defaultValue={renameFolderTarget?.name ?? ""}
         submitLabel="Rename"
-        closeButtonClassName="hover:text-destructive"
         onSubmit={handleRenameFolderSubmit}
       />
       <CreateNameDialog
@@ -784,7 +780,6 @@ export function Sidebar({
         placeholder="Document title"
         defaultValue={renameDocTarget?.title ?? ""}
         submitLabel="Rename"
-        closeButtonClassName="hover:text-destructive"
         onSubmit={handleRenameDocumentSubmit}
       />
 
@@ -940,14 +935,13 @@ export function Sidebar({
             <DialogTitle>Export workspaces</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-2 py-2">
-            <label className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-primary/90">
+            <label className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-sidebar-accent">
               <Checkbox
                 checked={
                   sortedWorkspaces.length > 0 &&
                   exportSelectedIds.size === sortedWorkspaces.length
                 }
                 onCheckedChange={toggleExportSelectAll}
-                className="data-checked:border-main/20 data-checked:bg-primary/90"
               />
               <span className="text-sm font-medium">Select all</span>
             </label>
@@ -955,12 +949,11 @@ export function Sidebar({
               {sortedWorkspaces.map((ws) => (
                 <label
                   key={ws.id}
-                  className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-primary/90"
+                  className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-sidebar-accent"
                 >
                   <Checkbox
                     checked={exportSelectedIds.has(ws.id)}
                     onCheckedChange={() => toggleExportWorkspace(ws.id)}
-                    className="data-checked:border-main/20 data-checked:bg-primary/90"
                   />
                   <span className="text-sm truncate">{ws.name}</span>
                 </label>
@@ -970,7 +963,7 @@ export function Sidebar({
           <DialogFooter>
             <Button
               variant="neutral"
-              className="bg-background text-primary hover:text-primary-hover"
+              className="bg-background"
               onClick={() => setExportDialogOpen(false)}
             >
               Cancel
@@ -978,7 +971,7 @@ export function Sidebar({
             <Button
               onClick={() => void handleExportSelected()}
               disabled={exportSelectedIds.size === 0}
-              className="bg-primary/90 text-background hover:bg-primary/90"
+              className="bg-background text-foreground hover:bg-primary/90"
             >
               Export
             </Button>

@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import {
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
@@ -31,26 +30,22 @@ import {
 
 /** Native scrollbar aligned with TOC / `ScrollArea` thumb (Radix scroll area breaks inside menus). */
 const workspaceSwitcherScrollbarClassName = cn(
-  "overflow-y-auto overflow-x-hidden",
-  "[scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]",
-  "[&::-webkit-scrollbar]:w-2.5",
-  "[&::-webkit-scrollbar-track]:bg-transparent",
-  "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border"
+  "overflow-y-auto overflow-x-hidden native-scrollbar-transparent-track"
 );
 
 const workspaceSwitcherDropdownMaxHeightClassName =
   "max-h-[min(50vh,16rem)]";
 
 export const workspaceTabBaseClassName =
-  "!h-9 !min-h-9 !rounded-[5px] !border-2 !border-border !font-heading !font-bold !shadow-shadow !outline-0 transition-[transform,box-shadow] hover:!translate-x-[2px] hover:!translate-y-[2px] hover:!shadow-shadow hover:!outline-0 focus-visible:!outline-0 focus-visible:!shadow-shadow";
+  "!h-9 !min-h-9 !rounded-[5px] !border-2 !border-border !font-heading !font-bold !shadow-shadow !outline-0 transition-[transform,box-shadow] hover:!translate-x-boxShadowX hover:!translate-y-boxShadowY hover:!shadow-none hover:!outline-0 focus-visible:!outline-0 focus-visible:!shadow-shadow";
 
 const workspaceTabAllClassName = cn(
   workspaceTabBaseClassName,
-  "!bg-primary/90 !text-background hover:!bg-primary/90 hover:!text-primary-foreground focus-visible:!bg-primary/90"
+  "!bg-background !text-foreground hover:!bg-background hover:!text-foreground"
 );
 
 /** (+) “New workspace” and single-workspace ⋯ — same chrome as tabs, neutral surface. */
-const workspaceNeutralChipClassName = cn(
+export const workspaceNeutralChipClassName = cn(
   workspaceTabBaseClassName,
   "!bg-background !text-foreground hover:!bg-background hover:!text-foreground focus-visible:!bg-background focus-visible:!text-foreground"
 );
@@ -63,7 +58,7 @@ export const workspacePairTabClassName = cn(
 
 /** List panel under the workspace switcher trigger (and inline Create Markdown). */
 export const workspaceSwitcherDropdownContentClassName =
-  "w-[var(--radix-popper-anchor-width)] min-w-0 max-w-[var(--radix-popper-anchor-width)] rounded-[5px] border-2 border-sidebar-border bg-background p-0 font-heading text-foreground shadow-md";
+  "w-[var(--radix-popper-anchor-width)] min-w-0 max-w-[var(--radix-popper-anchor-width)] rounded-[5px] border-2 border-sidebar-border bg-popover p-0 font-heading text-popover-foreground shadow-md";
 
 interface WorkspaceSwitcherProps {
   workspaces: Workspace[];
@@ -113,7 +108,7 @@ export function WorkspaceSwitcher({
         onClick={() => onSelect(null)}
         className={cn(
           !selectedId &&
-            "bg-primary/70 border-border-2 font-semibold text-background"
+            "bg-sidebar-accent font-semibold text-primary"
         )}
       >
         <span className="truncate">All Workspaces</span>
@@ -124,7 +119,7 @@ export function WorkspaceSwitcher({
           onClick={() => onSelect(ws.id)}
           className={cn(
             selectedId === ws.id &&
-              "bg-primary/90 font-semibold text-sidebar-accent-foreground"
+              "bg-sidebar-accent font-semibold text-primary"
           )}
         >
           <span className="truncate">{ws.name}</span>
@@ -141,13 +136,16 @@ export function WorkspaceSwitcher({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             {isAllWorkspaces ? (
-              <SidebarMenuButton
-                isActive
-                className={workspaceTabAllClassName}
+              <button
+                type="button"
+                className={cn(
+                  workspaceTabAllClassName,
+                  "flex w-full min-w-0 items-center gap-2 px-3 text-left"
+                )}
               >
-                <span className="truncate">{label}</span>
+                <span className="min-w-0 flex-1 truncate">{label}</span>
                 <ChevronDown className="ml-auto size-4 shrink-0" />
-              </SidebarMenuButton>
+              </button>
             ) : (
               <button
                 type="button"
@@ -218,7 +216,7 @@ export function WorkspaceSwitcher({
                   "inline-flex w-9 min-w-9 shrink-0 items-center justify-center px-0"
                 )}
               >
-                <Plus className="size-4 shrink-0 text-primary" />
+                <Plus className="size-4 shrink-0 text-muted-foreground" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom" align="end">
@@ -245,7 +243,7 @@ export function WorkspaceSwitcher({
                       "inline-flex w-9 min-w-9 shrink-0 items-center justify-center px-0"
                     )}
                   >
-                    <MoreHorizontal className="size-4 shrink-0 text-primary" />
+                    <MoreHorizontal className="size-4 shrink-0 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
@@ -256,7 +254,7 @@ export function WorkspaceSwitcher({
             <DropdownMenuContent
               align="end"
               sideOffset={4}
-              className="min-w-0 w-max whitespace-nowrap rounded-[5px] border-2 border-sidebar-border bg-background p-1 font-heading text-foreground shadow-md"
+              className="min-w-0 w-max whitespace-nowrap rounded-[5px] border-2 border-sidebar-border bg-popover p-1 font-heading text-popover-foreground shadow-md"
               onClick={(e) => e.stopPropagation()}
             >
               <DropdownMenuItem

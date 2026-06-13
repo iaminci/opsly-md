@@ -169,8 +169,8 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
                 className={cn(
                   "block w-full max-w-full min-w-0 rounded-md border-2 border-l-2 px-2 py-1 transition-colors [overflow-wrap:anywhere]",
                   activeId === id
-                    ? "border-border bg-primary/90 font-medium !text-background visited:!text-background"
-                    : "border-transparent text-muted hover:bg-primary/90 hover:!text-background"
+                    ? "border-border bg-sidebar-accent font-medium text-primary visited:!text-primary"
+                    : "border-transparent text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
                 )}
               >
                 {text}
