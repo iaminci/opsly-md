@@ -35,9 +35,6 @@ export function ThemeToggle({ className }: { className?: string }) {
           {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
         </Button>
       </TooltipTrigger>
-      <TooltipContent side="bottom" align="center">
-        {theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-      </TooltipContent>
     </Tooltip>
   );
 }

@@ -448,7 +448,7 @@ function HeroSection() {
             documentation, and knowledge.
           </p>
           <div className="flex flex-wrap items-center gap-3">
-            <Button variant="neutral" size="lg" asChild>
+            <Button variant="neutral" size="lg" className="hover:bg-primary" asChild>
               <Link href={APP_URL}>
                 Start Writing
                 <ArrowRight className="size-4" />
