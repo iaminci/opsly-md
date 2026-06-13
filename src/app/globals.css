@@ -353,8 +353,8 @@ textarea {
 }
 
 /*
- * Encatch SDK iframe — inline radius + soft shadow from Encatch; dashboard CSS cannot target this node.
- * Duplicated in comments for “combined Encatch paste” docs; source of truth for the app is here.
+ * Encatch SDK iframe — dashboard CSS cannot target this node; form chrome is encatch-form.css (repo root).
+ * Iframe shell uses the same border/radius/shadow tokens as the app UI.
  */
 iframe[src*="app.encatch.com/s/web-sdk-form"],
 iframe[id^="encatch-iframe-"] {
