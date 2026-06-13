@@ -515,6 +515,7 @@ function WorkspaceSection({
           isActive={currentId === doc.id}
           suppressDocHighlights={suppressDocHighlights}
           treeReorderDragActive={treeReorderDragActive}
+          treeGuideInset={!hideWorkspaceHeader}
           onTreeMenuOpenChange={onTreeMenuOpenChange}
           onSelect={() => onSelectDocument(doc)}
           onDelete={() => onDeleteDocument(doc.id, doc.title)}
@@ -1108,6 +1109,7 @@ function FileItem({
   isActive,
   suppressDocHighlights,
   treeReorderDragActive,
+  treeGuideInset = true,
   onTreeMenuOpenChange,
   onSelect,
   onDelete,
@@ -1117,6 +1119,8 @@ function FileItem({
   isActive: boolean;
   suppressDocHighlights: boolean;
   treeReorderDragActive: boolean;
+  /** When the parent drop area has `pl-1`, offset the guide highlight to align with its left border. */
+  treeGuideInset?: boolean;
   onTreeMenuOpenChange: (open: boolean) => void;
   onSelect: () => void;
   onDelete: () => void;
@@ -1127,9 +1131,8 @@ function FileItem({
   const [fileMenuOpen, setFileMenuOpen] = useState(false);
   const fileLooksSelected = isActive && !suppressDocHighlights;
   const fileTintPrimary = fileLooksSelected || fileMenuOpen;
-  /** Full row pill (border/background) — off for the open doc while reordering so only the title stays emphasized. */
-  const activeDocHeavyChrome =
-    fileTintPrimary && !(treeReorderDragActive && fileLooksSelected);
+  const showGuideHighlight =
+    fileLooksSelected && !(treeReorderDragActive && fileLooksSelected);
 
   const fileActionsRef = useRef<HTMLDivElement>(null);
 
@@ -1150,7 +1153,15 @@ function FileItem({
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      className="group/file flex cursor-pointer items-center rounded-md py-0.5 pl-1 pr-0"
+      className={cn(
+        "group/file flex cursor-pointer items-center rounded-md py-0.5 pl-1 pr-0",
+        showGuideHighlight &&
+          "relative before:pointer-events-none before:absolute before:inset-y-0 before:z-[1] before:w-0.5 before:bg-primary",
+        showGuideHighlight &&
+          treeGuideInset &&
+          "before:-left-[calc(0.25rem+2px)]",
+        showGuideHighlight && !treeGuideInset && "before:-left-0.5"
+      )}
       onClick={(e) => {
         if (!(e.target as HTMLElement).closest("[data-slot='dropdown-menu-trigger']")) {
           onSelect();
@@ -1172,26 +1183,22 @@ function FileItem({
               className={cn(
                 "flex min-h-6 min-w-0 flex-1 items-center justify-start gap-2 truncate border-0 bg-transparent text-left text-base font-base transition-colors hover:bg-transparent group-hover/file:!text-primary-hover",
                 fileTintPrimary ? "opacity-100" : "opacity-[0.85]",
-                fileLooksSelected && "font-medium",
-                activeDocHeavyChrome &&
-                  "text-primary bg-sidebar-accent hover:bg-transparent border-1 hover:border-0 rounded-base",
-                fileLooksSelected &&
-                  treeReorderDragActive &&
-                  "!bg-transparent !border-0 shadow-none rounded-none hover:!bg-transparent",
-                !activeDocHeavyChrome && !fileLooksSelected && "text-muted-foreground",
-                !activeDocHeavyChrome && fileMenuOpen && "text-foreground",
+                fileLooksSelected && "font-bold text-primary",
+                !fileLooksSelected && !fileMenuOpen && "text-muted-foreground",
+                !fileLooksSelected && fileMenuOpen && "text-foreground",
                 nameTruncated && "min-w-0"
               )}
             >
               <FileBraces
                 className={cn(
-                  "size-4 shrink-0 text-muted-foreground transition-colors group-hover/file:!text-primary-hover",
+                  "size-4 shrink-0 transition-colors group-hover/file:!text-primary-hover",
+                  fileLooksSelected ? "text-primary" : "text-muted-foreground"
                 )}
               />
               <span
                 className={cn(
                   "min-w-0 flex-1 truncate group-hover/file:!text-primary-hover",
-                  treeReorderDragActive && fileLooksSelected && "font-medium text-primary"
+                  treeReorderDragActive && fileLooksSelected && "font-bold text-primary"
                 )}
               >
                 {displayName}
@@ -1226,8 +1233,7 @@ function FileItem({
                     aria-label="Document actions"
                     className={cn(
                       "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary-hover focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
-                      activeDocHeavyChrome ? "text-muted-foreground" : "text-muted-foreground",
-                      "group-hover/file:text-primary-hover"
+                      "text-muted-foreground group-hover/file:text-primary-hover"
                     )}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") e.preventDefault();

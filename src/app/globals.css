@@ -42,6 +42,9 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-hover: var(--primary-hover);
   --color-primary: var(--primary);
+  --color-selection-bg: var(--selection-bg);
+  --color-selection-bg-soft: var(--selection-bg-soft);
+  --color-selection-border: var(--selection-border);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
@@ -189,6 +192,9 @@ body {
   --sidebar-ring: #1f1f1f;
   --sidebar-guide: rgb(33 33 33 / 0.35);
   --prose-blockquote-caution-icon: #7c3aed;
+  --selection-bg: color-mix(in srgb, var(--primary) 12%, transparent);
+  --selection-bg-soft: color-mix(in srgb, var(--primary) 8%, transparent);
+  --selection-border: var(--primary);
 }
 
 .dark {
