@@ -1,14 +1,19 @@
 import Link from "next/link";
 import { HeaderLogo } from "@/components/HeaderLogo";
+import { GitHubIcon } from "@/components/GitHubIcon";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-const APP_URL = "/app?loadSample=1";
+const GITHUB_URL = "https://github.com/iaminci/opsly-md";
 
 const navLinks = [
   { href: "#features", label: "Features" },
-  { href: "#use-cases", label: "Use Cases" },
+  { href: "#roadmap", label: "Roadmap" },
   { href: "/app", label: "Docs" },
 ] as const;
 
@@ -35,6 +40,28 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-3">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="neutral"
+                size="icon-sm"
+                className="bg-background text-foreground hover:text-foreground"
+                asChild
+              >
+                <a
+                  href={GITHUB_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="View on GitHub"
+                >
+                  <GitHubIcon className="size-4" />
+                </a>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" align="center">
+              View on GitHub
+            </TooltipContent>
+          </Tooltip>
           <ThemeToggle />
         </div>
       </div>
