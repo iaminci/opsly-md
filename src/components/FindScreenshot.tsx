@@ -2,9 +2,9 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const FIND_IMAGE = {
-  width: 972,
-  height: 688,
-  alt: "Opsly MD search with results for git across notes and folders",
+  width: 1024,
+  height: 872,
+  alt: "Opsly MD search with results for docker across notes and sections",
 } as const;
 
 export function FindScreenshot({ className }: { className?: string }) {
