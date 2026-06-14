@@ -139,6 +139,7 @@ export function Sidebar({
   const { sortedWorkspaces, getFoldersInWorkspace } = useWorkspaceTree();
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
   const [workspaceSwitcherMenuOpen, setWorkspaceSwitcherMenuOpen] = useState(false);
+  const [workspaceSwitcherDragTarget, setWorkspaceSwitcherDragTarget] = useState(false);
   const [uploadTarget, setUploadTarget] = useState<{
     workspaceId: string;
     folderId: string | null;
@@ -602,6 +603,7 @@ export function Sidebar({
               <WorkspaceSwitcher
                 workspaces={sortedWorkspaces}
                 selectedId={selectedWorkspaceId}
+                dragTargetActive={workspaceSwitcherDragTarget}
                 onSelect={handleWorkspaceSelect}
                 onAddWorkspace={handleAddWorkspace}
                 onQuickCreateMarkdown={handleQuickCreateFromAllView}
@@ -644,6 +646,7 @@ export function Sidebar({
               onRenameFolder={handleRenameFolder}
               onDeleteFolder={handleDeleteFolderRequest}
               onRenameDocument={handleRenameDocument}
+              onWorkspaceDragTargetChange={setWorkspaceSwitcherDragTarget}
             />
             </SidebarGroupContent>
           </SidebarGroup>
