@@ -975,8 +975,7 @@ function AppContent() {
     documentSearchQuery,
     searchActiveMatchIndex,
     searchMatchCount,
-    currentDoc?.id,
-    currentDoc?.content,
+    currentDoc,
     editMode,
     createMode,
   ]);
