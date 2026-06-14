@@ -7,11 +7,12 @@ export const ROADMAP_MARKDOWN = `# Roadmap
 - [x] Stack Docs
 - [x] Opsly Mask
 - [x] Import / Export
+- [x] Advanced Search Capabilities
 
 ## In progress
 
 - [ ] Improved Rendered Output
-- [ ] Advanced Search Capabilities
+
 
 ## Planned
 

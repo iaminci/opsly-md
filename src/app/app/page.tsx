@@ -31,6 +31,7 @@ import {
   DuplicateNameError,
 } from "@/lib/storage";
 import { toMarkdownDownloadFilename } from "@/lib/utils";
+import { scrollToSearchMatch } from "@/lib/search-highlight";
 import { SAMPLE_MARKDOWN } from "@/lib/sample-document";
 import { EmptyState } from "@/components/EmptyState";
 import { HeaderLogo } from "@/components/HeaderLogo";
@@ -537,6 +538,10 @@ function AppContent() {
   const [documentStackEnabled, setDocumentStackEnabled] = useState(true);
   const [docStackIds, setDocStackIds] = useState<string[]>([]);
   const contentScrollRef = useRef<HTMLDivElement>(null);
+  const markdownArticleRef = useRef<HTMLElement>(null);
+  const [documentSearchQuery, setDocumentSearchQuery] = useState("");
+  const [searchActiveMatchIndex, setSearchActiveMatchIndex] = useState(0);
+  const [searchMatchCount, setSearchMatchCount] = useState(0);
   const [createMode, setCreateMode] = useState(false);
   const [createSelectedWorkspaceId, setCreateSelectedWorkspaceId] = useState("");
   const [createSelectedFolderId, setCreateSelectedFolderId] = useState<string | null>(null);
@@ -904,6 +909,78 @@ function AppContent() {
     URL.revokeObjectURL(url);
   }, [currentDoc]);
 
+  const handleSelectDocument = useCallback(
+    async (doc: Document) => {
+      navigatingToHomeRef.current = false;
+      setCreateMode(false);
+      setInlineCreateHideLocationSelectors(false);
+      setCreateSelectedWorkspaceId("");
+      setCreateSelectedFolderId(null);
+      setCreateTitle(DEFAULT_NEW_DOCUMENT_TITLE);
+      setCreateMarkdown("");
+      justSelectedDocIdRef.current = doc.id;
+      const fresh = await getDocument(doc.id);
+      setCurrentDoc(fresh ?? doc);
+      if (documentStackEnabled) {
+        setDocStackIds((prev) => [...prev.filter((i) => i !== doc.id), doc.id]);
+      }
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("doc", doc.id);
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [router, pathname, searchParams, documentStackEnabled]
+  );
+
+  const handleDocumentSearchQueryChange = useCallback((query: string) => {
+    setDocumentSearchQuery(query);
+    setSearchActiveMatchIndex(0);
+  }, []);
+
+  const handleSearchMatchCountChange = useCallback((count: number) => {
+    setSearchMatchCount(count);
+    setSearchActiveMatchIndex((active) => {
+      if (count <= 0) return 0;
+      return active >= count ? 0 : active;
+    });
+  }, []);
+
+  const handlePreviousSearchMatch = useCallback(() => {
+    if (searchMatchCount <= 0) return;
+    setSearchActiveMatchIndex(
+      (active) => (active - 1 + searchMatchCount) % searchMatchCount
+    );
+  }, [searchMatchCount]);
+
+  const handleNextSearchMatch = useCallback(() => {
+    if (searchMatchCount <= 0) return;
+    setSearchActiveMatchIndex((active) => (active + 1) % searchMatchCount);
+  }, [searchMatchCount]);
+
+  const handleSearchSelectDocument = useCallback(
+    (doc: Document) => {
+      setSearchActiveMatchIndex(0);
+      void handleSelectDocument(doc);
+    },
+    [handleSelectDocument]
+  );
+
+  useLayoutEffect(() => {
+    if (!documentSearchQuery.trim() || !currentDoc || editMode || createMode) return;
+
+    const viewport = contentScrollRef.current;
+    if (!viewport) return;
+
+    scrollToSearchMatch(viewport, searchActiveMatchIndex);
+  }, [
+    documentSearchQuery,
+    searchActiveMatchIndex,
+    searchMatchCount,
+    currentDoc?.id,
+    currentDoc?.content,
+    editMode,
+    createMode,
+  ]);
+
   const handleCloseDocument = useCallback(async () => {
     if (documentStackEnabled && docStackIds.length > 1) {
       const nextStack = docStackIds.slice(0, -1);
@@ -1000,24 +1077,24 @@ function AppContent() {
             setDocStackIds([currentDoc.id]);
           }
         }}
-        onSelectDocument={async (doc) => {
-          navigatingToHomeRef.current = false;
-          setCreateMode(false);
-          setInlineCreateHideLocationSelectors(false);
-          setCreateSelectedWorkspaceId("");
-          setCreateSelectedFolderId(null);
-          setCreateTitle(DEFAULT_NEW_DOCUMENT_TITLE);
-          setCreateMarkdown("");
-          justSelectedDocIdRef.current = doc.id;
-          const fresh = await getDocument(doc.id);
-          setCurrentDoc(fresh ?? doc);
-          if (documentStackEnabled) {
-            setDocStackIds((prev) => [...prev.filter((i) => i !== doc.id), doc.id]);
-          }
-          const params = new URLSearchParams(searchParams.toString());
-          params.set("doc", doc.id);
-          router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-        }}
+        onSelectDocument={handleSelectDocument}
+        documentSearchQuery={documentSearchQuery}
+        onDocumentSearchQueryChange={handleDocumentSearchQueryChange}
+        onSearchSelectDocument={handleSearchSelectDocument}
+        searchMatchNavigation={
+          currentDoc &&
+          documentSearchQuery.trim() &&
+          searchMatchCount > 0 &&
+          !editMode &&
+          !createMode
+            ? {
+                activeIndex: searchActiveMatchIndex,
+                total: searchMatchCount,
+                onPrevious: handlePreviousSearchMatch,
+                onNext: handleNextSearchMatch,
+              }
+            : null
+        }
         onDeleteDocument={handleDeleteDocument}
         onAddDocument={handleAddDocument}
         onOpenInlineCreate={handleOpenInlineCreate}
@@ -1178,7 +1255,13 @@ function AppContent() {
                     textareaClassName="leading-relaxed"
                   />
                 ) : (
-                  <MarkdownRenderer content={currentDoc.content} />
+                  <MarkdownRenderer
+                    content={currentDoc.content}
+                    searchQuery={documentSearchQuery}
+                    activeMatchIndex={searchActiveMatchIndex}
+                    articleRef={markdownArticleRef}
+                    onMatchCountChange={handleSearchMatchCountChange}
+                  />
                 )}
               </DocumentColumn>
             </>
