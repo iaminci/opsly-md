@@ -45,6 +45,8 @@
   --color-selection-bg: var(--selection-bg);
   --color-selection-bg-soft: var(--selection-bg-soft);
   --color-selection-border: var(--selection-border);
+  --color-search-highlight-bg: var(--search-highlight-bg);
+  --color-search-highlight-active-bg: var(--search-highlight-active-bg);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
@@ -96,6 +98,32 @@ body {
   background-color: var(--card);
   color: var(--muted-foreground) !important;
   border: 1px solid color-mix(in srgb, var(--border) 25%, transparent);
+}
+
+/* In-document and search-result highlights */
+mark.search-highlight {
+  background-color: var(--search-highlight-bg) !important;
+  color: inherit !important;
+  border-radius: 2px;
+  padding: 0 1px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+mark.search-highlight-active {
+  background-color: var(--search-highlight-active-bg) !important;
+  box-shadow: inset 0 0 0 2px var(--selection-border);
+}
+.prose mark.search-highlight {
+  background-color: var(--search-highlight-bg) !important;
+  color: inherit !important;
+  border-radius: 2px;
+  padding: 0 1px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.prose mark.search-highlight-active {
+  background-color: var(--search-highlight-active-bg) !important;
+  box-shadow: inset 0 0 0 2px var(--selection-border);
 }
 
 /* Blockquote: caution callout — amber warning icon, destructive body text (see content/why.md) */
@@ -195,6 +223,8 @@ body {
   --selection-bg: color-mix(in srgb, var(--primary) 12%, transparent);
   --selection-bg-soft: color-mix(in srgb, var(--primary) 8%, transparent);
   --selection-border: var(--primary);
+  --search-highlight-bg: color-mix(in srgb, var(--primary) 30%, transparent);
+  --search-highlight-active-bg: color-mix(in srgb, var(--primary) 55%, transparent);
   --tree-drag-target-bg: color-mix(in srgb, var(--primary) 14%, var(--sidebar));
   --tree-drag-target-fg: var(--primary);
   --tree-drag-target-border: color-mix(in srgb, var(--primary) 45%, var(--border));
@@ -233,6 +263,8 @@ body {
   --destructive-foreground: #ffffff;
   --sidebar-guide: rgb(154 165 206 / 0.25);
   --prose-blockquote-caution-icon: #FFD866;
+  --search-highlight-bg: color-mix(in srgb, var(--primary) 32%, transparent);
+  --search-highlight-active-bg: color-mix(in srgb, var(--primary) 58%, transparent);
   --tree-drag-target-bg: color-mix(in srgb, var(--primary) 28%, var(--sidebar));
   --tree-drag-target-fg: var(--primary);
   --tree-drag-target-border: color-mix(in srgb, var(--primary) 55%, var(--border));

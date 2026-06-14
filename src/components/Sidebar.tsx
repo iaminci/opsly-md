@@ -4,7 +4,7 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import type { Document } from "@/types/document";
 import type { Folder } from "@/types/workspace";
 import { WorkspaceTree } from "./WorkspaceTree";
-import { Search } from "./Search";
+import { Search, type SearchMatchNavigation } from "./Search";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar as ShadcnSidebar,
@@ -84,6 +84,10 @@ interface SidebarProps {
   onRefresh: () => void;
   documentStackEnabled: boolean;
   onDocumentStackEnabledChange: (enabled: boolean) => void;
+  documentSearchQuery: string;
+  onDocumentSearchQueryChange: (query: string) => void;
+  onSearchSelectDocument: (doc: Document) => void;
+  searchMatchNavigation?: SearchMatchNavigation | null;
 }
 
 export function Sidebar({
@@ -96,6 +100,10 @@ export function Sidebar({
   onRefresh,
   documentStackEnabled,
   onDocumentStackEnabledChange,
+  documentSearchQuery,
+  onDocumentSearchQueryChange,
+  onSearchSelectDocument,
+  searchMatchNavigation,
 }: SidebarProps) {
   const { setOpen } = useSidebar();
   const [workspaceDialogOpen, setWorkspaceDialogOpen] = useState(false);
@@ -553,8 +561,14 @@ export function Sidebar({
           <SidebarGroup>
             <SidebarGroupLabel className="sr-only">Search</SidebarGroupLabel>
             <SidebarGroupContent>
-              <div className="min-w-0">
-                <Search documents={searchDocuments} onSelect={onSelectDocument} />
+              <div className="min-w-0 overflow-visible">
+                <Search
+                  documents={searchDocuments}
+                  query={documentSearchQuery}
+                  onQueryChange={onDocumentSearchQueryChange}
+                  onSelect={onSearchSelectDocument}
+                  matchNavigation={searchMatchNavigation}
+                />
               </div>
             </SidebarGroupContent>
           </SidebarGroup>

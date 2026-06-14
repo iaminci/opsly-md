@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, type ComponentProps, createElement } from "react";
+import { useMemo, useRef, type ComponentProps, type RefObject, createElement } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -24,6 +24,7 @@ import rehypeKatex from "rehype-katex";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize, { defaultSchema, type Options as RehypeSanitizeSchema } from "rehype-sanitize";
+import { useDocumentSearchHighlight } from "@/hooks/useDocumentSearchHighlight";
 import { cn, normalizeInvalidAtxParagraphBreaks, reactNodeToPlainText } from "@/lib/utils";
 import { CodeBlock } from "./CodeBlock";
 import {
@@ -95,6 +96,12 @@ interface MarkdownRendererProps {
    * Used on the homepage only so user document rendering is unaffected.
    */
   ctaLinks?: boolean;
+  /** Active sidebar search query; highlights prose matches when set. */
+  searchQuery?: string;
+  /** Index of the match styled as active (for jump-to-match / future next/prev). */
+  activeMatchIndex?: number;
+  articleRef?: RefObject<HTMLElement | null>;
+  onMatchCountChange?: (count: number) => void;
 }
 
 function isMermaidCode(lang: string | undefined): boolean {
@@ -163,7 +170,17 @@ function mergeOpslyMarkdownComponentsWithSecureCopy(base: Components | undefined
   };
 }
 
-export function MarkdownRenderer({ content, ctaLinks = false }: MarkdownRendererProps) {
+export function MarkdownRenderer({
+  content,
+  ctaLinks = false,
+  searchQuery = "",
+  activeMatchIndex = 0,
+  articleRef: articleRefProp,
+  onMatchCountChange,
+}: MarkdownRendererProps) {
+  const internalArticleRef = useRef<HTMLElement>(null);
+  const articleRef = articleRefProp ?? internalArticleRef;
+
   /** Same normalization pipeline as TOC (`buildHeadingManifest` normalizes again; cheap and idempotent). */
   const normalizedContent = useMemo(
     () => normalizeInvalidAtxParagraphBreaks(content),
@@ -305,8 +322,21 @@ export function MarkdownRenderer({ content, ctaLinks = false }: MarkdownRenderer
 
   const components = useMemo(() => mergeOpslyMarkdownComponentsWithSecureCopy(baseComponents), [baseComponents]);
 
+  const searchMountKey = searchQuery.trim()
+    ? `${normalizedContent}\0${searchQuery}`
+    : normalizedContent;
+
+  useDocumentSearchHighlight(articleRef, {
+    searchQuery,
+    activeMatchIndex,
+    mountKey: searchMountKey,
+    enabled: searchQuery.trim().length > 0,
+    onMatchCountChange,
+  });
+
   return (
     <article
+      ref={articleRef}
       className={cn(
         "prose prose-zinc dark:prose-invert max-w-none min-w-0 break-words",
         "[&_h1]:!text-foreground [&_h2]:!text-foreground [&_h3]:!text-foreground",
@@ -322,6 +352,7 @@ export function MarkdownRenderer({ content, ctaLinks = false }: MarkdownRenderer
       )}
     >
       <ReactMarkdown
+        key={searchMountKey}
         remarkPlugins={[
           remarkGfm,
           ...opslyMaskRemarkPlugins.slice(1),
