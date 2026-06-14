@@ -228,8 +228,6 @@ function constrainSnippetLength(
 
   if (snippet.length <= maxLength) return preview;
 
-  const matchEnd = matchStart + matchLength;
-  const availableAfter = snippet.length - matchEnd;
   const availableBefore = matchStart;
 
   let trimBefore = Math.max(0, snippet.length - maxLength);
@@ -237,7 +235,7 @@ function constrainSnippetLength(
 
   let trimmed = snippet.slice(trimBefore);
   let newMatchStart = matchStart - trimBefore;
-  let newMatchLength = matchLength;
+  const newMatchLength = matchLength;
 
   if (trimmed.length > maxLength) {
     const overflow = trimmed.length - maxLength;
