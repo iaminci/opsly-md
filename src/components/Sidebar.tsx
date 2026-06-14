@@ -36,7 +36,7 @@ import {
   type WorkspaceExport,
   type AllWorkspacesExport,
 } from "@/lib/storage";
-import { titleFromMarkdownContent } from "@/lib/utils";
+import { cn, titleFromMarkdownContent } from "@/lib/utils";
 import { CreateNameDialog } from "./CreateNameDialog";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import {
@@ -57,28 +57,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
-import { Upload, Download, Trash2 } from "lucide-react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Settings } from "lucide-react";
 import { toast } from "sonner";
 import { CommandPalette } from "./CommandPalette";
+import { SettingsModal } from "./SettingsModal";
+import { workspaceTabBaseClassName } from "./WorkspaceSwitcher";
 import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
-/** Outside-click / pointer-dismiss: `contains(target)` misses retargeting; composedPath matches Radix/portals reliably. */
-function isPointerEventInside(container: HTMLElement | null, nativeEvent: Event): boolean {
-  if (!container) return false;
-  if (typeof nativeEvent.composedPath === "function") {
-    for (const n of nativeEvent.composedPath()) {
-      if (n instanceof Node && container.contains(n)) return true;
-    }
-    return false;
-  }
-  const t = nativeEvent.target;
-  return t instanceof Node && container.contains(t);
-}
 
 interface SidebarProps {
   documents: Document[];
@@ -147,8 +131,7 @@ export function Sidebar({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
-  const moreMenuRef = useRef<HTMLDivElement>(null);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
   const sidebarBlocksDeployReload =
     workspaceDialogOpen ||
@@ -162,23 +145,12 @@ export function Sidebar({
     deleteDocDialogOpen ||
     exportDialogOpen ||
     exportConfirmDialogOpen ||
-    commandPaletteOpen;
+    commandPaletteOpen ||
+    settingsModalOpen;
 
   useDeploymentReloadBlock(sidebarBlocksDeployReload);
 
   const WORKSPACE_KEY = "md-viewer-current-workspace";
-
-  useEffect(() => {
-    if (!moreMenuOpen) return;
-    const handlePointerDown = (e: PointerEvent) => {
-      const el = moreMenuRef.current;
-      if (!el || isPointerEventInside(el, e)) return;
-      setMoreMenuOpen(false);
-    };
-    // Capture on window + pointerdown: covers touch/pen and runs before target handlers that stop propagation.
-    window.addEventListener("pointerdown", handlePointerDown, true);
-    return () => window.removeEventListener("pointerdown", handlePointerDown, true);
-  }, [moreMenuOpen]);
 
   const displayedWorkspaces = selectedWorkspaceId
     ? sortedWorkspaces.filter((w) => w.id === selectedWorkspaceId)
@@ -576,15 +548,7 @@ export function Sidebar({
         className="hidden"
       />
       <SidebarContent className="flex flex-col min-h-0 overflow-hidden">
-        <div
-          className="flex flex-1 min-h-0 flex-col"
-          onPointerDownCapture={(e) => {
-            if (!moreMenuOpen) return;
-            const menu = moreMenuRef.current;
-            if (!menu || isPointerEventInside(menu, e.nativeEvent)) return;
-            setMoreMenuOpen(false);
-          }}
-        >
+        <div className="flex flex-1 min-h-0 flex-col">
         <div className="flex shrink-0 flex-col border-b-0 border-sidebar-border pb-0">
           <SidebarGroup>
             <SidebarGroupLabel className="sr-only">Search</SidebarGroupLabel>
@@ -652,79 +616,22 @@ export function Sidebar({
           </SidebarGroup>
         </div>
 
-        <div ref={moreMenuRef} className="shrink-0 border-t-0 px-2 py-2">
-          {!moreMenuOpen && (
-            <label className="mb-2 flex w-full cursor-pointer items-center justify-between gap-2 rounded-base border-2 border-border bg-background px-3 py-1.5 text-muted-foreground">
-              <span className="min-w-0 text-m">Stack Docs</span>
-              <Switch
-                size="sm"
-                checked={documentStackEnabled}
-                onCheckedChange={onDocumentStackEnabledChange}
-                aria-label="Stack viewed documents when closing"
-              />
-            </label>
-          )}
-          <Collapsible
-            open={moreMenuOpen}
-            onOpenChange={setMoreMenuOpen}
-            className="flex w-full min-w-0 flex-col-reverse"
+        <div className="shrink-0 px-2 py-2">
+          <Button
+            variant="neutral"
+            size="sm"
+            className={cn(
+              workspaceTabBaseClassName,
+              "w-full min-w-0 shrink-0 gap-2",
+              "!bg-background !text-foreground",
+              "hover:!bg-primary hover:!text-black",
+              "active:!translate-x-boxShadowX active:!translate-y-boxShadowY active:!shadow-none",
+            )}
+            onClick={() => setSettingsModalOpen(true)}
           >
-            <CollapsibleTrigger asChild>
-              <Button
-                type="button"
-                variant="neutral"
-                size="sm"
-                className="w-full min-w-0 shrink-0 gap-2 text-foreground bg-background hover:bg-sidebar-accent"
-              >
-                Advanced Options
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="overflow-hidden">
-              <div className="mb-1.5 box-border w-full min-w-0 rounded-base border-2 border-border bg-background p-1.5 shadow-none">
-                <div className="flex min-w-0 flex-col gap-1.5">
-                  <div className="grid min-w-0 grid-cols-2 gap-1.5">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="min-w-0 justify-center rounded-base border-2 border-border text-foreground hover:border-border hover:bg-sidebar-accent"
-                      onClick={() => {
-                        setMoreMenuOpen(false);
-                        window.setTimeout(() => importInputRef.current?.click(), 0);
-                      }}
-                    >
-                      <Upload className="size-4 shrink-0" />
-                      Import
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="min-w-0 justify-center rounded-base border-2 border-border text-foreground hover:border-border hover:bg-sidebar-accent"
-                      onClick={() => {
-                        setMoreMenuOpen(false);
-                        handleExportClick();
-                      }}
-                    >
-                      <Download className="size-4 shrink-0" />
-                      Export
-                    </Button>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="w-full min-w-0 justify-center rounded-base border-2 border-border text-foreground hover:border-border hover:bg-sidebar-accent focus-visible:ring-destructive [&_svg]:text-muted-foreground"
-                    onClick={() => {
-                      setMoreMenuOpen(false);
-                      handleDeleteAllClick();
-                    }}
-                  >
-                    <Trash2 className="size-4 shrink-0" />
-                    {selectedWorkspaceId ? "Delete Workspace" : "Delete Everything"}
-                  </Button>
-                </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+            <Settings className="size-4 shrink-0" />
+            Settings
+          </Button>
         </div>
         </div>
       </SidebarContent>
@@ -981,6 +888,26 @@ export function Sidebar({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <SettingsModal
+        open={settingsModalOpen}
+        onOpenChange={setSettingsModalOpen}
+        documentStackEnabled={documentStackEnabled}
+        onDocumentStackEnabledChange={onDocumentStackEnabledChange}
+        onImport={() => {
+          setSettingsModalOpen(false);
+          window.setTimeout(() => importInputRef.current?.click(), 0);
+        }}
+        onExport={() => {
+          setSettingsModalOpen(false);
+          handleExportClick();
+        }}
+        onDeleteAll={() => {
+          setSettingsModalOpen(false);
+          handleDeleteAllClick();
+        }}
+        deleteLabel={selectedWorkspaceId ? "Delete Workspace" : "Delete Everything"}
+      />
 
       <CommandPalette
         open={commandPaletteOpen}
