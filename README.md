@@ -2,30 +2,53 @@
 
 Local-first Markdown workspaces that run entirely in your browser.
 
-- No accounts
-- No servers
-- No tracking
+No accounts. No servers. No tracking.
 
-Your data stays on your device.
+Your notes, documentation, and knowledge base stay on your device.
 
-## What you can do
+## Features
 
-- Write markdown instantly
-- Organize into workspaces and folders
-- Move through documents without losing context
-- Search across everything
-- Import / export anytime
+### Organize
 
-## Why this exists
+* Workspaces and folders
+* Nested document organization
+* Fast navigation between documents
+* Import and export your data anytime
 
-Most tools:
+### Search
 
-- require accounts
-- push your data to the cloud
-- overcomplicate simple workflows
+* Search across your entire workspace
+* Section-aware search results
+* See exactly where matches live before opening a document
+* Jump directly to matching content
 
-Opsly MD keeps it simple.  
-A tool to write, organize, and read markdown — nothing more.
+### Retrieve
+
+* Find relevant information across your documentation
+* Surface the sections that answer your question
+* Navigate directly to the source content
+
+### Write
+
+* GitHub Flavored Markdown
+* Syntax highlighting
+* LaTeX (KaTeX)
+* Mermaid diagrams
+
+## Why Opsly MD?
+
+Most documentation tools require:
+
+* Accounts
+* Cloud storage
+* Subscription plans
+* Vendor lock-in
+
+Opsly MD keeps things simple.
+
+Open the app and start writing.
+
+Your data never leaves your browser unless you choose to export it.
 
 ## Example
 
@@ -33,22 +56,28 @@ A tool to write, organize, and read markdown — nothing more.
 kubectl apply -f deployment.yaml
 ```
 
-Math, when you need it: $a^2 + b^2 = c^2$.
+Inline math:
 
-## What it supports
+$a^2 + b^2 = c^2$
 
-- GitHub Flavored Markdown
-- Syntax highlighting
-- LaTeX (KaTeX)
-- Mermaid diagrams
+Mermaid diagrams:
 
-## Get started
-
-- [Open App](https://md.opsly.dev)
-- [View on GitHub](https://github.com/iaminci/opsly-md)
+```mermaid
+graph TD
+    A[Write] --> B[Organize]
+    B --> C[Search]
+    C --> D[Retrieve]
+```
 
 ## Philosophy
 
-- Local-first
-- No lock-in
-- Tools shouldn’t ask for your data
+* Local-first
+* Privacy by default
+* No lock-in
+* Fast and simple tools
+* Your data belongs to you
+
+## Get Started
+
+* Open App: https://md.opsly.dev
+* GitHub: https://github.com/iaminci/opsly-md
