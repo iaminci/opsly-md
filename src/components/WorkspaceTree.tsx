@@ -36,16 +36,20 @@ import {
 const DRAG_TYPE = "application/x-md-viewer-document";
 const DRAG_TYPE_FOLDER = "application/x-md-viewer-folder";
 
-/** Full-height stripe on accordion section (header + expanded drop area). */
-const DRAG_SECTION_LEFT_STRIPE =
-  "relative before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:z-[5] before:w-0.5 before:bg-border";
+/** Row pill while a workspace / folder header is the drag drop target. */
+export const TREE_DRAG_TARGET_PILL = cn(
+  "rounded-md border-2 border-[var(--tree-drag-target-border)] bg-[var(--tree-drag-target-bg)] font-heading font-semibold text-[var(--tree-drag-target-fg)] transition-colors duration-150"
+);
 
-/** Row tint during tree drag; vertical stripe is on the accordion section wrapper. */
-const DRAG_ROW_TINT_CLASS =
-  "bg-sidebar-accent/55 transition-colors duration-150";
+/** Inner drop zone fill (border comes from {@link TREE_DRAG_TARGET_SECTION}). */
+export const TREE_DRAG_TARGET_ZONE = cn(
+  "rounded-md bg-[var(--tree-drag-target-bg)] transition-colors duration-150"
+);
 
-/** Background only while dragging over workspace / folder list drop zones. */
-const DROP_ZONE_BG_CLASS = "rounded-md bg-muted/25";
+/** Outer shell wrapping a folder or workspace header + its drop zone. */
+export const TREE_DRAG_TARGET_SECTION = cn(
+  "rounded-md border-2 border-[var(--tree-drag-target-border)] transition-colors duration-150"
+);
 
 /** Workspace name strip (tree rows) — borderless; name, chevron, and Layers use foreground when accent/path-highlighted. */
 const WORKSPACE_TAB_CORAL_PILL = cn(
@@ -70,6 +74,76 @@ const EXPANDED_FOLDERS_KEY = "md-viewer-expanded-folders";
 function isTreeDrag(e: React.DragEvent): boolean {
   const types = Array.from(e.dataTransfer?.types ?? []);
   return types.includes(DRAG_TYPE) || types.includes(DRAG_TYPE_FOLDER);
+}
+
+/** Max width for the compact drag pill; longer labels ellipsize. */
+const TREE_DRAG_GHOST_MAX_WIDTH_PX = 320;
+
+/** Cursor-style compact pill attached to the pointer while dragging tree items. */
+function setTreeDragGhostImage(e: React.DragEvent, label: string) {
+  const transfer = e.dataTransfer;
+  if (!transfer || typeof document === "undefined") return;
+
+  const ghost = document.createElement("div");
+  const marker = document.createElement("span");
+  marker.setAttribute("aria-hidden", "true");
+  const text = document.createElement("span");
+  text.textContent = label;
+
+  Object.assign(ghost.style, {
+    position: "fixed",
+    top: "-10000px",
+    left: "-10000px",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "7px",
+    width: "max-content",
+    maxWidth: `${TREE_DRAG_GHOST_MAX_WIDTH_PX}px`,
+    padding: "4px 9px",
+    borderRadius: "6px",
+    background: "var(--tree-drag-target-bg)",
+    border: "2px solid var(--tree-drag-target-border)",
+    color: "var(--tree-drag-target-fg)",
+    fontFamily: "var(--font-sans, ui-monospace, monospace)",
+    fontSize: "12px",
+    fontWeight: "600",
+    lineHeight: "1.25",
+    whiteSpace: "nowrap",
+    boxShadow: "0 1px 4px rgb(0 0 0 / 0.15)",
+    pointerEvents: "none",
+    boxSizing: "border-box",
+  });
+
+  Object.assign(marker.style, {
+    flexShrink: "0",
+    width: "5px",
+    height: "5px",
+    borderRadius: "9999px",
+    background: "currentColor",
+  });
+
+  Object.assign(text.style, {
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    minWidth: "0",
+  });
+
+  ghost.append(marker, text);
+  document.body.appendChild(ghost);
+
+  const anchorX = Math.min(14, Math.max(8, ghost.offsetWidth * 0.3));
+  const anchorY = Math.max(10, Math.floor(ghost.offsetHeight / 2));
+  transfer.setDragImage(ghost, anchorX, anchorY);
+
+  window.setTimeout(() => ghost.remove(), 0);
+}
+
+function dimDragSource(el: HTMLElement) {
+  el.style.opacity = "0.38";
+}
+
+function restoreDragSource(el: HTMLElement) {
+  el.style.opacity = "";
 }
 
 function containsActiveDoc(
@@ -113,6 +187,8 @@ interface WorkspaceTreeProps {
   flatDocuments: Document[];
   /** All folders in a workspace (for walking ancestors of `folderId`). */
   getFoldersFlat: (workspaceId: string) => Folder[];
+  /** Single-workspace view: highlight the switcher chip when the workspace root is the drop target. */
+  onWorkspaceDragTargetChange?: (active: boolean) => void;
 }
 
 export function WorkspaceTree({
@@ -137,6 +213,7 @@ export function WorkspaceTree({
   onRenameDocument,
   flatDocuments,
   getFoldersFlat,
+  onWorkspaceDragTargetChange,
 }: WorkspaceTreeProps) {
   void onAddWorkspace;
   const workspaceIds = useMemo(
@@ -300,6 +377,7 @@ export function WorkspaceTree({
     onRenameDocument,
     ensureWorkspaceExpanded,
     ensureFolderExpanded,
+    onWorkspaceDragTargetChange,
   });
 
   const treeSections = workspaces.map((ws, i) => (
@@ -364,6 +442,7 @@ interface WorkspaceSectionProps {
   ensureFolderExpanded: (folderId: string) => void;
   /** All-workspaces accordion: extra space below expanded sections (skipped for last item). */
   isLastWorkspace?: boolean;
+  onWorkspaceDragTargetChange?: (active: boolean) => void;
 }
 
 function WorkspaceSection({
@@ -395,31 +474,17 @@ function WorkspaceSection({
   onDeleteFolder,
   onRenameDocument,
   isLastWorkspace = false,
+  onWorkspaceDragTargetChange,
 }: WorkspaceSectionProps) {
   const [wsDragOver, setWsDragOver] = useState(false);
   const [wsContentDragOver, setWsContentDragOver] = useState(false);
-  const nestedFolderDragCountRef = useRef(0);
-  const [nestedFolderDragActive, setNestedFolderDragActive] = useState(false);
-  const registerWorkspaceFolderDragTarget = useCallback((delta: number) => {
-    nestedFolderDragCountRef.current = Math.max(0, nestedFolderDragCountRef.current + delta);
-    setNestedFolderDragActive(nestedFolderDragCountRef.current > 0);
-  }, []);
 
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   useClearDragStateOnDragEnd(setWsDragOver);
   useClearDragStateOnDragEnd(setWsContentDragOver);
-  useEffect(() => {
-    const clearNestedFolderDrag = () => {
-      nestedFolderDragCountRef.current = 0;
-      setNestedFolderDragActive(false);
-    };
-    window.addEventListener("dragend", clearNestedFolderDrag);
-    return () => window.removeEventListener("dragend", clearNestedFolderDrag);
-  }, []);
 
   const folderIds = folders.map((f) => f.id);
-  const workspaceHighlighted =
-    wsDragOver || wsContentDragOver || nestedFolderDragActive;
+  const workspaceDragTarget = wsDragOver || wsContentDragOver;
   const docActiveInWorkspace =
     !suppressDocHighlights &&
     containsActiveDoc(workspace.id, null, currentId, getDocuments, getFolders);
@@ -436,6 +501,7 @@ function WorkspaceSection({
     !workspaceMenuOpen &&
     !(workspaceSwitcherMenuOpen && selectedWorkspaceId === workspace.id);
   const workspaceFullRowAccent = workspaceRowActive && !workspaceIconPrimaryOnly;
+  const workspaceShowPill = workspaceFullRowAccent || workspaceDragTarget;
 
   const handleWsDragOver = (e: React.DragEvent) => {
     if (!isTreeDrag(e)) {
@@ -443,6 +509,7 @@ function WorkspaceSection({
       return;
     }
     e.preventDefault();
+    e.stopPropagation();
     e.dataTransfer.dropEffect = "move";
     ensureWorkspaceExpanded(workspace.id);
     setWsDragOver(true);
@@ -467,6 +534,26 @@ function WorkspaceSection({
 
   const hasTreeItems = folders.length > 0 || documents.length > 0;
   const hideWorkspaceHeader = selectedWorkspaceId === workspace.id;
+
+  useEffect(() => {
+    if (!hideWorkspaceHeader) return;
+    onWorkspaceDragTargetChange?.(workspaceDragTarget);
+  }, [hideWorkspaceHeader, workspaceDragTarget, onWorkspaceDragTargetChange]);
+
+  useEffect(() => {
+    if (!hideWorkspaceHeader) return;
+    return () => onWorkspaceDragTargetChange?.(false);
+  }, [hideWorkspaceHeader, onWorkspaceDragTargetChange]);
+
+  const handleWsContentDragTargetChange = useCallback(
+    (active: boolean) => {
+      if (active) {
+        setWsDragOver(false);
+      }
+      setWsContentDragOver(active);
+    },
+    []
+  );
 
   const workspaceTreeInner = (
     <>
@@ -503,7 +590,10 @@ function WorkspaceSection({
               onRenameFolder={onRenameFolder}
               onDeleteFolder={onDeleteFolder}
               onRenameDocument={onRenameDocument}
-              registerWorkspaceFolderDragTarget={registerWorkspaceFolderDragTarget}
+              clearAncestorDropHighlights={() => {
+                setWsContentDragOver(false);
+                setWsDragOver(false);
+              }}
             />
           ))}
         </Accordion>
@@ -537,7 +627,8 @@ function WorkspaceSection({
     !hideWorkspaceHeader && "ml-2.5 pl-1",
     hasTreeItems
       ? "border-l-2 border-[color:var(--sidebar-guide)] pb-0.5 pt-0"
-      : "min-h-8 py-0.5"
+      : "min-h-8 py-0.5",
+    workspaceDragTarget && hasTreeItems && "!border-l-[var(--tree-drag-target-border)]"
   );
 
   if (hideWorkspaceHeader) {
@@ -545,8 +636,7 @@ function WorkspaceSection({
       <div
         className={cn(
           "flex w-full max-w-full flex-col",
-          workspaceHighlighted &&
-            cn(DRAG_SECTION_LEFT_STRIPE, DRAG_ROW_TINT_CLASS)
+          workspaceDragTarget && cn(TREE_DRAG_TARGET_SECTION, "p-0.5")
         )}
         onDragOver={handleWsDragOver}
         onDragLeave={handleWsDragLeave}
@@ -555,9 +645,10 @@ function WorkspaceSection({
         <WorkspaceDropArea
           workspaceId={workspace.id}
           folderId={null}
+          isDragTarget={workspaceDragTarget}
           onMoveDocument={onMoveDocument}
           onMoveFolder={onMoveFolder}
-          onDragTargetActiveChange={setWsContentDragOver}
+          onDragTargetActiveChange={handleWsContentDragTargetChange}
           className={dropAreaClassName}
         >
           {workspaceTreeInner}
@@ -569,39 +660,49 @@ function WorkspaceSection({
   return (
     <AccordionItem
       value={workspace.id}
-      className={cn("group", workspaceHighlighted && DRAG_SECTION_LEFT_STRIPE)}
+      className={cn(
+        "group",
+        workspaceDragTarget && cn(TREE_DRAG_TARGET_SECTION, "p-0.5")
+      )}
     >
         <AccordionTrigger
           triggerVariant="section"
-          isActive={workspaceFullRowAccent}
+          isActive={workspaceShowPill}
           hideTriggerChevron
-          className={cn(
-            "group/ws hover:no-underline !border-0 !bg-transparent !p-0 !pl-1 !pr-0 !shadow-none hover:!bg-transparent",
-            workspaceHighlighted && DRAG_ROW_TINT_CLASS
-          )}
+          className="group/ws hover:no-underline !border-0 !bg-transparent !p-0 !pl-1 !pr-0 !shadow-none hover:!bg-transparent"
           onDragOver={handleWsDragOver}
           onDragLeave={handleWsDragLeave}
           onDrop={handleWsDrop}
         >
           <div
-            className={
-              workspaceFullRowAccent ? WORKSPACE_TAB_CORAL_PILL : WORKSPACE_TAB_MUTED_PILL
-            }
+            className={cn(
+              workspaceDragTarget
+                ? cn(
+                    "!flex !h-8 !min-h-8 !min-w-0 !flex-1 !items-center !gap-2 !py-1 !pl-3 !pr-0 !text-left !shadow-none !outline-none !ring-0",
+                    TREE_DRAG_TARGET_PILL
+                  )
+                : workspaceFullRowAccent
+                  ? WORKSPACE_TAB_CORAL_PILL
+                  : WORKSPACE_TAB_MUTED_PILL
+            )}
           >
             <Layers
               className={cn(
                 "size-4 shrink-0 transition-colors",
-                workspaceFullRowAccent || workspaceIconPrimaryOnly
-                  ? "text-foreground"
-                  : "text-muted-foreground",
+                workspaceDragTarget
+                  ? "text-[var(--tree-drag-target-fg)]"
+                  : workspaceShowPill || workspaceIconPrimaryOnly
+                    ? "text-foreground"
+                    : "text-muted-foreground",
                 "group-hover/ws:text-primary-hover"
               )}
             />
             <span
               className={cn(
                 "min-w-0 flex-1 truncate text-left font-heading text-lg transition-colors",
+                workspaceDragTarget && "font-semibold text-[var(--tree-drag-target-fg)]",
                 workspaceIconPrimaryOnly &&
-                  !workspaceFullRowAccent &&
+                  !workspaceShowPill &&
                   "!text-foreground",
                 "group-hover/ws:!text-primary-hover"
               )}
@@ -613,7 +714,7 @@ function WorkspaceSection({
                 aria-hidden
                 className={cn(
                   "pointer-events-none size-[1.125rem] shrink-0 transition-[transform,color] duration-200",
-                  workspaceFullRowAccent ? "text-inherit" : "text-muted-foreground",
+                  workspaceDragTarget || workspaceShowPill ? "text-inherit" : "text-muted-foreground",
                   "group-hover/ws:text-primary-hover",
                   "group-data-[state=open]/ws:rotate-90",
                 )}
@@ -643,7 +744,7 @@ function WorkspaceSection({
                         aria-label="Workspace actions"
                         className={cn(
                           "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary-hover focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
-                          workspaceFullRowAccent ? "text-foreground" : "text-muted-foreground",
+                          workspaceShowPill ? "text-foreground" : "text-muted-foreground",
                           "group-hover/ws:text-primary-hover"
                         )}
                         onKeyDown={(e) => {
@@ -702,9 +803,10 @@ function WorkspaceSection({
           <WorkspaceDropArea
             workspaceId={workspace.id}
             folderId={null}
+            isDragTarget={workspaceDragTarget}
             onMoveDocument={onMoveDocument}
             onMoveFolder={onMoveFolder}
-            onDragTargetActiveChange={setWsContentDragOver}
+            onDragTargetActiveChange={handleWsContentDragTargetChange}
             className={dropAreaClassName}
           >
             {workspaceTreeInner}
@@ -720,6 +822,7 @@ function WorkspaceDropArea({
   onMoveDocument,
   onMoveFolder,
   onDragTargetActiveChange,
+  isDragTarget = false,
   className,
   children,
 }: {
@@ -727,37 +830,33 @@ function WorkspaceDropArea({
   folderId: string | null;
   onMoveDocument: (docId: string, workspaceId: string, folderId: string | null) => void;
   onMoveFolder: (folderId: string, workspaceId: string, parentFolderId: string | null) => void;
-  /** Highlights the workspace / folder **row** while dragging over this list zone. */
+  /** Highlights the workspace / folder row pill while dragging over this list zone. */
   onDragTargetActiveChange?: (active: boolean) => void;
+  /** When true, fill this drop zone with the drag-target border + tint. */
+  isDragTarget?: boolean;
   className?: string;
   children: React.ReactNode;
 }) {
-  const [zoneActive, setZoneActive] = useState(false);
-  useClearDragStateOnDragEnd(setZoneActive);
-
   const handleDragOver = (e: React.DragEvent) => {
     if (!isTreeDrag(e)) {
-      setZoneActive(false);
       onDragTargetActiveChange?.(false);
       return;
     }
     e.preventDefault();
+    e.stopPropagation();
     e.dataTransfer.dropEffect = "move";
-    setZoneActive(true);
     onDragTargetActiveChange?.(true);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
     const next = e.relatedTarget;
     if (next instanceof Node && e.currentTarget.contains(next)) return;
-    setZoneActive(false);
     onDragTargetActiveChange?.(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setZoneActive(false);
     onDragTargetActiveChange?.(false);
     const docId = e.dataTransfer.getData(DRAG_TYPE);
     const draggedFolderId = e.dataTransfer.getData(DRAG_TYPE_FOLDER);
@@ -773,7 +872,7 @@ function WorkspaceDropArea({
       className={cn(
         "min-h-0 transition-colors duration-150",
         className,
-        zoneActive && DROP_ZONE_BG_CLASS
+        isDragTarget && TREE_DRAG_TARGET_ZONE
       )}
     >
       {children}
@@ -804,7 +903,8 @@ interface FolderItemProps {
   onTreeMenuOpenChange: (open: boolean) => void;
   ensureWorkspaceExpanded: (workspaceId: string) => void;
   ensureFolderExpanded: (folderId: string) => void;
-  registerWorkspaceFolderDragTarget: (delta: number) => void;
+  /** Clear workspace / parent folder drop highlights when this folder claims the target. */
+  clearAncestorDropHighlights?: () => void;
 }
 
 function FolderItem({
@@ -830,7 +930,7 @@ function FolderItem({
   onRenameFolder,
   onDeleteFolder,
   onRenameDocument,
-  registerWorkspaceFolderDragTarget,
+  clearAncestorDropHighlights,
 }: FolderItemProps) {
   const subfolders = getFolders(workspaceId, folder.id);
   const docs = getDocuments(workspaceId, folder.id);
@@ -842,12 +942,19 @@ function FolderItem({
   useClearDragStateOnDragEnd(setFolderDragOver);
   useClearDragStateOnDragEnd(setFolderContentDragOver);
 
-  const folderHighlighted = folderDragOver || folderContentDragOver;
-  useEffect(() => {
-    if (!folderHighlighted) return;
-    registerWorkspaceFolderDragTarget(1);
-    return () => registerWorkspaceFolderDragTarget(-1);
-  }, [folderHighlighted, registerWorkspaceFolderDragTarget]);
+  const folderDragTarget = folderDragOver || folderContentDragOver;
+
+  const claimDropTarget = useCallback(() => {
+    clearAncestorDropHighlights?.();
+  }, [clearAncestorDropHighlights]);
+
+  const handleFolderContentDragTargetChange = useCallback(
+    (active: boolean) => {
+      if (active) claimDropTarget();
+      setFolderContentDragOver(active);
+    },
+    [claimDropTarget]
+  );
 
   const docActiveInFolder =
     !suppressDocHighlights &&
@@ -857,6 +964,7 @@ function FolderItem({
   const openFileInTree = Boolean(currentId) && !suppressDocHighlights;
   const folderIconPrimaryOnly = openFileInTree && docActiveInFolder && !folderMenuOpen;
   const folderFullRowAccent = folderRowActive && !folderIconPrimaryOnly;
+  const folderShowPill = folderFullRowAccent || folderDragTarget;
 
   const handleFolderDragOver = (e: React.DragEvent) => {
     if (!isTreeDrag(e)) {
@@ -864,9 +972,11 @@ function FolderItem({
       return;
     }
     e.preventDefault();
+    e.stopPropagation();
     e.dataTransfer.dropEffect = "move";
     ensureWorkspaceExpanded(workspaceId);
     ensureFolderExpanded(folder.id);
+    claimDropTarget();
     setFolderDragOver(true);
   };
 
@@ -894,11 +1004,14 @@ function FolderItem({
   const handleFolderDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData(DRAG_TYPE_FOLDER, folder.id);
     e.dataTransfer.effectAllowed = "move";
+    setTreeDragGhostImage(e, folder.name);
+    dimDragSource(e.currentTarget as HTMLElement);
     const box = folderActionsRef.current;
     if (box) box.style.display = "none";
   };
 
-  const handleFolderDragEnd = () => {
+  const handleFolderDragEnd = (e: React.DragEvent) => {
+    restoreDragSource(e.currentTarget as HTMLElement);
     const box = folderActionsRef.current;
     if (box) box.style.display = "";
   };
@@ -907,16 +1020,13 @@ function FolderItem({
     <AccordionItem
       value={folder.id}
       variant="nested"
-      className={cn(folderHighlighted && DRAG_SECTION_LEFT_STRIPE)}
+      className={cn(folderDragTarget && cn(TREE_DRAG_TARGET_SECTION, "p-0.5"))}
     >
       <AccordionTrigger
         triggerVariant="tree"
-        isActive={folderFullRowAccent}
+        isActive={folderShowPill}
         hideTriggerChevron
-        className={cn(
-          "group/folder min-h-8 hover:no-underline !border-0 !bg-transparent !p-0 !pl-1 !pr-0 !shadow-none hover:!bg-transparent",
-          folderHighlighted && DRAG_ROW_TINT_CLASS
-        )}
+        className="group/folder min-h-8 hover:no-underline !border-0 !bg-transparent !p-0 !pl-1 !pr-0 !shadow-none hover:!bg-transparent"
         onDragOver={handleFolderDragOver}
         onDragLeave={handleFolderDragLeave}
         onDrop={handleFolderDrop}
@@ -926,27 +1036,33 @@ function FolderItem({
           onDragStart={handleFolderDragStart}
           onDragEnd={handleFolderDragEnd}
           className={cn(
-            "flex min-h-8 min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded-[5px] py-0.5 pl-1 pr-0",
-            folderRowActive ? "opacity-100" : "opacity-[0.85]",
+            "flex min-h-8 min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded-[5px] py-0.5 pl-1 pr-0 transition-colors duration-150",
+            folderDragTarget && TREE_DRAG_TARGET_PILL,
+            folderShowPill ? "opacity-100" : "opacity-[0.85]",
             folderFullRowAccent &&
-              !folderHighlighted &&
+              !folderDragTarget &&
               "text-foreground hover:text-foreground",
             folderIconPrimaryOnly &&
-              !folderHighlighted &&
+              !folderDragTarget &&
               "text-foreground hover:text-foreground",
-            !folderRowActive && "text-muted-foreground hover:text-foreground"
+            !folderShowPill && "text-muted-foreground hover:text-foreground"
           )}
         >
           <FolderIcon
             className={cn(
               "size-4 shrink-0 transition-colors group-hover/folder:!text-primary-hover",
-              folderRowActive ? "text-foreground" : "text-muted-foreground"
+              folderDragTarget
+                ? "text-[var(--tree-drag-target-fg)]"
+                : folderRowActive
+                  ? "text-foreground"
+                  : "text-muted-foreground"
             )}
           />
           <span
             className={cn(
               "min-w-0 flex-1 truncate text-left font-heading text-base transition-colors",
-              folderRowActive && "!text-foreground",
+              folderDragTarget && "font-semibold text-[var(--tree-drag-target-fg)]",
+              folderRowActive && !folderDragTarget && "!text-foreground",
               "group-hover/folder:!text-primary-hover"
             )}
           >
@@ -1037,14 +1153,16 @@ function FolderItem({
         <WorkspaceDropArea
           workspaceId={workspaceId}
           folderId={folder.id}
+          isDragTarget={folderDragTarget}
           onMoveDocument={onMoveDocument}
           onMoveFolder={onMoveFolder}
-          onDragTargetActiveChange={setFolderContentDragOver}
+          onDragTargetActiveChange={handleFolderContentDragTargetChange}
           className={cn(
             "ml-1 flex flex-col gap-0.5 pl-1",
             hasNestedItems
               ? "border-l-2 border-[color:var(--sidebar-guide)] pb-0.5 pt-0"
-              : "min-h-8 py-0.5"
+              : "min-h-8 py-0.5",
+            folderDragTarget && "!border-l-[var(--tree-drag-target-border)]"
           )}
         >
           {subfolders.length > 0 && (
@@ -1080,7 +1198,11 @@ function FolderItem({
                   onRenameFolder={onRenameFolder}
                   onDeleteFolder={onDeleteFolder}
                   onRenameDocument={onRenameDocument}
-                  registerWorkspaceFolderDragTarget={registerWorkspaceFolderDragTarget}
+                  clearAncestorDropHighlights={() => {
+                    setFolderContentDragOver(false);
+                    setFolderDragOver(false);
+                    clearAncestorDropHighlights?.();
+                  }}
                 />
                 ))}
               </Accordion>
@@ -1139,11 +1261,14 @@ function FileItem({
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData(DRAG_TYPE, doc.id);
     e.dataTransfer.effectAllowed = "move";
+    setTreeDragGhostImage(e, displayName);
+    dimDragSource(e.currentTarget as HTMLElement);
     const box = fileActionsRef.current;
     if (box) box.style.display = "none";
   };
 
-  const handleDragEnd = () => {
+  const handleDragEnd = (e: React.DragEvent) => {
+    restoreDragSource(e.currentTarget as HTMLElement);
     const box = fileActionsRef.current;
     if (box) box.style.display = "";
   };

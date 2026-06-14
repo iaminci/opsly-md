@@ -21,6 +21,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { TREE_DRAG_TARGET_PILL } from "@/components/WorkspaceTree";
 import { Button } from "./ui/button";
 import {
   Tooltip,
@@ -76,6 +77,8 @@ interface WorkspaceSwitcherProps {
   onUploadFile?: (workspaceId: string, folderId: string | null) => void;
   onCreateFile?: (workspaceId: string, folderId: string | null) => void;
   onRenameWorkspace?: (id: string, name: string) => void;
+  /** True while the selected workspace root is the drag drop target (single-workspace view). */
+  dragTargetActive?: boolean;
 }
 
 export function WorkspaceSwitcher({
@@ -89,6 +92,7 @@ export function WorkspaceSwitcher({
   onUploadFile,
   onCreateFile,
   onRenameWorkspace,
+  dragTargetActive = false,
 }: WorkspaceSwitcherProps) {
   const selected = selectedId
     ? workspaces.find((w) => w.id === selectedId)
@@ -151,7 +155,12 @@ export function WorkspaceSwitcher({
                 type="button"
                 className={cn(
                   workspacePairTabClassName,
-                  "flex w-full min-w-0 items-center gap-2 px-3 text-left"
+                  "flex w-full min-w-0 items-center gap-2 px-3 text-left",
+                  dragTargetActive &&
+                    cn(
+                      "!border-2 !border-[var(--tree-drag-target-border)] !shadow-none hover:!translate-x-0 hover:!translate-y-0",
+                      TREE_DRAG_TARGET_PILL
+                    )
                 )}
               >
                 <span className="min-w-0 flex-1 truncate">{label}</span>

@@ -195,6 +195,9 @@ body {
   --selection-bg: color-mix(in srgb, var(--primary) 12%, transparent);
   --selection-bg-soft: color-mix(in srgb, var(--primary) 8%, transparent);
   --selection-border: var(--primary);
+  --tree-drag-target-bg: color-mix(in srgb, var(--primary) 14%, var(--sidebar));
+  --tree-drag-target-fg: var(--primary);
+  --tree-drag-target-border: color-mix(in srgb, var(--primary) 45%, var(--border));
 }
 
 .dark {
@@ -230,6 +233,9 @@ body {
   --destructive-foreground: #ffffff;
   --sidebar-guide: rgb(154 165 206 / 0.25);
   --prose-blockquote-caution-icon: #FFD866;
+  --tree-drag-target-bg: color-mix(in srgb, var(--primary) 28%, var(--sidebar));
+  --tree-drag-target-fg: var(--primary);
+  --tree-drag-target-border: color-mix(in srgb, var(--primary) 55%, var(--border));
 }
 
 /* Unlayered: in-app ::selection must not live only in @layer base (Tailwind v4 can cascade it below preflight
