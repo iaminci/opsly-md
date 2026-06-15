@@ -20,6 +20,7 @@
   --spacing-reverseBoxShadowY: -2px;
   --radius-base: 5px;
   --shadow-shadow: var(--shadow);
+  --shadow-reverted: var(--reverted);
   --font-weight-base: 500;
   --font-weight-heading: 700;
   --font-sans: var(--font-fira-code), ui-monospace, monospace;
@@ -198,7 +199,8 @@ mark.search-highlight-active {
   --main: #8b5cf6;
   --border: #1f1f1f;
   --ring: #1f1f1f;
-  --shadow: 4px 4px 0px 0px var(--main);
+  --shadow: 4px 4px 0px 0px #8b5cf6;
+  --reverted: 4px 4px 0px 0px #000000;
   --radius: 0.5rem;
   --muted-foreground: #667085;
   --card-foreground: #17181b;
@@ -254,6 +256,7 @@ mark.search-highlight-active {
   --ring: #34D399;
   --sidebar-ring: #34D399;
   --shadow: 2px 2px 0px 0px #34D399;
+  --reverted: 4px 4px 0px 0px #000000;
   --card-foreground: #c0caf5;
   --popover-foreground: #c0caf5;
   --sidebar-foreground: #c0caf5;

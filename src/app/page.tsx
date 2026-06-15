@@ -294,7 +294,7 @@ function HeroSection() {
             Markdown-first workspace.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3 pb-8 sm:mt-10 sm:pb-10">
-            <Button variant="neutral" size="lg" className="hover:bg-primary" asChild>
+            <Button variant="default" size="lg" className="shadow-reverted hover:bg-primary-hover hover:text-black" asChild>
               <Link href={APP_URL}>
                 Start Writing
                 <ArrowRight className="size-4" />
