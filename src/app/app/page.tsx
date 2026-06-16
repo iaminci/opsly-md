@@ -93,7 +93,7 @@ const RIGHT_TOC_OPEN_KEY = "md-viewer-right-toc-open";
 const DOC_STACK_ENABLED_KEY = "md-viewer-doc-stack-enabled";
 const GITHUB_URL = "https://github.com/iaminci/opsly-md";
 const DEFAULT_NEW_DOCUMENT_TITLE = "Untitled";
-const EDIT_AUTOSAVE_INTERVAL_SEC = 60;
+const EDIT_AUTOSAVE_INTERVAL_SEC = 10;
 
 /** Normalized title when creating a document (empty input → default). */
 function resolveNewDocumentTitle(titleInput: string): string {
