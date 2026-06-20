@@ -526,6 +526,7 @@ function AppContent() {
   const [currentDoc, setCurrentDoc] = useState<Document | null>(null);
   const navigatingToHomeRef = useRef(false);
   const justSelectedDocIdRef = useRef<string | null>(null);
+  const selectDocumentGenerationRef = useRef(0);
   const currentDocIdRef = useRef<string | null>(null);
   currentDocIdRef.current = currentDoc?.id ?? null;
   const [loading, setLoading] = useState(true);
@@ -911,6 +912,7 @@ function AppContent() {
 
   const handleSelectDocument = useCallback(
     async (doc: Document) => {
+      const generation = ++selectDocumentGenerationRef.current;
       navigatingToHomeRef.current = false;
       setCreateMode(false);
       setInlineCreateHideLocationSelectors(false);
@@ -919,7 +921,9 @@ function AppContent() {
       setCreateTitle(DEFAULT_NEW_DOCUMENT_TITLE);
       setCreateMarkdown("");
       justSelectedDocIdRef.current = doc.id;
+      setCurrentDoc(doc);
       const fresh = await getDocument(doc.id);
+      if (generation !== selectDocumentGenerationRef.current) return;
       setCurrentDoc(fresh ?? doc);
       if (documentStackEnabled) {
         setDocStackIds((prev) => [...prev.filter((i) => i !== doc.id), doc.id]);
@@ -1255,6 +1259,7 @@ function AppContent() {
                   />
                 ) : (
                   <MarkdownRenderer
+                    key={currentDoc.id}
                     content={currentDoc.content}
                     searchQuery={documentSearchQuery}
                     activeMatchIndex={searchActiveMatchIndex}

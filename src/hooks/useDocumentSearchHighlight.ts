@@ -39,8 +39,8 @@ export function useDocumentSearchHighlight(
     const count = applySearchHighlights(root, searchQuery, activeMatchIndex);
     onMatchCountChange?.(count);
 
-    return () => {
-      clearSearchHighlights(root);
-    };
+    // No cleanup: React replaces the markdown subtree on content/search changes.
+    // Running clearSearchHighlights in a layout-effect cleanup races React's own
+    // removeChild calls and throws NotFoundError when switching documents quickly.
   }, [articleRef, mountKey, searchQuery, activeMatchIndex, enabled, onMatchCountChange]);
 }

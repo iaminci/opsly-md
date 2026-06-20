@@ -8,10 +8,18 @@ export function clearSearchHighlights(root: HTMLElement): void {
   const marks = root.querySelectorAll("mark.search-highlight");
   for (const mark of marks) {
     const parent = mark.parentNode;
-    if (!parent) continue;
-    parent.replaceChild(document.createTextNode(mark.textContent ?? ""), mark);
+    if (!parent || !parent.contains(mark)) continue;
+    try {
+      parent.replaceChild(document.createTextNode(mark.textContent ?? ""), mark);
+    } catch {
+      // Node may already have been removed by React during a fast remount.
+    }
   }
-  root.normalize();
+  try {
+    root.normalize();
+  } catch {
+    // ignore
+  }
 }
 
 function highlightTextNode(
@@ -49,7 +57,13 @@ function highlightTextNode(
     fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
   }
 
-  textNode.parentNode?.replaceChild(fragment, textNode);
+  const parent = textNode.parentNode;
+  if (!parent || !parent.contains(textNode)) return;
+  try {
+    parent.replaceChild(fragment, textNode);
+  } catch {
+    // Text node may have been replaced while React was reconciling.
+  }
 }
 
 function collectHighlightableTextNodes(root: HTMLElement): Text[] {

@@ -76,7 +76,13 @@ function measureWrappedRowsPerLogicalLine(
       return Math.max(1, 1 + extraRows);
     });
   } finally {
-    document.body.removeChild(measure);
+    if (measure.parentNode === document.body) {
+      try {
+        document.body.removeChild(measure);
+      } catch {
+        measure.remove();
+      }
+    }
   }
 }
 
