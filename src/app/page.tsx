@@ -205,11 +205,11 @@ function FeatureSection({
           </h2>
         </div>
         {lineGroups ? (
-          <div className="mt-7 text-base leading-relaxed text-muted-foreground sm:text-lg">
+          <div className="mt-7 text-base leading-snug text-muted-foreground sm:text-lg">
             {lineGroups.map((group, groupIndex) => (
               <div
                 key={groupIndex}
-                className={cn("space-y-2", groupIndex > 0 && "mt-6")}
+                className={cn("space-y-1", groupIndex > 0 && "mt-2")}
               >
                 {group.map((line) => (
                   <p key={line}>{line}</p>

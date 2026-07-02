@@ -47,24 +47,9 @@ export const roadmap: RoadmapData = {
         "Protect sensitive notes without giving up a local-first workflow.",
     },
     {
-      title: "Workspace Sync",
-      description:
-        "Optional synchronization across devices. Local-first remains the default.",
-    },
-    {
-      title: "Plugin System",
-      description:
-        "Extend Opsly MD with reusable plugins instead of modifying the core.",
-    },
-    {
       title: "VS Code Extension",
       description:
         "Open, browse, and edit your workspaces directly from VS Code.",
-    },
-    {
-      title: "Better Markdown Support",
-      description:
-        "Continue improving compatibility with CommonMark, GitHub Flavored Markdown, Mermaid, KaTeX, and future extensions.",
     },
     {
       title: "Command Palette",
@@ -73,11 +58,8 @@ export const roadmap: RoadmapData = {
     },
   ],
   ideas: [
-    { title: "Git integration" },
-    { title: "Publish static documentation" },
     { title: "Theme customization" },
     { title: "AI-assisted documentation" },
-    { title: "Collaboration" },
   ],
   wontBuild: [
     { title: "Mandatory user accounts" },
