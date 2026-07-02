@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-/** One hour between idle checks; focus/visibility still trigger checks immediately. */
+/** One hour between scheduled background polls (plus one check on mount). */
 const POLL_MS = 3_600_000;
 
 /** Inlined at build from VERCEL_DEPLOYMENT_ID via next.config `env`. */
@@ -91,26 +91,14 @@ export function DeploymentRefreshWatcher() {
       void check();
     };
 
-    const interval = window.setInterval(run, POLL_MS);
-    const onVisible = () => {
-      if (document.visibilityState === "visible") run();
-    };
-
-    window.addEventListener("focus", run);
-    document.addEventListener("visibilitychange", onVisible);
     run();
+    const interval = window.setInterval(run, POLL_MS);
 
     return () => {
       cancelled = true;
       window.clearInterval(interval);
-      window.removeEventListener("focus", run);
-      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [check]);
-
-  useEffect(() => {
-    void check();
-  }, [blockCount, check]);
 
   const handleUpdate = async () => {
     if (blockCountRef.current > 0) return;

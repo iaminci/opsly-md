@@ -3,7 +3,7 @@
 import { ChevronRight, FileText, Layers, Search } from "lucide-react";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { HeaderLogo } from "@/components/HeaderLogo";
-import { ROADMAP_MARKDOWN } from "@/lib/sample-document";
+import { getRoadmapMarkdown } from "@/lib/roadmap";
 import { cn } from "@/lib/utils";
 
 export function RoadmapPreview({ className }: { className?: string }) {
@@ -96,7 +96,7 @@ export function RoadmapPreview({ className }: { className?: string }) {
                 "[&_.prose_input]:!size-3"
               )}
             >
-              <MarkdownRenderer content={ROADMAP_MARKDOWN} />
+              <MarkdownRenderer content={getRoadmapMarkdown()} />
             </div>
           </div>
           <div

@@ -94,7 +94,7 @@ export function FencedCodeShell({
 }
 
 /**
- * `components.pre` for secure fences (`data-opsly-mask`): same shell + toolbar as normal blocks, plus reveal.
+ * `components.pre` for secure block (`data-opsly-mask`): same shell + toolbar as normal blocks, plus reveal.
  */
 export function SecureFencePreChrome(
   props: ComponentProps<"pre"> & { "data-opsly-mask"?: boolean },

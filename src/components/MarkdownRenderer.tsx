@@ -223,7 +223,7 @@ export function MarkdownRenderer({
           return <MermaidDiagram chart={code} />;
         }
 
-        /* Secure fences: identical inner surface to {@link CodeBlock} / hljs fences. */
+        /* Secure block: identical inner surface to {@link CodeBlock} / hljs fences. */
         if (isBlock && lang?.toLowerCase() === "secure") {
           return (
             <code
