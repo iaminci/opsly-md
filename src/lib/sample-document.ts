@@ -1,30 +1,3 @@
-export const ROADMAP_MARKDOWN = `# Roadmap
-
-## Available today
-
-- [x] Local-first storage
-- [x] Workspaces
-- [x] Stack Docs
-- [x] Opsly Mask
-- [x] Import / Export
-- [x] Advanced Search Capabilities
-
-## In progress
-
-- [ ] Improved Rendered Output
-
-
-## Planned
-
-- [ ] Bring Your Own Database
-- [ ] Secure sharing
-- [ ] Chrome Local AI
-
-## Future
-
-- Collaboration (under evaluation)
-`;
-
 export const HOME_MARKDOWN_PREVIEW = `# Opsly MD Renderer
 
 | Feature | Supported |
@@ -147,7 +120,7 @@ Fences without a language tag render as plain text:
 No language tag — still monospace with copy support.
 \`\`\`
 
-## Opsly Mask: Secure fence
+## Opsly Mask: Secure block
 
 Use a \`secure\` language tag for values you want masked by default—hover to copy, or use the eye control to reveal:
 
