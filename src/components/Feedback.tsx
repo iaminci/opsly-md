@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/tooltip";
 
 /** Must match where Encatch hosts `/s/web-sdk-form`. Without this, localhost uses the current origin and the iframe loads a non-existent path (blank/black modal). */
-const ENCATCH_WEB_HOST = "https://app.encatch.com";
+const ENCATCH_WEB_HOST = "https://form.encatch.com";
 
 const ENCATCH_API_KEY =
   "en_ZpxFYPlKUQq7zjg70QVJ1FDK4mvUXTKGioh1VSmGaYc3gDh8Rx8YUqEYqYS27cd7M4gkgIBcQb6FPfV_709035e6";

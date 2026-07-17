@@ -575,3 +575,7 @@ iframe[id^="encatch-iframe-"] {
 .prose ul li::marker {
   color: var(--foreground);
 }
+
+#encatch-iframe-container iframe {
+  border-radius: 10px !important;
+}
