@@ -33,8 +33,15 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-const DRAG_TYPE = "application/x-md-viewer-document";
-const DRAG_TYPE_FOLDER = "application/x-md-viewer-folder";
+import {
+  TREE_DRAG_DOCUMENT_TYPE as DRAG_TYPE,
+  TREE_DRAG_FOLDER_TYPE as DRAG_TYPE_FOLDER,
+  isTreeDrag,
+  setTreeDocumentDragData,
+} from "@/lib/workspace-tree-drag";
+
+/** Compact hit target for dropping into empty workspace / folder rows. */
+const EMPTY_TREE_DROP_ZONE_CLASS = "min-h-4 py-0";
 
 /** Row pill while a workspace / folder header is the drag drop target. */
 export const TREE_DRAG_TARGET_PILL = cn(
@@ -70,11 +77,6 @@ function useClearDragStateOnDragEnd(setDragOver: (v: boolean) => void) {
 }
 const EXPANDED_WORKSPACES_KEY = "md-viewer-expanded-workspaces";
 const EXPANDED_FOLDERS_KEY = "md-viewer-expanded-folders";
-
-function isTreeDrag(e: React.DragEvent): boolean {
-  const types = Array.from(e.dataTransfer?.types ?? []);
-  return types.includes(DRAG_TYPE) || types.includes(DRAG_TYPE_FOLDER);
-}
 
 /** Max width for the compact drag pill; longer labels ellipsize. */
 const TREE_DRAG_GHOST_MAX_WIDTH_PX = 320;
@@ -627,7 +629,7 @@ function WorkspaceSection({
     !hideWorkspaceHeader && "ml-2.5 pl-1",
     hasTreeItems
       ? "border-l-2 border-[color:var(--sidebar-guide)] pb-0.5 pt-0"
-      : "min-h-8 py-0.5",
+      : EMPTY_TREE_DROP_ZONE_CLASS,
     workspaceDragTarget && hasTreeItems && "!border-l-[var(--tree-drag-target-border)]"
   );
 
@@ -797,7 +799,9 @@ function WorkspaceSection({
           className={cn(
             isLastWorkspace
               ? "!p-0"
-              : "!mt-0 !px-0 !pt-0 group-data-[state=open]:pb-3 group-data-[state=open]:mb-3"
+              : !hasTreeItems
+                ? "!mt-0 !px-0 !pt-0 group-data-[state=open]:pb-1 group-data-[state=open]:mb-1"
+                : "!mt-0 !px-0 !pt-0 group-data-[state=open]:pb-3 group-data-[state=open]:mb-3"
           )}
         >
           <WorkspaceDropArea
@@ -1161,7 +1165,7 @@ function FolderItem({
             "ml-1 flex flex-col gap-0.5 pl-1",
             hasNestedItems
               ? "border-l-2 border-[color:var(--sidebar-guide)] pb-0.5 pt-0"
-              : "min-h-8 py-0.5",
+              : EMPTY_TREE_DROP_ZONE_CLASS,
             folderDragTarget && "!border-l-[var(--tree-drag-target-border)]"
           )}
         >
@@ -1259,8 +1263,8 @@ function FileItem({
   const fileActionsRef = useRef<HTMLDivElement>(null);
 
   const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData(DRAG_TYPE, doc.id);
-    e.dataTransfer.effectAllowed = "move";
+    setTreeDocumentDragData(e.dataTransfer, doc.id);
+    e.dataTransfer.effectAllowed = "copyMove";
     setTreeDragGhostImage(e, displayName);
     dimDragSource(e.currentTarget as HTMLElement);
     const box = fileActionsRef.current;
