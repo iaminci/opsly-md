@@ -14,7 +14,6 @@ const GITHUB_URL = "https://github.com/iaminci/opsly-md";
 const navLinks = [
   { href: "/#features", label: "Features" },
   { href: "/roadmap", label: "Roadmap" },
-  { href: "/docs", label: "Docs" },
 ] as const;
 
 export function SiteHeader() {
