@@ -5,7 +5,6 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -21,7 +20,6 @@ function hashContent(s: string): number {
 }
 
 import type { Document } from "@/types/document";
-import type { Folder } from "@/types/workspace";
 import {
   getDocuments,
   getDocument,
@@ -66,7 +64,11 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import {
-  ChevronDown,
+  getTreeDocumentDragId,
+  isTreeDocumentDrag,
+} from "@/lib/workspace-tree-drag";
+import { InlineLocationSelectors } from "@/components/InlineLocationSelectors";
+import {
   ChevronLeft,
   ChevronRight,
   Pencil,
@@ -77,16 +79,6 @@ import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
 import { Feedback } from "@/components/Feedback";
 import { GitHubIcon } from "@/components/GitHubIcon";
 import { WorkspaceTreeProvider, useWorkspaceTree } from "@/context/WorkspaceTreeContext";
-import {
-  workspaceNeutralChipClassName,
-  workspaceSwitcherDropdownContentClassName,
-} from "@/components/WorkspaceSwitcher";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const CURRENT_DOC_KEY = "md-viewer-current-doc";
 const RIGHT_TOC_OPEN_KEY = "md-viewer-right-toc-open";
@@ -99,19 +91,6 @@ const EDIT_AUTOSAVE_INTERVAL_SEC = 10;
 function resolveNewDocumentTitle(titleInput: string): string {
   const explicit = titleInput.trim().replace(/\.md$/i, "").trim();
   return explicit || DEFAULT_NEW_DOCUMENT_TITLE;
-}
-
-function folderPathLabel(folder: Folder, allInWorkspace: Folder[]): string {
-  const byId = new Map(allInWorkspace.map((f) => [f.id, f]));
-  const parts: string[] = [];
-  let f: Folder | undefined = folder;
-  const seen = new Set<string>();
-  while (f && !seen.has(f.id)) {
-    seen.add(f.id);
-    parts.unshift(f.name);
-    f = f.parentFolderId ? byId.get(f.parentFolderId) : undefined;
-  }
-  return parts.join(" / ");
 }
 
 /**
@@ -274,54 +253,7 @@ function InlineCreateMarkdownForm({
   onCancel,
   onSubmit,
 }: InlineCreateMarkdownFormProps) {
-  const { sortedWorkspaces, getFoldersInWorkspace, hasSyncedWorkspacesAtLeastOnce } =
-    useWorkspaceTree();
-
-  const folders = useMemo(
-    () => getFoldersInWorkspace(createSelectedWorkspaceId),
-    [getFoldersInWorkspace, createSelectedWorkspaceId]
-  );
-
-  useEffect(() => {
-    if (sortedWorkspaces.length === 0) return;
-    if (sortedWorkspaces.some((w) => w.id === createSelectedWorkspaceId)) return;
-    setCreateSelectedWorkspaceId(sortedWorkspaces[0]!.id);
-    setCreateSelectedFolderId(null);
-  }, [sortedWorkspaces, createSelectedWorkspaceId, setCreateSelectedWorkspaceId, setCreateSelectedFolderId]);
-
-  useEffect(() => {
-    if (createSelectedFolderId === null) return;
-    if (folders.some((f) => f.id === createSelectedFolderId)) return;
-    setCreateSelectedFolderId(null);
-  }, [createSelectedFolderId, folders, setCreateSelectedFolderId]);
-
-  const createFolderOptions = useMemo(
-    () =>
-      [...folders]
-        .map((f) => ({
-          folder: f,
-          label: folderPathLabel(f, folders),
-        }))
-        .sort((a, b) =>
-          a.label.localeCompare(b.label, undefined, { sensitivity: "base" })
-        ),
-    [folders]
-  );
-
-  const inlineCreateWorkspaceTriggerLabel = useMemo(() => {
-    if (!sortedWorkspaces.length) return "…";
-    return (
-      sortedWorkspaces.find((w) => w.id === createSelectedWorkspaceId)?.name ?? "…"
-    );
-  }, [sortedWorkspaces, createSelectedWorkspaceId]);
-
-  const inlineCreateFolderTriggerLabel = useMemo(() => {
-    if (createSelectedFolderId === null) return "None (workspace root)";
-    return (
-      createFolderOptions.find((x) => x.folder.id === createSelectedFolderId)
-        ?.label ?? "None (workspace root)"
-    );
-  }, [createSelectedFolderId, createFolderOptions]);
+  const { sortedWorkspaces, hasSyncedWorkspacesAtLeastOnce } = useWorkspaceTree();
 
   return (
     <>
@@ -367,117 +299,13 @@ function InlineCreateMarkdownForm({
         ) : (
           <div className="space-y-3">
             {!hideLocationSelectors ? (
-              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:items-end">
-                <div className="flex min-w-0 flex-col gap-1">
-                  <label
-                    htmlFor="inline-create-workspace"
-                    className="block text-sm font-medium text-foreground"
-                  >
-                    Workspace
-                  </label>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        id="inline-create-workspace"
-                        className={cn(
-                          workspaceNeutralChipClassName,
-                          "flex w-full min-w-0 items-center gap-2 px-3 text-left"
-                        )}
-                      >
-                        <span className="min-w-0 flex-1 truncate">
-                          {inlineCreateWorkspaceTriggerLabel}
-                        </span>
-                        <ChevronDown className="size-4 shrink-0" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="start"
-                      sideOffset={4}
-                      className={workspaceSwitcherDropdownContentClassName}
-                    >
-                      <div className="no-scrollbar max-h-[min(50vh,16rem)] w-full overflow-y-auto overflow-x-hidden">
-                        <div className="p-1">
-                          {sortedWorkspaces.map((ws) => (
-                            <DropdownMenuItem
-                              key={ws.id}
-                              onClick={() => {
-                                setCreateSelectedWorkspaceId(ws.id);
-                                setCreateSelectedFolderId(null);
-                              }}
-                              className={cn(
-                                "cursor-pointer",
-                                createSelectedWorkspaceId === ws.id &&
-                                  "bg-sidebar-accent font-semibold text-primary"
-                              )}
-                            >
-                              <span className="truncate">{ws.name}</span>
-                            </DropdownMenuItem>
-                          ))}
-                        </div>
-                      </div>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                <div className="flex min-w-0 flex-col gap-1">
-                  <label
-                    htmlFor="inline-create-folder"
-                    className="block text-sm font-medium text-foreground"
-                  >
-                    Folder
-                  </label>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        id="inline-create-folder"
-                        className={cn(
-                          workspaceNeutralChipClassName,
-                          "flex w-full min-w-0 items-center gap-2 px-3 text-left"
-                        )}
-                      >
-                        <span className="min-w-0 flex-1 truncate">
-                          {inlineCreateFolderTriggerLabel}
-                        </span>
-                        <ChevronDown className="size-4 shrink-0" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="start"
-                      sideOffset={4}
-                      className={workspaceSwitcherDropdownContentClassName}
-                    >
-                      <div className="no-scrollbar max-h-[min(50vh,16rem)] w-full overflow-y-auto overflow-x-hidden">
-                        <div className="p-1">
-                          <DropdownMenuItem
-                            onClick={() => setCreateSelectedFolderId(null)}
-                            className={cn(
-                              "cursor-pointer",
-                              createSelectedFolderId === null &&
-                                "bg-sidebar-accent font-semibold text-primary"
-                            )}
-                          >
-                            <span className="truncate">None (workspace root)</span>
-                          </DropdownMenuItem>
-                          {createFolderOptions.map(({ folder, label }) => (
-                            <DropdownMenuItem
-                              key={folder.id}
-                              onClick={() => setCreateSelectedFolderId(folder.id)}
-                              className={cn(
-                                "cursor-pointer",
-                                createSelectedFolderId === folder.id &&
-                                  "bg-sidebar-accent font-semibold text-primary"
-                              )}
-                            >
-                              <span className="truncate">{label}</span>
-                            </DropdownMenuItem>
-                          ))}
-                        </div>
-                      </div>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
+              <InlineLocationSelectors
+                idPrefix="inline-create"
+                selectedWorkspaceId={createSelectedWorkspaceId}
+                setSelectedWorkspaceId={setCreateSelectedWorkspaceId}
+                selectedFolderId={createSelectedFolderId}
+                setSelectedFolderId={setCreateSelectedFolderId}
+              />
             ) : null}
             <div className="flex flex-col gap-1">
               <label
@@ -552,6 +380,7 @@ function AppContent() {
     useState(false);
   const [editAutosaveUi, setEditAutosaveUi] = useState<"idle" | "saving" | "saved">("idle");
   const [editAutosaveSecs, setEditAutosaveSecs] = useState<number | null>(null);
+  const [mainPanelDocDragOver, setMainPanelDocDragOver] = useState(false);
 
   const editDirty =
     editMode &&
@@ -773,18 +602,14 @@ function AppContent() {
       createSelectedFolderId
     );
     if (!ok) return;
-    setCreateMode(false);
-    setInlineCreateHideLocationSelectors(false);
-    setCreateSelectedWorkspaceId("");
-    setCreateSelectedFolderId(null);
-    setCreateTitle(DEFAULT_NEW_DOCUMENT_TITLE);
-    setCreateMarkdown("");
+    handleCancelInlineCreate();
   }, [
     createSelectedWorkspaceId,
     createSelectedFolderId,
     createMarkdown,
     createTitle,
     handleAddDocument,
+    handleCancelInlineCreate,
   ]);
 
   const handleEnterEditMode = useCallback(() => {
@@ -933,6 +758,42 @@ function AppContent() {
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
     [router, pathname, searchParams, documentStackEnabled]
+  );
+
+  useEffect(() => {
+    const clearMainPanelDragOver = () => setMainPanelDocDragOver(false);
+    window.addEventListener("dragend", clearMainPanelDragOver);
+    return () => window.removeEventListener("dragend", clearMainPanelDragOver);
+  }, []);
+
+  const handleMainPanelDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (!isTreeDocumentDrag(e)) {
+      setMainPanelDocDragOver(false);
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "copy";
+    setMainPanelDocDragOver(true);
+  }, []);
+
+  const handleMainPanelDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    const next = e.relatedTarget;
+    if (next instanceof Node && e.currentTarget.contains(next)) return;
+    setMainPanelDocDragOver(false);
+  }, []);
+
+  const handleMainPanelDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setMainPanelDocDragOver(false);
+      const docId = getTreeDocumentDragId(e);
+      if (!docId) return;
+      const doc = documents.find((d) => d.id === docId);
+      if (doc) void handleSelectDocument(doc);
+    },
+    [documents, handleSelectDocument]
   );
 
   const handleDocumentSearchQueryChange = useCallback((query: string) => {
@@ -1151,13 +1012,18 @@ function AppContent() {
         >
           <div
             ref={contentScrollRef}
+            onDragOverCapture={handleMainPanelDragOver}
+            onDragLeave={handleMainPanelDragLeave}
+            onDropCapture={handleMainPanelDrop}
             className={cn(
               // Native overflow (not Radix ScrollArea): Radix wraps content in display:table + minWidth:100%,
               // which can grow wider than the grid column and clip right-aligned doc actions beside the TOC.
               "relative z-[1] min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden font-base outline-none native-scrollbar",
               currentDoc &&
                 !createMode &&
-                "lg:col-span-1 lg:col-start-1 lg:row-start-1 lg:h-full lg:max-h-full lg:min-h-0"
+                "lg:col-span-1 lg:col-start-1 lg:row-start-1 lg:h-full lg:max-h-full lg:min-h-0",
+              mainPanelDocDragOver &&
+                "bg-[var(--tree-drag-target-bg)] ring-2 ring-inset ring-[var(--tree-drag-target-border)]"
             )}
           >
             <div className="box-border max-w-full min-w-0 py-8 pl-8 pr-8 print:px-0 lg:pl-8 lg:pr-12">

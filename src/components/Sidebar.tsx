@@ -61,6 +61,7 @@ import { Settings } from "lucide-react";
 import { toast } from "sonner";
 import { CommandPalette } from "./CommandPalette";
 import { SettingsModal } from "./SettingsModal";
+import { UploadFileModal } from "./UploadFileModal";
 import { workspaceTabBaseClassName } from "./WorkspaceSwitcher";
 import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
 
@@ -132,11 +133,16 @@ export function Sidebar({
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
   const [workspaceSwitcherMenuOpen, setWorkspaceSwitcherMenuOpen] = useState(false);
   const [workspaceSwitcherDragTarget, setWorkspaceSwitcherDragTarget] = useState(false);
-  const [uploadTarget, setUploadTarget] = useState<{
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadModalConfig, setUploadModalConfig] = useState<{
     workspaceId: string;
     folderId: string | null;
-  } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+    hideLocationSelectors: boolean;
+  }>({
+    workspaceId: "default",
+    folderId: null,
+    hideLocationSelectors: false,
+  });
   const importInputRef = useRef<HTMLInputElement>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
@@ -154,7 +160,8 @@ export function Sidebar({
     exportDialogOpen ||
     exportConfirmDialogOpen ||
     commandPaletteOpen ||
-    settingsModalOpen;
+    settingsModalOpen ||
+    uploadModalOpen;
 
   useDeploymentReloadBlock(sidebarBlocksDeployReload);
 
@@ -202,32 +209,69 @@ export function Sidebar({
     [getFoldersInWorkspace]
   );
 
+  const openUploadModal = useCallback((
+    workspaceId: string,
+    folderId: string | null,
+    options?: { hideLocationSelectors?: boolean }
+  ) => {
+    setUploadModalConfig({
+      workspaceId,
+      folderId,
+      hideLocationSelectors: Boolean(options?.hideLocationSelectors),
+    });
+    setUploadModalOpen(true);
+  }, []);
+
   const handleUploadFile = (workspaceId: string, folderId: string | null) => {
-    setUploadTarget({ workspaceId, folderId });
-    fileInputRef.current?.click();
+    openUploadModal(workspaceId, folderId, { hideLocationSelectors: true });
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const target = uploadTarget ?? {
-      workspaceId: selectedWorkspaceId ?? "default",
-      folderId: null,
-    };
-    const content = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result ?? ""));
-      reader.onerror = () => reject(reader.error);
-      reader.readAsText(file);
-    });
-    const stem = file.name.replace(/\.(md|markdown)$/i, "").trim();
-    const isReadmeName = stem.toLowerCase() === "readme";
-    const title = isReadmeName
-      ? titleFromMarkdownContent(content)
-      : stem || "Untitled";
-    await onAddDocument(title, content, target.workspaceId, target.folderId);
-    setUploadTarget(null);
-    e.target.value = "";
+  const handleUploadSubmit = async (
+    files: File[],
+    workspaceId: string,
+    folderId: string | null
+  ): Promise<{ uploaded: number; failed: number }> => {
+    let uploaded = 0;
+    let failed = 0;
+
+    for (const file of files) {
+      const content = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result ?? ""));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsText(file);
+      });
+      const stem = file.name.replace(/\.(md|txt)$/i, "").trim();
+      const isReadmeName = stem.toLowerCase() === "readme";
+      const title = isReadmeName
+        ? titleFromMarkdownContent(content)
+        : stem || "Untitled";
+      const result = await onAddDocument(title, content, workspaceId, folderId);
+      if (result !== false) {
+        uploaded += 1;
+      } else {
+        failed += 1;
+      }
+    }
+
+    if (uploaded > 0) {
+      toast.success(
+        uploaded === 1
+          ? `"${files[0]!.name}" uploaded`
+          : `${uploaded} files uploaded`
+      );
+    }
+    if (failed > 0 && uploaded === 0) {
+      toast.error(
+        failed === 1
+          ? "Failed to upload file."
+          : `Failed to upload ${failed} files.`
+      );
+    } else if (failed > 0) {
+      toast.error(`${failed} file${failed === 1 ? "" : "s"} could not be uploaded.`);
+    }
+
+    return { uploaded, failed };
   };
 
   const handleWorkspaceSelect = (id: string | null) => {
@@ -239,15 +283,23 @@ export function Sidebar({
 
   const handleAddWorkspace = () => setWorkspaceDialogOpen(true);
 
-  const handleQuickCreateFromAllView = useCallback(() => {
-    const defaultId =
+  const getDefaultWorkspaceId = useCallback(() => {
+    return (
       selectedWorkspaceId ??
       sortedWorkspaces.find((w) => w.id === "default")?.id ??
       sortedWorkspaces.find((w) => w.name === "Default")?.id ??
       sortedWorkspaces[0]?.id ??
-      "default";
-    onOpenInlineCreate(defaultId, null);
-  }, [onOpenInlineCreate, selectedWorkspaceId, sortedWorkspaces]);
+      "default"
+    );
+  }, [selectedWorkspaceId, sortedWorkspaces]);
+
+  const handleQuickCreateFromAllView = useCallback(() => {
+    onOpenInlineCreate(getDefaultWorkspaceId(), null);
+  }, [getDefaultWorkspaceId, onOpenInlineCreate]);
+
+  const handleQuickUploadFromAllView = useCallback(() => {
+    openUploadModal(getDefaultWorkspaceId(), null);
+  }, [getDefaultWorkspaceId, openUploadModal]);
 
   const handleWorkspaceSubmit = async (name: string) => {
     await addWorkspace(name);
@@ -542,13 +594,6 @@ export function Sidebar({
     <>
       <ShadcnSidebar collapsible="offcanvas" className="print:hidden border-r-2 border-sidebar-border">
       <input
-        ref={fileInputRef}
-        type="file"
-        accept=".md,.markdown,text/*"
-        onChange={handleFileChange}
-        className="hidden"
-      />
-      <input
         ref={importInputRef}
         type="file"
         accept=".json,application/json"
@@ -585,6 +630,7 @@ export function Sidebar({
                 onSelect={handleWorkspaceSelect}
                 onAddWorkspace={handleAddWorkspace}
                 onQuickCreateMarkdown={handleQuickCreateFromAllView}
+                onQuickUploadFile={handleQuickUploadFromAllView}
                 onWorkspaceMenuOpenChange={setWorkspaceSwitcherMenuOpen}
                 onAddFolder={handleAddFolder}
                 onUploadFile={handleUploadFile}
@@ -921,6 +967,15 @@ export function Sidebar({
           handleDeleteAllClick();
         }}
         deleteLabel={selectedWorkspaceId ? "Delete Workspace" : "Delete Everything"}
+      />
+
+      <UploadFileModal
+        open={uploadModalOpen}
+        onOpenChange={setUploadModalOpen}
+        initialWorkspaceId={uploadModalConfig.workspaceId}
+        initialFolderId={uploadModalConfig.folderId}
+        hideLocationSelectors={uploadModalConfig.hideLocationSelectors}
+        onUpload={handleUploadSubmit}
       />
 
       <CommandPalette

@@ -67,10 +67,11 @@ interface WorkspaceSwitcherProps {
   onSelect: (workspaceId: string | null) => void;
   onAddWorkspace?: () => void;
   /**
-   * In “All Workspaces” view, the (+) chip opens inline Create Markdown (not New Workspace).
+   * In “All Workspaces” view, the (+) chip menu: Create File / Upload File.
    * “New Workspace” remains in the workspace dropdown.
    */
   onQuickCreateMarkdown?: () => void;
+  onQuickUploadFile?: () => void;
   /** When a workspace is selected, actions for that workspace (⋯ menu). */
   onWorkspaceMenuOpenChange?: (open: boolean) => void;
   onAddFolder?: (workspaceId: string, parentFolderId: string | null) => void;
@@ -87,6 +88,7 @@ export function WorkspaceSwitcher({
   onSelect,
   onAddWorkspace,
   onQuickCreateMarkdown,
+  onQuickUploadFile,
   onWorkspaceMenuOpenChange,
   onAddFolder,
   onUploadFile,
@@ -212,26 +214,48 @@ export function WorkspaceSwitcher({
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
-      {onQuickCreateMarkdown && selectedId === null ? (
+      {onQuickCreateMarkdown && onQuickUploadFile && selectedId === null ? (
         <SidebarMenuItem className="w-auto shrink-0">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                aria-label="New markdown file"
-                onClick={onQuickCreateMarkdown}
-                className={cn(
-                  workspaceNeutralChipClassName,
-                  "inline-flex w-9 min-w-9 shrink-0 items-center justify-center px-0"
-                )}
-              >
-                <Plus className="size-4 shrink-0 text-muted-foreground" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" align="end">
-              New markdown file
-            </TooltipContent>
-          </Tooltip>
+          <DropdownMenu
+            onOpenChange={(open) => {
+              onWorkspaceMenuOpenChange?.(open);
+            }}
+          >
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    aria-label="Create or upload file"
+                    className={cn(
+                      workspaceNeutralChipClassName,
+                      "inline-flex w-9 min-w-9 shrink-0 items-center justify-center px-0"
+                    )}
+                  >
+                    <Plus className="size-4 shrink-0 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" align="end">
+                Create or upload file
+              </TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent
+              align="end"
+              sideOffset={4}
+              className="min-w-0 w-max whitespace-nowrap rounded-[5px] border-2 border-sidebar-border bg-popover p-1 font-heading text-popover-foreground shadow-md"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <DropdownMenuItem onClick={onQuickCreateMarkdown}>
+                <FilePlus className="mr-2 size-4" />
+                Create File
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onQuickUploadFile}>
+                <FileBraces className="mr-2 size-4" />
+                Upload File
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </SidebarMenuItem>
       ) : null}
       {workspaceActionsAvailable && selected && selectedId ? (
