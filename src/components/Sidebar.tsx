@@ -62,6 +62,7 @@ import { toast } from "sonner";
 import { CommandPalette } from "./CommandPalette";
 import { SettingsModal } from "./SettingsModal";
 import { UploadFileModal } from "./UploadFileModal";
+import { CreateMarkdownModal } from "./CreateMarkdownModal";
 import { workspaceTabBaseClassName } from "./WorkspaceSwitcher";
 import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
 
@@ -76,12 +77,6 @@ interface SidebarProps {
     workspaceId?: string,
     folderId?: string | null
   ) => void | Promise<boolean>;
-  /** Opens inline Create Markdown in the main pane (replaces the former modal). */
-  onOpenInlineCreate: (
-    workspaceId: string,
-    folderId: string | null,
-    options?: { hideLocationSelectors?: boolean }
-  ) => void;
   onRefresh: () => void;
   documentStackEnabled: boolean;
   onDocumentStackEnabledChange: (enabled: boolean) => void;
@@ -97,7 +92,6 @@ export function Sidebar({
   onSelectDocument,
   onDeleteDocument,
   onAddDocument,
-  onOpenInlineCreate,
   onRefresh,
   documentStackEnabled,
   onDocumentStackEnabledChange,
@@ -143,6 +137,16 @@ export function Sidebar({
     folderId: null,
     hideLocationSelectors: false,
   });
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [createModalConfig, setCreateModalConfig] = useState<{
+    workspaceId: string;
+    folderId: string | null;
+    hideLocationSelectors: boolean;
+  }>({
+    workspaceId: "default",
+    folderId: null,
+    hideLocationSelectors: false,
+  });
   const importInputRef = useRef<HTMLInputElement>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
@@ -161,7 +165,8 @@ export function Sidebar({
     exportConfirmDialogOpen ||
     commandPaletteOpen ||
     settingsModalOpen ||
-    uploadModalOpen;
+    uploadModalOpen ||
+    createModalOpen;
 
   useDeploymentReloadBlock(sidebarBlocksDeployReload);
 
@@ -220,6 +225,19 @@ export function Sidebar({
       hideLocationSelectors: Boolean(options?.hideLocationSelectors),
     });
     setUploadModalOpen(true);
+  }, []);
+
+  const openCreateModal = useCallback((
+    workspaceId: string,
+    folderId: string | null,
+    options?: { hideLocationSelectors?: boolean }
+  ) => {
+    setCreateModalConfig({
+      workspaceId,
+      folderId,
+      hideLocationSelectors: Boolean(options?.hideLocationSelectors),
+    });
+    setCreateModalOpen(true);
   }, []);
 
   const handleUploadFile = (workspaceId: string, folderId: string | null) => {
@@ -294,8 +312,8 @@ export function Sidebar({
   }, [selectedWorkspaceId, sortedWorkspaces]);
 
   const handleQuickCreateFromAllView = useCallback(() => {
-    onOpenInlineCreate(getDefaultWorkspaceId(), null);
-  }, [getDefaultWorkspaceId, onOpenInlineCreate]);
+    openCreateModal(getDefaultWorkspaceId(), null);
+  }, [getDefaultWorkspaceId, openCreateModal]);
 
   const handleQuickUploadFromAllView = useCallback(() => {
     openUploadModal(getDefaultWorkspaceId(), null);
@@ -635,7 +653,7 @@ export function Sidebar({
                 onAddFolder={handleAddFolder}
                 onUploadFile={handleUploadFile}
                 onCreateFile={(ws, folderId) =>
-                  onOpenInlineCreate(ws, folderId, { hideLocationSelectors: true })
+                  openCreateModal(ws, folderId, { hideLocationSelectors: true })
                 }
                 onRenameWorkspace={handleRenameWorkspace}
               />
@@ -660,7 +678,7 @@ export function Sidebar({
               onAddWorkspace={handleAddWorkspace}
               onAddFolder={handleAddFolder}
               onAddFile={(ws, folderId) =>
-                onOpenInlineCreate(ws, folderId, { hideLocationSelectors: true })
+                openCreateModal(ws, folderId, { hideLocationSelectors: true })
               }
               onUploadFile={handleUploadFile}
               onMoveDocument={handleMoveDocument}
@@ -976,6 +994,15 @@ export function Sidebar({
         initialFolderId={uploadModalConfig.folderId}
         hideLocationSelectors={uploadModalConfig.hideLocationSelectors}
         onUpload={handleUploadSubmit}
+      />
+
+      <CreateMarkdownModal
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+        initialWorkspaceId={createModalConfig.workspaceId}
+        initialFolderId={createModalConfig.folderId}
+        hideLocationSelectors={createModalConfig.hideLocationSelectors}
+        onCreate={onAddDocument}
       />
 
       <CommandPalette

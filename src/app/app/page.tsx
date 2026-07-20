@@ -36,6 +36,7 @@ import { HeaderLogo } from "@/components/HeaderLogo";
 import { Sidebar } from "@/components/Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+import { LineNumberedTextarea } from "@/components/LineNumberedTextarea";
 import { TableOfContents } from "@/components/TableOfContents";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -44,8 +45,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Input } from "@/components/ui/input";
-import { LineNumberedTextarea } from "@/components/LineNumberedTextarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,7 +66,6 @@ import {
   getTreeDocumentDragId,
   isTreeDocumentDrag,
 } from "@/lib/workspace-tree-drag";
-import { InlineLocationSelectors } from "@/components/InlineLocationSelectors";
 import {
   ChevronLeft,
   ChevronRight,
@@ -78,20 +76,13 @@ import { toast } from "sonner";
 import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
 import { Feedback } from "@/components/Feedback";
 import { GitHubIcon } from "@/components/GitHubIcon";
-import { WorkspaceTreeProvider, useWorkspaceTree } from "@/context/WorkspaceTreeContext";
+import { WorkspaceTreeProvider } from "@/context/WorkspaceTreeContext";
 
 const CURRENT_DOC_KEY = "md-viewer-current-doc";
 const RIGHT_TOC_OPEN_KEY = "md-viewer-right-toc-open";
 const DOC_STACK_ENABLED_KEY = "md-viewer-doc-stack-enabled";
 const GITHUB_URL = "https://github.com/iaminci/opsly-md";
-const DEFAULT_NEW_DOCUMENT_TITLE = "Untitled";
 const EDIT_AUTOSAVE_INTERVAL_SEC = 10;
-
-/** Normalized title when creating a document (empty input → default). */
-function resolveNewDocumentTitle(titleInput: string): string {
-  const explicit = titleInput.trim().replace(/\.md$/i, "").trim();
-  return explicit || DEFAULT_NEW_DOCUMENT_TITLE;
-}
 
 /**
  * Open Radix overlays that handle Escape. Used in the capture phase so we still see
@@ -223,129 +214,6 @@ function DocumentRightSidebar({
   );
 }
 
-type InlineCreateMarkdownFormProps = {
-  rightTocOpen: boolean;
-  /** When true, workspace/folder were chosen from the tree or switcher menu; hide those pickers. */
-  hideLocationSelectors: boolean;
-  createTitle: string;
-  setCreateTitle: (v: string) => void;
-  createMarkdown: string;
-  setCreateMarkdown: (v: string) => void;
-  createSelectedWorkspaceId: string;
-  setCreateSelectedWorkspaceId: (v: string) => void;
-  createSelectedFolderId: string | null;
-  setCreateSelectedFolderId: (v: string | null) => void;
-  onCancel: () => void;
-  onSubmit: () => void | Promise<void>;
-};
-
-function InlineCreateMarkdownForm({
-  rightTocOpen,
-  hideLocationSelectors,
-  createTitle,
-  setCreateTitle,
-  createMarkdown,
-  setCreateMarkdown,
-  createSelectedWorkspaceId,
-  setCreateSelectedWorkspaceId,
-  createSelectedFolderId,
-  setCreateSelectedFolderId,
-  onCancel,
-  onSubmit,
-}: InlineCreateMarkdownFormProps) {
-  const { sortedWorkspaces, hasSyncedWorkspacesAtLeastOnce } = useWorkspaceTree();
-
-  return (
-    <>
-      <DocumentColumn rightTocOpen={rightTocOpen}>
-        <div className="mb-6 print:mb-4">
-          {hasSyncedWorkspacesAtLeastOnce && sortedWorkspaces.length > 0 ? (
-            <div className="flex min-w-0 flex-col gap-3">
-              <div className="min-h-0 min-w-0">
-                <h1 className="break-words text-3xl font-semibold text-foreground">Create Markdown</h1>
-              </div>
-              <div className="flex min-w-0 w-full max-w-full flex-wrap items-center justify-start gap-2 sm:justify-end sm:gap-3 md:gap-5">
-                <Button
-                  type="button"
-                  variant="neutral"
-                  size="sm"
-                  className="shrink-0 bg-background"
-                  onClick={onCancel}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  variant="neutral"
-                  size="sm"
-                  className="shrink-0 bg-background hover:bg-main hover:text-black"
-                  onClick={() => void onSubmit()}
-                  disabled={!createMarkdown.trim() || !createSelectedWorkspaceId}
-                >
-                  Add
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <h1 className="text-3xl font-semibold text-foreground">Create Markdown</h1>
-          )}
-        </div>
-        {!hasSyncedWorkspacesAtLeastOnce ? (
-          <p className="text-sm text-muted-foreground">Loading workspaces…</p>
-        ) : sortedWorkspaces.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No workspace available. Add one with “New Workspace” in the workspace menu.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {!hideLocationSelectors ? (
-              <InlineLocationSelectors
-                idPrefix="inline-create"
-                selectedWorkspaceId={createSelectedWorkspaceId}
-                setSelectedWorkspaceId={setCreateSelectedWorkspaceId}
-                selectedFolderId={createSelectedFolderId}
-                setSelectedFolderId={setCreateSelectedFolderId}
-              />
-            ) : null}
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="inline-create-title"
-                className="block text-sm font-medium text-foreground"
-              >
-                Filename
-              </label>
-              <Input
-                id="inline-create-title"
-                autoFocus
-                value={createTitle}
-                onChange={(e) => setCreateTitle(e.target.value)}
-                placeholder="Enter title...  "
-                className="font-mono text-sm"
-                autoComplete="off"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="inline-create-body"
-                className="block text-sm font-medium text-foreground"
-              >
-              </label>
-              <LineNumberedTextarea
-                id="inline-create-body"
-                value={createMarkdown}
-                onChange={(e) => setCreateMarkdown(e.target.value)}
-                placeholder="Enter markdown here..."
-                spellCheck={false}
-                className="field-sizing-fixed h-[calc(100svh-24rem)] min-h-[12rem] w-full max-w-full"
-              />
-            </div>
-          </div>
-        )}
-      </DocumentColumn>
-    </>
-  );
-}
-
 function AppContent() {
   const router = useRouter();
   const pathname = usePathname();
@@ -371,13 +239,6 @@ function AppContent() {
   const [documentSearchQuery, setDocumentSearchQuery] = useState("");
   const [searchActiveMatchIndex, setSearchActiveMatchIndex] = useState(0);
   const [searchMatchCount, setSearchMatchCount] = useState(0);
-  const [createMode, setCreateMode] = useState(false);
-  const [createSelectedWorkspaceId, setCreateSelectedWorkspaceId] = useState("");
-  const [createSelectedFolderId, setCreateSelectedFolderId] = useState<string | null>(null);
-  const [createTitle, setCreateTitle] = useState(DEFAULT_NEW_DOCUMENT_TITLE);
-  const [createMarkdown, setCreateMarkdown] = useState("");
-  const [inlineCreateHideLocationSelectors, setInlineCreateHideLocationSelectors] =
-    useState(false);
   const [editAutosaveUi, setEditAutosaveUi] = useState<"idle" | "saving" | "saved">("idle");
   const [editAutosaveSecs, setEditAutosaveSecs] = useState<number | null>(null);
   const [mainPanelDocDragOver, setMainPanelDocDragOver] = useState(false);
@@ -386,19 +247,15 @@ function AppContent() {
     editMode &&
     !!currentDoc &&
     draftContent !== currentDoc.content;
-  const createDirty =
-    createMode &&
-    (createMarkdown.trim().length > 0 ||
-      createTitle.trim() !== DEFAULT_NEW_DOCUMENT_TITLE);
-  useDeploymentReloadBlock(editMode || createMode);
+  useDeploymentReloadBlock(editMode);
   useEffect(() => {
-    if (!editDirty && !createDirty) return;
+    if (!editDirty) return;
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
     };
     window.addEventListener("beforeunload", onBeforeUnload);
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, [editDirty, createDirty]);
+  }, [editDirty]);
 
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
@@ -486,12 +343,6 @@ function AppContent() {
   }, [currentDoc?.id]);
 
   useLayoutEffect(() => {
-    if (!createMode) return;
-    const vp = contentScrollRef.current;
-    if (vp) vp.scrollTop = 0;
-  }, [createMode]);
-
-  useLayoutEffect(() => {
     if (editMode) return;
     if (!shouldRestoreScrollRef.current) return;
     shouldRestoreScrollRef.current = false;
@@ -564,62 +415,8 @@ function AppContent() {
     [documentStackEnabled, docStackIds]
   );
 
-  const handleOpenInlineCreate = useCallback(
-    (
-      workspaceId: string,
-      folderId: string | null,
-      options?: { hideLocationSelectors?: boolean }
-    ) => {
-      setEditMode(false);
-      setCreateSelectedWorkspaceId(workspaceId);
-      setCreateSelectedFolderId(folderId);
-      setCreateTitle(DEFAULT_NEW_DOCUMENT_TITLE);
-      setCreateMarkdown("");
-      setInlineCreateHideLocationSelectors(Boolean(options?.hideLocationSelectors));
-      setCreateMode(true);
-    },
-    []
-  );
-
-  const handleCancelInlineCreate = useCallback(() => {
-    setCreateMode(false);
-    setInlineCreateHideLocationSelectors(false);
-    setCreateSelectedWorkspaceId("");
-    setCreateSelectedFolderId(null);
-    setCreateTitle(DEFAULT_NEW_DOCUMENT_TITLE);
-    setCreateMarkdown("");
-  }, []);
-
-  const handleSubmitInlineCreate = useCallback(async () => {
-    if (!createSelectedWorkspaceId) return;
-    const trimmed = createMarkdown.trim();
-    if (!trimmed) return;
-    const title = resolveNewDocumentTitle(createTitle);
-    const ok = await handleAddDocument(
-      title,
-      trimmed,
-      createSelectedWorkspaceId,
-      createSelectedFolderId
-    );
-    if (!ok) return;
-    handleCancelInlineCreate();
-  }, [
-    createSelectedWorkspaceId,
-    createSelectedFolderId,
-    createMarkdown,
-    createTitle,
-    handleAddDocument,
-    handleCancelInlineCreate,
-  ]);
-
   const handleEnterEditMode = useCallback(() => {
     if (!currentDoc) return;
-    setCreateMode(false);
-    setInlineCreateHideLocationSelectors(false);
-    setCreateSelectedWorkspaceId("");
-    setCreateSelectedFolderId(null);
-    setCreateTitle(DEFAULT_NEW_DOCUMENT_TITLE);
-    setCreateMarkdown("");
     const vp = contentScrollRef.current;
     scrollTopBeforeEditRef.current = vp?.scrollTop ?? 0;
     setDraftContent(currentDoc.content);
@@ -739,12 +536,6 @@ function AppContent() {
     async (doc: Document) => {
       const generation = ++selectDocumentGenerationRef.current;
       navigatingToHomeRef.current = false;
-      setCreateMode(false);
-      setInlineCreateHideLocationSelectors(false);
-      setCreateSelectedWorkspaceId("");
-      setCreateSelectedFolderId(null);
-      setCreateTitle(DEFAULT_NEW_DOCUMENT_TITLE);
-      setCreateMarkdown("");
       justSelectedDocIdRef.current = doc.id;
       setCurrentDoc(doc);
       const fresh = await getDocument(doc.id);
@@ -830,7 +621,7 @@ function AppContent() {
   );
 
   useLayoutEffect(() => {
-    if (!documentSearchQuery.trim() || !currentDoc || editMode || createMode) return;
+    if (!documentSearchQuery.trim() || !currentDoc || editMode) return;
 
     const viewport = contentScrollRef.current;
     if (!viewport) return;
@@ -842,7 +633,6 @@ function AppContent() {
     searchMatchCount,
     currentDoc,
     editMode,
-    createMode,
   ]);
 
   const handleCloseDocument = useCallback(async () => {
@@ -879,11 +669,6 @@ function AppContent() {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       if (downloadConfirmOpen || hasOpenEscapeBlockingOverlay()) return;
-      if (createMode) {
-        e.preventDefault();
-        handleCancelInlineCreate();
-        return;
-      }
       if (!currentDoc) return;
       if (editMode) return;
       e.preventDefault();
@@ -894,11 +679,9 @@ function AppContent() {
     return () => window.removeEventListener("keydown", onKeyDown, true);
   }, [
     currentDoc,
-    createMode,
     editMode,
     downloadConfirmOpen,
     handleCloseDocument,
-    handleCancelInlineCreate,
   ]);
 
   useEffect(() => {
@@ -949,8 +732,7 @@ function AppContent() {
           currentDoc &&
           documentSearchQuery.trim() &&
           searchMatchCount > 0 &&
-          !editMode &&
-          !createMode
+          !editMode
             ? {
                 activeIndex: searchActiveMatchIndex,
                 total: searchMatchCount,
@@ -961,7 +743,6 @@ function AppContent() {
         }
         onDeleteDocument={handleDeleteDocument}
         onAddDocument={handleAddDocument}
-        onOpenInlineCreate={handleOpenInlineCreate}
         onRefresh={refresh}
       />
 
@@ -1005,7 +786,7 @@ function AppContent() {
         <div
           className={cn(
             "min-h-0 flex-1 overflow-hidden",
-            currentDoc && !createMode
+            currentDoc
               ? "flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:grid-rows-1"
               : "flex flex-col"
           )}
@@ -1020,29 +801,13 @@ function AppContent() {
               // which can grow wider than the grid column and clip right-aligned doc actions beside the TOC.
               "relative z-[1] min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden font-base outline-none native-scrollbar",
               currentDoc &&
-                !createMode &&
                 "lg:col-span-1 lg:col-start-1 lg:row-start-1 lg:h-full lg:max-h-full lg:min-h-0",
               mainPanelDocDragOver &&
                 "bg-[var(--tree-drag-target-bg)] ring-2 ring-inset ring-[var(--tree-drag-target-border)]"
             )}
           >
             <div className="box-border max-w-full min-w-0 py-8 pl-8 pr-8 print:px-0 lg:pl-8 lg:pr-12">
-          {createMode ? (
-            <InlineCreateMarkdownForm
-              rightTocOpen={rightTocOpen}
-              hideLocationSelectors={inlineCreateHideLocationSelectors}
-              createTitle={createTitle}
-              setCreateTitle={setCreateTitle}
-              createMarkdown={createMarkdown}
-              setCreateMarkdown={setCreateMarkdown}
-              createSelectedWorkspaceId={createSelectedWorkspaceId}
-              setCreateSelectedWorkspaceId={setCreateSelectedWorkspaceId}
-              createSelectedFolderId={createSelectedFolderId}
-              setCreateSelectedFolderId={setCreateSelectedFolderId}
-              onCancel={handleCancelInlineCreate}
-              onSubmit={handleSubmitInlineCreate}
-            />
-          ) : currentDoc ? (
+          {currentDoc ? (
             <>
               <DocumentColumn rightTocOpen={rightTocOpen}>
                 <div className="mb-6 flex min-w-0 w-full max-w-full flex-wrap items-center justify-start gap-2 print:mb-4 sm:justify-end sm:gap-3 md:gap-5">
@@ -1141,7 +906,7 @@ function AppContent() {
             </div>
           </div>
 
-          {currentDoc && !createMode && (
+          {currentDoc && (
             <div className="relative z-[2] hidden min-h-0 min-w-0 shrink-0 print:hidden lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:flex lg:h-full lg:min-h-0 lg:flex-col">
               <div
                 id="document-outline-panel"
