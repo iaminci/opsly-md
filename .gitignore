@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules/
 .pnpm-store
 /.pnp
 .pnp.*
@@ -43,6 +43,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# vscode extension (local deps + build output — do not push)
+vscode-extension/node_modules/
+vscode-extension/out/
+vscode-extension/media/
+vscode-extension/*.vsix
+vscode-extension/**/*.tsbuildinfo
+vscode-extension/.esbuild/
+.vscode-test/
+*.vsix
 
 # devbox
 .devbox/

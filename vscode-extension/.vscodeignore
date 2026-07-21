@@ -1,0 +1,10 @@
+.vscode/**
+src/**
+webview/**
+node_modules/**
+.esbuild/**
+*.ts
+!out/**
+tsconfig.json
+esbuild.webview.mjs
+pnpm-lock.yaml

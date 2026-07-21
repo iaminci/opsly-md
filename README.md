@@ -81,3 +81,9 @@ graph TD
 
 * Open App: https://md.opsly.dev
 * GitHub: https://github.com/iaminci/opsly-md
+
+## VS Code Extension
+
+Preview `.md` files in VS Code with the same rendering pipeline as the web app — GFM, syntax highlighting, KaTeX, Mermaid, and Opsly secure code fences.
+
+See [`vscode-extension/README.md`](vscode-extension/README.md) for usage, development, and packaging instructions.

@@ -29,6 +29,18 @@ Start the development server:
 pnpm dev
 ```
 
+### VS Code extension
+
+The preview extension lives in `vscode-extension/`. From the repo root:
+
+```bash
+pnpm install
+cd vscode-extension
+pnpm run build
+```
+
+See [`vscode-extension/README.md`](vscode-extension/README.md) for usage, packaging, and F5 debugging.
+
 ---
 
 ## Before Submitting Changes
@@ -45,6 +57,13 @@ If applicable:
 - verify responsive layouts
 - verify copy-to-clipboard interactions
 - verify Mermaid/math rendering
+
+For changes under `vscode-extension/`:
+
+```bash
+cd vscode-extension
+pnpm run build
+```
 
 ---
 
