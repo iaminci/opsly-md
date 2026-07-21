@@ -16,13 +16,14 @@ All notable updates to Opsly MD will be documented here.
 - table of contents navigation
 - responsive reading experience
 - browser-based workflow with no account requirement
+- VS Code preview extension (`vscode-extension/`)
 
 ---
 
 ## Planned
 - expanded secure code block workflows
 - encryption/decryption support
-- VS Code extension
+- full VS Code workspace integration (browse/edit workspaces in VS Code)
 - optional external database persistence and sync
 - improved markdown compatibility
 - plugin documentation support

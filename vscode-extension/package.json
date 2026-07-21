@@ -1,0 +1,124 @@
+{
+  "name": "opsly-md",
+  "displayName": "Opsly MD Preview",
+  "description": "Preview Markdown files with Opsly MD rendering (GFM, KaTeX, Mermaid, syntax highlighting)",
+  "version": "0.1.0",
+  "publisher": "opsly",
+  "license": "MIT",
+  "icon": "images/favicon-64.png",
+  "galleryBanner": {
+    "color": "#FAFAF7",
+    "theme": "light"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iaminci/opsly-md"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "markdown",
+    "preview",
+    "opsly",
+    "katex",
+    "mermaid"
+  ],
+  "activationEvents": [
+    "onCustomEditor:opsly-md.preview",
+    "onCommand:opsly-md.openPreview"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "opsly-md.openPreview",
+        "title": "Open Opsly MD Preview",
+        "category": "Opsly MD",
+        "icon": "$(open-preview)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "opsly-md.openPreview",
+          "when": "resourceLangId == markdown",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "opsly-md.openPreview",
+          "when": "resourceLangId == markdown",
+          "group": "navigation"
+        }
+      ]
+    },
+    "customEditors": [
+      {
+        "viewType": "opsly-md.preview",
+        "displayName": "Opsly MD Preview",
+        "selector": [
+          {
+            "filenamePattern": "*.md"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "opsly-md.openPreview",
+        "key": "ctrl+shift+o",
+        "mac": "cmd+shift+o",
+        "when": "resourceLangId == markdown"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run build",
+    "build": "pnpm run build:extension && pnpm run build:webview && pnpm run build:css",
+    "build:extension": "tsc -p tsconfig.json",
+    "build:webview": "node esbuild.webview.mjs",
+    "build:css": "tailwindcss -i webview/styles.css -o media/webview.css --minify",
+    "watch": "concurrently \"tsc -watch -p tsconfig.json\" \"node esbuild.webview.mjs --watch\" \"tailwindcss -i webview/styles.css -o media/webview.css --watch\"",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.7.1",
+    "concurrently": "^9.2.1",
+    "esbuild": "^0.27.3",
+    "tailwindcss": "^4",
+    "typescript": "^6"
+  },
+  "dependencies": {
+    "@tailwindcss/typography": "^0.5.20",
+    "clsx": "^2.1.1",
+    "highlight.js": "^11.11.1",
+    "katex": "^0.17.0",
+    "lucide-react": "^1.23.0",
+    "mdast-util-to-string": "^4.0.0",
+    "mermaid": "^11.16.0",
+    "opsly-mask": "0.9.0",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "react-markdown": "^10.1.0",
+    "rehype-highlight": "^7.0.2",
+    "rehype-katex": "^7.0.1",
+    "rehype-raw": "^7.0.0",
+    "rehype-sanitize": "^6.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "remark-parse": "^11.0.0",
+    "tailwind-merge": "^3.6.0",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.1.0"
+  }
+}
