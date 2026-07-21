@@ -1,6 +1,6 @@
 {
-  "name": "opsly-md",
-  "displayName": "Opsly MD Preview",
+  "name": "opsly-md-preview",
+  "displayName": "Opsly MD",
   "description": "Preview Markdown files with Opsly MD rendering (GFM, KaTeX, Mermaid, syntax highlighting)",
   "version": "0.1.0",
   "publisher": "opsly",
