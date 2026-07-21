@@ -27,6 +27,7 @@ export const roadmap: RoadmapData = {
     { title: "Opsly Mask" },
     { title: "Import / Export" },
     { title: "Advanced Search" },
+    { title: "VS Code Extension"},
   ],
   inProgress: [
     {
@@ -45,11 +46,6 @@ export const roadmap: RoadmapData = {
       title: "End-to-End Encryption",
       description:
         "Protect sensitive notes without giving up a local-first workflow.",
-    },
-    {
-      title: "VS Code Extension",
-      description:
-        "Open, browse, and edit your workspaces directly from VS Code.",
     },
     {
       title: "Command Palette",
