@@ -27,6 +27,8 @@ import rehypeSanitize, { defaultSchema, type Options as RehypeSanitizeSchema } f
 import { useDocumentSearchHighlight } from "@/hooks/useDocumentSearchHighlight";
 import { cn, normalizeInvalidAtxParagraphBreaks, reactNodeToPlainText } from "@/lib/utils";
 import { CodeBlock } from "./CodeBlock";
+import { HeadingAnchor } from "./markdown/HeadingAnchor";
+import { MarkdownLink } from "./markdown/MarkdownLink";
 import {
   FENCED_CODE_INNER_CODE_CLASSNAME,
   SecureFenceExtrasContext,
@@ -199,14 +201,17 @@ export function MarkdownRenderer({
     (): Components => ({
       a({ href, className, children, ...props }) {
         const ctaClass = ctaLinks ? classifyCtaLink(href) : undefined;
+        if (ctaClass) {
+          return (
+            <a href={href} className={cn(className, ctaClass)} {...props}>
+              {children}
+            </a>
+          );
+        }
         return (
-          <a
-            href={href}
-            className={cn(className, ctaClass)}
-            {...props}
-          >
+          <MarkdownLink href={href} className={className} {...props}>
             {children}
-          </a>
+          </MarkdownLink>
         );
       },
       code(codeProps: MarkdownCodeProps) {
@@ -257,6 +262,7 @@ export function MarkdownRenderer({
       },
       h1: ({ id: idProp, children, node, ...rest }) => {
         void node;
+        void rest;
         const id =
           (typeof idProp === "string" && idProp) ||
           takeNextHeadingId(
@@ -266,9 +272,9 @@ export function MarkdownRenderer({
             consumedIdsRef.current
           );
         return (
-          <h1 id={id} {...rest}>
+          <HeadingAnchor level={1} id={id}>
             {children}
-          </h1>
+          </HeadingAnchor>
         );
       },
       h2: ({ children }) => {
@@ -278,7 +284,11 @@ export function MarkdownRenderer({
           idQueueMap,
           consumedIdsRef.current
         );
-        return <h2 id={id}>{children}</h2>;
+        return (
+          <HeadingAnchor level={2} id={id}>
+            {children}
+          </HeadingAnchor>
+        );
       },
       h3: ({ children }) => {
         const id = takeNextHeadingId(
@@ -287,7 +297,11 @@ export function MarkdownRenderer({
           idQueueMap,
           consumedIdsRef.current
         );
-        return <h3 id={id}>{children}</h3>;
+        return (
+          <HeadingAnchor level={3} id={id}>
+            {children}
+          </HeadingAnchor>
+        );
       },
       h4: ({ children }) => {
         const id = takeNextHeadingId(
@@ -296,7 +310,11 @@ export function MarkdownRenderer({
           idQueueMap,
           consumedIdsRef.current
         );
-        return <h4 id={id}>{children}</h4>;
+        return (
+          <HeadingAnchor level={4} id={id}>
+            {children}
+          </HeadingAnchor>
+        );
       },
       h5: ({ children }) => {
         const id = takeNextHeadingId(
@@ -305,7 +323,11 @@ export function MarkdownRenderer({
           idQueueMap,
           consumedIdsRef.current
         );
-        return <h5 id={id}>{children}</h5>;
+        return (
+          <HeadingAnchor level={5} id={id}>
+            {children}
+          </HeadingAnchor>
+        );
       },
       h6: ({ children }) => {
         const id = takeNextHeadingId(
@@ -314,7 +336,18 @@ export function MarkdownRenderer({
           idQueueMap,
           consumedIdsRef.current
         );
-        return <h6 id={id}>{children}</h6>;
+        return (
+          <HeadingAnchor level={6} id={id}>
+            {children}
+          </HeadingAnchor>
+        );
+      },
+      table({ children, ...props }) {
+        return (
+          <div className="markdown-table-wrap markdown-wide not-prose">
+            <table {...props}>{children}</table>
+          </div>
+        );
       },
     }),
     [idQueueMap, ctaLinks]
@@ -338,17 +371,7 @@ export function MarkdownRenderer({
     <article
       ref={articleRef}
       className={cn(
-        "prose prose-zinc dark:prose-invert max-w-none min-w-0 break-words",
-        "[&_h1]:!text-foreground [&_h2]:!text-foreground [&_h3]:!text-foreground",
-        "[&_h4]:!text-foreground [&_h5]:!text-foreground [&_h6]:!text-foreground",
-        "[&_p]:!text-foreground [&_ul]:!text-foreground [&_ol]:!text-foreground [&_li]:!text-foreground",
-        /* Caution blockquotes: p/li must stay destructive (beats [&_p]:!text-foreground) */
-        "[&_blockquote_p]:!text-destructive [&_blockquote_li]:!text-destructive",
-        "[&_strong]:!text-foreground [&_em]:!text-foreground",
-        "[&_blockquote_strong]:!text-inherit [&_blockquote_em]:!text-inherit",
-        "[&_figcaption]:!text-foreground [&_th]:!text-foreground [&_td]:!text-muted-foreground",
-        /* Links default to primary; exclude `.cta` so homepage CTAs can use cta-primary / cta-secondary colors */
-        "[&_a:not(.cta)]:!text-primary"
+        "markdown-content prose prose-zinc dark:prose-invert mx-auto min-w-0 w-full break-words"
       )}
     >
       <ReactMarkdown

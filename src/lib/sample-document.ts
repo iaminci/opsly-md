@@ -58,7 +58,7 @@ A local-first Markdown workspace with **GFM**, syntax highlighting, \`secure\` f
 | LaTeX | Inline and block math |
 | Mermaid | Flowcharts and diagrams |
 | Links & images | Yes |
-| Blockquotes | Caution callout styling |
+| Blockquotes | Soft accent styling |
 
 ## Typography
 
@@ -90,7 +90,7 @@ Task list:
 - [ ] Create your first note
 - [ ] Try a \`secure\` fence for secrets
 
-## Caution blockquote
+## Blockquote
 
 > Rotating credentials regularly limits blast radius if a secret is exposed.
 

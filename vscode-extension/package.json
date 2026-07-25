@@ -1,8 +1,8 @@
 {
   "name": "opsly-md-preview",
   "displayName": "Opsly MD",
-  "description": "Preview Markdown files with Opsly MD rendering (GFM, KaTeX, Mermaid, syntax highlighting)",
-  "version": "0.1.0",
+  "description": "Preview Markdown files with Opsly MD rendering in VS Code and Cursor (GFM, KaTeX, Mermaid, syntax highlighting)",
+  "version": "0.2.0",
   "publisher": "opsly",
   "license": "MIT",
   "icon": "images/favicon-64.png",
@@ -25,11 +25,9 @@
     "preview",
     "opsly",
     "katex",
-    "mermaid"
-  ],
-  "activationEvents": [
-    "onCustomEditor:opsly-md.preview",
-    "onCommand:opsly-md.openPreview"
+    "mermaid",
+    "cursor",
+    "vscode"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -83,7 +81,7 @@
     "build": "pnpm run build:extension && pnpm run build:webview && pnpm run build:css",
     "build:extension": "tsc -p tsconfig.json",
     "build:webview": "node esbuild.webview.mjs",
-    "build:css": "tailwindcss -i webview/styles.css -o media/webview.css --minify",
+    "build:css": "node scripts/copy-prose-fonts.mjs && tailwindcss -i webview/styles.css -o media/webview.css --minify",
     "watch": "concurrently \"tsc -watch -p tsconfig.json\" \"node esbuild.webview.mjs --watch\" \"tailwindcss -i webview/styles.css -o media/webview.css --watch\"",
     "package": "vsce package --no-dependencies"
   },

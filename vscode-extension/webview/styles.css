@@ -1,5 +1,22 @@
 @import "tailwindcss";
+@import "../../src/styles/markdown-prose.css";
 @plugin "@tailwindcss/typography";
+
+@font-face {
+  font-family: "Geist Sans";
+  src: url("./fonts/geist-sans/Geist-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("./fonts/geist-mono/GeistMono-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -10,6 +27,7 @@
 
 @theme inline {
   --color-background: var(--background);
+  --color-secondary-background: var(--secondary-background);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
@@ -18,41 +36,44 @@
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-border: var(--border);
+  --color-ring: var(--ring);
   --color-destructive: var(--destructive);
   --color-card: var(--card);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   --font-sans: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-weight-heading: 700;
+  --radius-base: 5px;
+  --radius: 0.5rem;
 }
 
 :root {
-  --background: #fafaf7;
-  --foreground: #17181b;
-  --muted: #e6e9ed;
-  --muted-foreground: #667085;
-  --primary: #8b5cf6;
-  --primary-foreground: #ffffff;
-  --secondary: #ede9fe;
-  --secondary-foreground: #5b21b6;
-  --border: #1f1f1f;
-  --destructive: #d00000;
-  --card: #ffffff;
-  --prose-blockquote-caution-icon: #7c3aed;
+  --font-geist-sans: "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-geist-mono: "Geist Mono", ui-monospace, monospace;
+
+  /* Shell tokens — VS Code injects --vscode-* into webviews; fallbacks for local CSS builds. */
+  --background: var(--vscode-editor-background, #fafaf7);
+  --secondary-background: var(--vscode-editor-background, #ffffff);
+  --foreground: var(--vscode-editor-foreground, #17181b);
+  --muted-foreground: var(--vscode-descriptionForeground, #667085);
+  --muted: var(--vscode-input-background, #e6e9ed);
+  --primary: var(--vscode-textLink-foreground, #8b5cf6);
+  --primary-foreground: var(--vscode-editor-background, #ffffff);
+  --secondary: var(--vscode-badge-background, #ede9fe);
+  --secondary-foreground: var(--vscode-badge-foreground, #5b21b6);
+  --border: var(--vscode-widget-border, #1f1f1f);
+  --ring: var(--vscode-focusBorder, #1f1f1f);
+  --destructive: var(--vscode-errorForeground, #d00000);
+  --card: var(--vscode-editorWidget-background, #ffffff);
+  --accent: var(--vscode-list-hoverBackground, #f5f3ff);
+  --accent-foreground: var(--vscode-foreground, #5b21b6);
+  --search-highlight-bg: color-mix(in srgb, var(--primary) 30%, transparent);
+  --search-highlight-active-bg: color-mix(in srgb, var(--primary) 55%, transparent);
+  --selection-border: var(--primary);
 }
 
-.dark {
-  --background: #24283b;
-  --foreground: #c0caf5;
-  --muted: #2a3158;
-  --muted-foreground: #9aa5ce;
-  --primary: #34d399;
-  --primary-foreground: #111111;
-  --secondary: #ffd866;
-  --secondary-foreground: #111111;
-  --border: #0b0f14;
-  --destructive: #ff6188;
-  --card: #272f45;
-  --prose-blockquote-caution-icon: #ffd866;
-}
+/* .dark is toggled for prose/Mermaid; shell colors track the editor via --vscode-* above. */
 
 html,
 body,
@@ -73,146 +94,4 @@ body {
   z-index: 10;
   background: color-mix(in srgb, var(--background) 92%, transparent);
   backdrop-filter: blur(8px);
-}
-
-/* Table styling */
-.prose table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.prose th,
-.prose td {
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 35%, transparent);
-  padding: 0.75rem 1rem;
-  text-align: left;
-}
-
-.prose th {
-  font-weight: 600;
-}
-
-/* Code blocks */
-.prose pre {
-  font-family: var(--font-mono);
-  white-space: pre;
-}
-
-.prose pre,
-.prose pre * {
-  white-space: pre !important;
-  font-family: var(--font-mono) !important;
-}
-
-.prose :not(pre) > code {
-  border-radius: 0.25rem;
-  border: 1px solid color-mix(in srgb, var(--border) 25%, transparent);
-  background: var(--muted);
-  padding: 0.125rem 0.375rem;
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  color: var(--muted-foreground) !important;
-}
-
-.dark .prose :not(pre) > code {
-  background-color: var(--card);
-  color: var(--muted-foreground) !important;
-}
-
-/* Blockquote caution callout */
-.prose blockquote {
-  margin: 1.15em 0;
-  padding: 0.35rem 0.65rem;
-  border-left: 3px solid var(--destructive);
-  background: transparent;
-  font-style: italic;
-  color: var(--destructive) !important;
-  display: grid;
-  grid-template-columns: 1.125rem 1fr;
-  column-gap: 0.45rem;
-  align-items: center;
-}
-
-.prose blockquote::before {
-  content: "";
-  width: 1.125rem;
-  height: 1.125rem;
-  background-color: var(--prose-blockquote-caution-icon);
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' fill-rule='evenodd' d='M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.577 4.5-2.598 4.5H4.645c-2.022 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z' clip-rule='evenodd'/%3E%3C/svg%3E");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  grid-column: 1;
-  grid-row: 1;
-}
-
-.prose blockquote > * {
-  grid-column: 2;
-  min-width: 0;
-}
-
-.prose h1,
-.prose h2,
-.prose h3,
-.prose h4,
-.prose h5,
-.prose h6,
-.prose p,
-.prose ul,
-.prose ol,
-.prose li,
-.prose strong,
-.prose em,
-.prose dd,
-.prose dt,
-.prose figcaption,
-.prose th {
-  color: var(--foreground) !important;
-}
-
-.prose td {
-  color: var(--muted-foreground) !important;
-}
-
-.prose a {
-  color: var(--primary) !important;
-}
-
-.prose blockquote p,
-.prose blockquote li {
-  color: var(--destructive) !important;
-}
-
-.prose hr {
-  border: none;
-  border-top: 2px solid var(--border);
-  margin-top: 4rem !important;
-  margin-bottom: 4rem !important;
-}
-
-.prose h2 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  font-size: 1.875rem;
-  line-height: 1.25;
-  letter-spacing: -0.015em;
-}
-
-.prose ul,
-.prose ol {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  padding-left: 1.375rem;
-}
-
-.prose ul li,
-.prose ol li {
-  margin-top: 0.25rem;
-  margin-bottom: 0.25rem;
-  padding-left: 0.25rem;
-  line-height: 1.55;
-}
-
-.prose ul li::marker {
-  color: var(--foreground);
 }

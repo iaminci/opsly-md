@@ -26,15 +26,10 @@ export const SecureFenceExtrasContext = createContext<{ copyPlain?: string | nul
  * imported `highlight.js/styles/github-dark.min.css` gets identical surface/foreground.
  */
 export const FENCED_CODE_INNER_CODE_CLASSNAME =
-  "hljs block w-full p-5 text-sm font-mono whitespace-pre";
-
-/** One shared toolbar row for every fenced code block (normal + secure). */
-const TOOLBAR_ROW =
-  "not-prose flex min-h-9 shrink-0 flex-wrap items-center justify-end gap-2 border-b border-border bg-zinc-900 px-2 py-1 dark:bg-zinc-950";
+  "hljs block w-full font-mono whitespace-pre";
 
 /** Shared chip styling: copy + icon actions align to the same height. */
-const toolbarActionBase =
-  "inline-flex h-7 shrink-0 items-center justify-center rounded border border-zinc-600 bg-zinc-800 text-zinc-300 transition-colors hover:bg-zinc-700 dark:border-zinc-500 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600";
+const toolbarActionClass = "fenced-code-action";
 
 /** Inline copy control — same visual system as the reveal control. */
 export function ToolbarCopyButton({ textToCopy }: { textToCopy: string }) {
@@ -51,15 +46,27 @@ export function ToolbarCopyButton({ textToCopy }: { textToCopy: string }) {
     <button
       type="button"
       onClick={copy}
-      className={cn(toolbarActionBase, "px-2 text-xs font-medium")}
+      className={toolbarActionClass}
+      aria-label={copied ? "Copied to clipboard" : "Copy code to clipboard"}
     >
       {copied ? "Copied!" : "Copy"}
     </button>
   );
 }
 
-function CodeBlockToolbar({ children }: { children: ReactNode }) {
-  return <div className={TOOLBAR_ROW}>{children}</div>;
+function CodeBlockToolbar({
+  language,
+  children,
+}: {
+  language?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="fenced-code-toolbar not-prose">
+      {language ? <span className="fenced-code-lang">{language}</span> : <span aria-hidden />}
+      <div className="fenced-code-toolbar-actions">{children}</div>
+    </div>
+  );
 }
 
 /**
@@ -67,9 +74,11 @@ function CodeBlockToolbar({ children }: { children: ReactNode }) {
  * Normal and secure blocks differ only by `toolbarRight` content.
  */
 export function FencedCodeShell({
+  language,
   toolbarRight,
   preProps,
 }: {
+  language?: string;
   toolbarRight?: ReactNode;
   preProps: ComponentProps<"pre">;
 }) {
@@ -77,9 +86,11 @@ export function FencedCodeShell({
   return (
     <div
       data-fenced-code
-      className="not-prose my-4 flex w-full max-w-full min-w-0 flex-col overflow-hidden rounded-md border-2 border-border"
+      className="fenced-code-block markdown-wide not-prose flex w-full max-w-full min-w-0 flex-col overflow-hidden"
     >
-      {toolbarRight != null ? <CodeBlockToolbar>{toolbarRight}</CodeBlockToolbar> : null}
+      {toolbarRight != null ? (
+        <CodeBlockToolbar language={language}>{toolbarRight}</CodeBlockToolbar>
+      ) : null}
       <pre
         {...restPre}
         className={cn(
@@ -121,7 +132,7 @@ export function SecureFencePreChrome(
         <button
           type="button"
           {...{ [OPSLY_MASK_TOGGLE_ATTR]: true }}
-          className={cn(toolbarActionBase, "w-7 min-w-7 p-0")}
+          className={cn(toolbarActionClass, "fenced-code-action-icon")}
           aria-label={ctx.revealed ? "Hide protected content" : "Show protected content"}
           aria-pressed={ctx.revealed}
           aria-controls={ctx.contentId}
@@ -144,5 +155,11 @@ export function SecureFencePreChrome(
     children,
   };
 
-  return <FencedCodeShell toolbarRight={toolbarRight} preProps={preProps} />;
+  return (
+    <FencedCodeShell
+      language="secure"
+      toolbarRight={toolbarRight}
+      preProps={preProps}
+    />
+  );
 }

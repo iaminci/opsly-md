@@ -82,8 +82,50 @@ graph TD
 * Open App: https://md.opsly.dev
 * GitHub: https://github.com/iaminci/opsly-md
 
-## VS Code Extension
+## Extension
 
-Preview `.md` files in VS Code with the same rendering pipeline as the web app — GFM, syntax highlighting, KaTeX, Mermaid, and Opsly secure code fences.
+Preview `.md` files with the same rendering pipeline as the web app — GFM, syntax highlighting, KaTeX, Mermaid, and Opsly secure code fences.
 
-See [`vscode-extension/README.md`](vscode-extension/README.md) for usage, development, and packaging instructions.
+See [`vscode-extension/README.md`](vscode-extension/README.md) for usage and feature overview.
+
+### Development
+
+The extension lives in `vscode-extension/` and reuses the main app's `MarkdownRenderer` via an esbuild alias — no duplicate rendering logic.
+
+**Requirements:** Node.js 20.9+, pnpm, editor 1.85+
+
+From the repository root:
+
+```bash
+pnpm install
+cd vscode-extension
+pnpm run build
+```
+
+Press **F5** with the `vscode-extension` folder open to launch an Extension Development Host.
+
+### Scripts
+
+| Script | Description |
+|--------|-------------|
+| `pnpm run build` | Compile extension host, webview bundle, and CSS |
+| `pnpm run watch` | Watch mode for all build targets |
+| `pnpm run package` | Create a `.vsix` installable package |
+
+Build output (`out/`, `media/`, `*.vsix`) is gitignored — run `pnpm run build` locally before debugging or packaging.
+
+### Install from VSIX
+
+```bash
+cd vscode-extension
+pnpm run build
+pnpm run package
+```
+
+Then: **Extensions** → `…` menu → **Install from VSIX…** → select `vscode-extension/opsly-md-0.2.0.vsix` (version may differ).
+
+### Architecture
+
+- **Extension host** (`src/`) — custom editor provider, file change sync, theme sync
+- **Webview** (`webview/`) — React app importing `MarkdownRenderer` from the main app
+- **CSS** — Tailwind v4 + shared `markdown-prose.css`, Geist fonts copied into `media/fonts/`

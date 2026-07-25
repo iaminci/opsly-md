@@ -69,7 +69,6 @@ import {
 import {
   ChevronLeft,
   ChevronRight,
-  Pencil,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -853,7 +852,6 @@ function AppContent() {
                             className="shrink-0 bg-background"
                             onClick={handleEnterEditMode}
                           >
-                            <Pencil className="size-4" />
                             Edit
                           </Button>
                           <Button
