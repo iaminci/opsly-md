@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "../styles/markdown-prose.css";
 @plugin "@tailwindcss/typography";
 
 /* Class-based dark mode (toggle controls this, not system preference) */
@@ -65,43 +66,7 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Table styling (Cursor-like) */
-.prose table {
-  @apply w-full border-collapse;
-}
-
-.prose th,
-.prose td {
-  @apply border-b border-zinc-200 px-4 py-3 text-left dark:border-zinc-700;
-}
-
-.prose th {
-  @apply font-semibold;
-}
-
-/* Code blocks: monospace + preserve whitespace for ASCII trees */
-.prose pre {
-  @apply font-mono whitespace-pre;
-}
-
-.prose pre,
-.prose pre * {
-  white-space: pre !important;
-  font-family: var(--font-fira-code), ui-monospace, monospace !important;
-}
-
-/* Inline code: neutral chip; label text uses muted-foreground (not amber / accent ink) */
-.prose :not(pre) > code {
-  @apply rounded border border-black/20 bg-muted px-1.5 py-0.5 font-mono text-sm before:content-none after:content-none;
-  color: var(--muted-foreground) !important;
-}
-.dark .prose :not(pre) > code {
-  background-color: var(--card);
-  color: var(--muted-foreground) !important;
-  border: 1px solid color-mix(in srgb, var(--border) 25%, transparent);
-}
-
-/* In-document and search-result highlights */
+/* In-document and search-result highlights (outside .markdown-content) */
 mark.search-highlight {
   background-color: var(--search-highlight-bg) !important;
   color: inherit !important;
@@ -113,77 +78,6 @@ mark.search-highlight {
 mark.search-highlight-active {
   background-color: var(--search-highlight-active-bg) !important;
   box-shadow: inset 0 0 0 2px var(--selection-border);
-}
-.prose mark.search-highlight {
-  background-color: var(--search-highlight-bg) !important;
-  color: inherit !important;
-  border-radius: 2px;
-  padding: 0 1px;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-}
-.prose mark.search-highlight-active {
-  background-color: var(--search-highlight-active-bg) !important;
-  box-shadow: inset 0 0 0 2px var(--selection-border);
-}
-
-/* Blockquote: caution callout — amber warning icon, destructive body text (see content/why.md) */
-.prose blockquote {
-  margin: 1.15em 0;
-  padding: 0.35rem 0.65rem 0.35rem 0.65rem;
-  border-left: 3px solid var(--destructive);
-  background: transparent;
-  font-style: italic;
-  color: var(--destructive) !important;
-  display: grid;
-  grid-template-columns: 1.125rem 1fr;
-  column-gap: 0.45rem;
-  align-items: center;
-}
-.prose blockquote::before {
-  content: "";
-  width: 1.125rem;
-  height: 1.125rem;
-  background-color: var(--prose-blockquote-caution-icon);
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' fill-rule='evenodd' d='M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.577 4.5-2.598 4.5H4.645c-2.022 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z' clip-rule='evenodd'/%3E%3C/svg%3E");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' fill-rule='evenodd' d='M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.577 4.5-2.598 4.5H4.645c-2.022 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z' clip-rule='evenodd'/%3E%3C/svg%3E");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  grid-column: 1;
-  grid-row: 1;
-  font-style: normal;
-}
-.prose blockquote > * {
-  grid-column: 2;
-  min-width: 0;
-}
-.dark .prose blockquote {
-  border-left-color: var(--destructive);
-  background: none;
-}
-
-/* Print styles */
-@media print {
-  body {
-    background: white;
-    color: black;
-  }
-  .print\:hidden {
-    display: none !important;
-  }
-  .prose pre {
-    background: #f4f4f4 !important;
-    color: #333 !important;
-    border: 1px solid #ddd;
-  }
-  .prose code {
-    background: #f4f4f4 !important;
-    color: #333 !important;
-  }
 }
 
 :root {
@@ -234,7 +128,7 @@ mark.search-highlight-active {
 
 .dark {
   --background: #24283b;
-  --secondary-background: #22293d;
+  --secondary-background: #24283b;
   --sidebar: #1d2333;
   --card: #272f45;
   --popover: #2d3750;
@@ -431,149 +325,15 @@ iframe[id^="encatch-iframe-"] {
   }
 }
 
-/*
- * Markdown / Typography: @tailwindcss/typography + dark:prose-invert set colors that
- * load late. Keep this block last; use !important so copy uses theme tokens.
- */
-.prose h1,
-.prose h2,
-.prose h3,
-.prose h4,
-.prose h5,
-.prose h6,
-.prose p,
-.prose ul,
-.prose ol,
-.prose li,
-.prose strong,
-.prose em,
-.prose dd,
-.prose dt,
-.prose figcaption,
-.prose th {
-  color: var(--foreground) !important;
-}
-
-.prose td {
-  color: var(--muted-foreground) !important;
-}
-
-.prose a {
-  color: var(--primary) !important;
-}
-
-/* Blockquote body: beats `.prose p { foreground }` for nested paragraphs */
-.prose blockquote p,
-.prose blockquote li {
-  color: var(--destructive) !important;
-}
-
-/*
- * Homepage CTA row. Tight, left-aligned block that closes the hero; extra
- * breathing room below is handled by `.cta-row + hr` further down.
- */
-.prose .cta-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 1.5rem;
-  margin-top: 1.5rem;
-  margin-bottom: 0;
-}
-
-/*
- * Homepage CTA buttons. Applied by MarkdownRenderer (opt-in via ctaLinks)
- * when a link's href matches `/app*` (primary) or a github.com URL (secondary).
- * Lives here so it wins the cascade over `.prose a` (which uses !important).
- *
- * Heavy neobrutalist treatment: 2px border, 4px hard offset shadow, press
- * translate matches shadow offset.
- */
-.prose a.cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  margin: 0;
-  padding: 0.5rem 1rem;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-base, 5px);
-  box-shadow: 4px 4px 0px 0px var(--border);
-  font-size: 0.875rem;
-  font-weight: 700;
-  letter-spacing: -0.005em;
-  text-decoration: none !important;
-  transition: transform 120ms ease, box-shadow 120ms ease;
-}
-
-.prose a.cta:hover {
-  transform: translate(4px, 4px);
-  box-shadow: none;
-}
-
-/* Primary: theme token so accent tracks Paper / Deep Ocean palettes. */
-.prose a.cta-primary {
-  background: var(--primary);
-  color: var(--primary-foreground) !important;
-}
-
-.prose a.cta-secondary {
-  background: var(--secondary-background);
-  color: var(--primary) !important;
-}
-
-/*
- * Section rhythm: `<hr>` (markdown `---`) is the structural anchor between
- * sections. Keep it flat and thick; give it consistent vertical margin so
- * every `##` section reads as a separate block.
- */
-.prose hr {
-  border: none;
-  border-top: 2px solid var(--border);
-  margin-top: 4rem !important;
-  margin-bottom: 4rem !important;
-}
-
-/* Extra space below the hero so it reads as a clear entry point. */
-.prose .cta-row + hr {
-  margin-top: 4.5rem !important;
-}
-
-/* The hr above a `##` does the separating; remove the heading's default top margin. */
-.prose hr + h2 {
-  margin-top: 0 !important;
-}
-
-/*
- * README-style section headings: confident but not brutalist. Size up from
- * prose defaults, tight spacing below, prose weight (700) left intact so the
- * heaviness lives on the buttons, not the type.
- */
-.prose h2 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  font-size: 1.875rem;
-  line-height: 1.25;
-  letter-spacing: -0.015em;
-}
-
-/* Tighter, aligned lists — bullets and numbers sit flush to the text edge. */
-.prose ul,
-.prose ol {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  padding-left: 1.375rem;
-}
-
-.prose ul li,
-.prose ol li {
-  margin-top: 0.25rem;
-  margin-bottom: 0.25rem;
-  padding-left: 0.25rem;
-  line-height: 1.55;
-}
-
-.prose ul li::marker {
-  color: var(--foreground);
+/* Print (app shell) */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+  .print\:hidden {
+    display: none !important;
+  }
 }
 
 #encatch-iframe-container iframe {

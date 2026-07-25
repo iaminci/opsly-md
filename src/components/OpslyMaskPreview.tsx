@@ -20,9 +20,6 @@ const MASKED_OUTPUT = "•".repeat(16);
 
 const MARKDOWN_SOURCE = SECRETS.map(({ key, value }) => `${key}=${value}`).join("\n");
 
-const toolbarActionBase =
-  "inline-flex h-7 shrink-0 items-center justify-center rounded border border-zinc-600 bg-zinc-800 text-zinc-300 transition-colors hover:bg-zinc-700 dark:border-zinc-500 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600";
-
 function SectionLabel({ children }: { children: ReactNode }) {
   return (
     <p className="mb-1.5 font-heading text-[9px] font-medium uppercase tracking-wider text-muted">
@@ -45,7 +42,7 @@ export function OpslyMaskPreview({ className }: { className?: string }) {
       <button
         type="button"
         {...{ [OPSLY_MASK_TOGGLE_ATTR]: true }}
-        className={cn(toolbarActionBase, "w-7 min-w-7 p-0")}
+        className="fenced-code-action fenced-code-action-icon"
         aria-label={revealed ? "Hide protected content" : "Show protected content"}
         aria-pressed={revealed}
         onClick={toggle}
@@ -101,6 +98,7 @@ export function OpslyMaskPreview({ className }: { className?: string }) {
           <SectionLabel>Rendered Output</SectionLabel>
           <div className="w-full [&_[data-fenced-code]]:my-0">
             <FencedCodeShell
+              language="secure"
               toolbarRight={toolbarRight}
               preProps={
                 {

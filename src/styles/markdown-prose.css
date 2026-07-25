@@ -1,0 +1,902 @@
+/*
+ * Rendered markdown — Geist reading surface.
+ * Fonts apply ONLY inside `.markdown-content`; app chrome is unchanged.
+ * Next.js loads Geist via geist/font in layout.tsx; VS Code loads via webview/styles.css @font-face.
+ */
+
+:root {
+  --prose-font-sans: var(--font-geist-sans, "Geist Sans"), ui-sans-serif, system-ui, -apple-system,
+    sans-serif;
+  --prose-font-mono: var(--font-geist-mono, "Geist Mono"), ui-monospace, "SF Mono", Menlo, Consolas,
+    monospace;
+  --prose-measure: 46rem;
+  --prose-wide: min(100%, 68rem);
+  --prose-body-size: 1.0625rem;
+  --prose-body-line-height: 1.65;
+  --prose-inline-code-bg: color-mix(in srgb, var(--muted) 55%, var(--background));
+  --prose-blockquote-accent: color-mix(in srgb, var(--foreground) 18%, transparent);
+  --prose-table-radius: 0.6875rem;
+  --prose-table-outer-border: color-mix(in srgb, var(--foreground) 12%, transparent);
+  --prose-table-col-rule: color-mix(in srgb, var(--foreground) 7%, transparent);
+  --prose-table-row-rule: color-mix(in srgb, var(--foreground) 7%, transparent);
+  --prose-hr-color: color-mix(in srgb, var(--foreground) 7%, transparent);
+  --prose-code-shell-bg: color-mix(in srgb, var(--muted) 42%, var(--background));
+  --prose-code-border: color-mix(in srgb, var(--foreground) 6%, transparent);
+  --prose-chrome-radius: 0.5rem;
+  --prose-toolbar-min-height: 2rem;
+  --prose-toolbar-padding: 0.4375rem 1rem 0.25rem;
+  --prose-toolbar-bg: transparent;
+  --prose-toolbar-divider: transparent;
+  --prose-toolbar-font-size: 0.6875rem;
+  --prose-toolbar-font-weight: 400;
+  --prose-toolbar-letter-spacing: 0.03em;
+  --prose-toolbar-color: color-mix(in srgb, var(--muted-foreground) 90%, transparent);
+  --prose-link-underline: color-mix(in srgb, var(--primary) 22%, transparent);
+  --prose-focus-ring: color-mix(in srgb, var(--primary) 60%, var(--ring));
+}
+
+.dark {
+  /* Darkest: code blocks → inline code → tables → prose (on secondary-background) */
+  --prose-code-shell-bg: color-mix(in srgb, #0b0f14 48%, var(--secondary-background));
+  --prose-code-toolbar-bg: color-mix(in srgb, var(--prose-code-shell-bg) 70%, var(--card));
+  --prose-inline-code-bg: color-mix(in srgb, var(--prose-code-shell-bg) 32%, var(--secondary-background));
+  --prose-code-border: color-mix(in srgb, var(--foreground) 12%, transparent);
+  --prose-code-shadow: 0 1px 3px color-mix(in srgb, #000 38%, transparent),
+    0 2px 6px color-mix(in srgb, #000 18%, transparent);
+  --prose-toolbar-min-height: 1.75rem;
+  --prose-toolbar-padding: 0.3125rem 0.875rem 0.1875rem;
+  --prose-toolbar-bg: var(--prose-code-toolbar-bg);
+  --prose-toolbar-divider: var(--prose-code-border);
+  --prose-toolbar-font-weight: 500;
+  --prose-toolbar-color: var(--muted-foreground);
+  --prose-table-outer-border: color-mix(in srgb, var(--foreground) 12%, transparent);
+  --prose-table-col-rule: color-mix(in srgb, var(--foreground) 7%, transparent);
+  --prose-table-row-rule: color-mix(in srgb, var(--foreground) 7%, transparent);
+}
+
+/* ── Layout: measure vs wide blocks ──────────────────────────────────────── */
+
+.markdown-content.prose {
+  width: 100%;
+  max-width: var(--prose-wide);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  font-family: var(--prose-font-sans);
+  font-size: var(--prose-body-size);
+  font-weight: 400;
+  line-height: var(--prose-body-line-height);
+  letter-spacing: -0.006em;
+  hanging-punctuation: first last;
+}
+
+.markdown-content.prose > * {
+  grid-column: 1;
+  width: 100%;
+  max-width: var(--prose-measure);
+  justify-self: center;
+}
+
+.markdown-content.prose > .markdown-wide,
+.markdown-content.prose > .fenced-code-block,
+.markdown-content.prose > .markdown-table-wrap,
+.markdown-content.prose > .markdown-embed,
+.markdown-content.prose > .katex-display,
+.markdown-content.prose > p:has(> .katex-display:only-child) {
+  max-width: 100%;
+}
+
+.markdown-content.prose > :first-child {
+  margin-top: 0 !important;
+}
+
+.markdown-content.prose > :last-child {
+  margin-bottom: 0 !important;
+}
+
+/* ── Paragraph rhythm ────────────────────────────────────────────────────── */
+
+.markdown-content.prose p {
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+}
+
+.markdown-content.prose p + p {
+  margin-top: 0;
+}
+
+/* ── Heading hierarchy ───────────────────────────────────────────────────── */
+/*
+ * Sizes/weights/margins come from @tailwindcss/typography (prose-zinc).
+ * Only h2 is customized — matches globals.css before markdown-prose extraction.
+ */
+
+.markdown-content.prose h1,
+.markdown-content.prose h2,
+.markdown-content.prose h3,
+.markdown-content.prose h4,
+.markdown-content.prose h5,
+.markdown-content.prose h6 {
+  scroll-margin-top: 4.5rem;
+  text-wrap: balance;
+}
+
+.markdown-content.prose h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.875rem;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
+/* Heading → first content */
+.markdown-content.prose h1 + p,
+.markdown-content.prose h2 + p,
+.markdown-content.prose h3 + p,
+.markdown-content.prose h4 + p,
+.markdown-content.prose h5 + p,
+.markdown-content.prose h6 + p {
+  margin-top: 0;
+}
+
+.markdown-content.prose :is(h1, h2, h3, h4, h5, h6) + .fenced-code-block,
+.markdown-content.prose :is(h1, h2, h3, h4, h5, h6) + .markdown-table-wrap,
+.markdown-content.prose :is(h1, h2, h3, h4, h5, h6) + .markdown-embed,
+.markdown-content.prose :is(h1, h2, h3, h4, h5, h6) + blockquote,
+.markdown-content.prose :is(h1, h2, h3, h4, h5, h6) + ul,
+.markdown-content.prose :is(h1, h2, h3, h4, h5, h6) + ol {
+  margin-top: 0.625rem;
+}
+
+.markdown-content.prose :is(h1, h2, h3, h4, h5, h6) + .katex-display {
+  margin-top: 0.75rem;
+}
+
+/* Heading anchor */
+.markdown-content.prose .heading-anchor-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  margin-left: 0.28em;
+  vertical-align: middle;
+  flex-shrink: 0;
+  color: var(--muted-foreground) !important;
+  text-decoration: none !important;
+  opacity: 0;
+  transition: opacity 100ms ease, color 100ms ease;
+}
+
+.markdown-content.prose .heading-anchor:hover .heading-anchor-link,
+.markdown-content.prose .heading-anchor-link:focus-visible {
+  opacity: 0.75;
+  color: var(--primary) !important;
+}
+
+.markdown-content.prose .heading-anchor-link:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--prose-focus-ring);
+  outline-offset: 2px;
+  border-radius: 0.2rem;
+}
+
+.markdown-content.prose .heading-anchor-link-icon {
+  width: 0.8125rem;
+  height: 0.8125rem;
+}
+
+/* ── Links ───────────────────────────────────────────────────────────────── */
+
+.markdown-content.prose a:not(.cta):not(.heading-anchor-link) {
+  color: var(--primary) !important;
+  text-decoration: underline;
+  text-decoration-color: var(--prose-link-underline);
+  text-underline-offset: 0.22em;
+  text-decoration-thickness: 1px;
+  transition: text-decoration-color 100ms ease;
+}
+
+.markdown-content.prose a:not(.cta):not(.heading-anchor-link):hover,
+.markdown-content.prose a:not(.cta):not(.heading-anchor-link):focus-visible {
+  text-decoration-color: var(--primary);
+}
+
+.markdown-content.prose a:not(.cta):not(.heading-anchor-link):focus-visible {
+  outline: 2px solid var(--prose-focus-ring);
+  outline-offset: 2px;
+  border-radius: 0.15rem;
+}
+
+.markdown-content.prose .markdown-external-link {
+  display: inline;
+}
+
+.markdown-content.prose .markdown-external-link-icon {
+  display: inline-block;
+  width: 0.6875rem;
+  height: 0.6875rem;
+  margin-left: 0.12em;
+  vertical-align: -0.05em;
+  opacity: 0;
+  transition: opacity 100ms ease;
+}
+
+.markdown-content.prose .markdown-external-link:hover .markdown-external-link-icon,
+.markdown-content.prose .markdown-external-link:focus-visible .markdown-external-link-icon {
+  opacity: 0.5;
+}
+
+/* ── Inline code ─────────────────────────────────────────────────────────── */
+
+.markdown-content.prose :not(pre) > code {
+  border-radius: 0.3125rem;
+  background-color: var(--prose-inline-code-bg);
+  padding: 0.14em 0.38em;
+  font-family: var(--prose-font-mono);
+  font-size: 0.84em;
+  font-weight: 400;
+  color: var(--foreground) !important;
+  word-break: break-word;
+}
+
+.markdown-content.prose :not(pre) > code::before,
+.markdown-content.prose :not(pre) > code::after {
+  content: none;
+}
+
+/* ── Code blocks ─────────────────────────────────────────────────────────── */
+
+.markdown-content.prose pre {
+  margin: 0;
+  font-family: var(--prose-font-mono);
+  white-space: pre;
+}
+
+.markdown-content.prose pre,
+.markdown-content.prose pre * {
+  white-space: pre !important;
+  font-family: var(--prose-font-mono) !important;
+}
+
+.fenced-code-block {
+  border: 1px solid var(--prose-code-border);
+  border-radius: var(--prose-chrome-radius);
+  background: var(--prose-code-shell-bg);
+  overflow: hidden;
+}
+
+.dark .fenced-code-block {
+  box-shadow: var(--prose-code-shadow);
+}
+
+.fenced-code-toolbar {
+  display: flex;
+  min-height: var(--prose-toolbar-min-height);
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: var(--prose-toolbar-padding);
+  background: var(--prose-toolbar-bg);
+  border-bottom: 1px solid var(--prose-toolbar-divider);
+}
+
+.fenced-code-lang {
+  font-family: var(--prose-font-mono);
+  font-size: var(--prose-toolbar-font-size);
+  font-weight: var(--prose-toolbar-font-weight);
+  letter-spacing: var(--prose-toolbar-letter-spacing);
+  text-transform: lowercase;
+  color: var(--prose-toolbar-color);
+}
+
+.fenced-code-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.125rem;
+  margin-left: auto;
+}
+
+.fenced-code-action {
+  display: inline-flex;
+  height: 1.625rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 0.3125rem;
+  background: transparent;
+  padding: 0 0.4375rem;
+  font-family: var(--prose-font-sans);
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--muted-foreground) 92%, transparent);
+  transition: color 100ms ease, background-color 100ms ease;
+}
+
+.dark .fenced-code-action {
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+
+.fenced-code-action:hover {
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
+  color: var(--muted-foreground);
+}
+
+.dark .fenced-code-action:hover {
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  color: var(--foreground);
+}
+
+.fenced-code-action:focus-visible {
+  outline: 2px solid var(--prose-focus-ring);
+  outline-offset: 1px;
+  color: var(--foreground);
+}
+
+.fenced-code-action-icon {
+  width: 1.625rem;
+  min-width: 1.625rem;
+  padding: 0;
+}
+
+.fenced-code-block pre {
+  margin: 0;
+  overflow-x: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.fenced-code-block .hljs {
+  display: block;
+  width: 100%;
+  padding: 0.25rem 1.25rem 1.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}
+
+/* ── Contextual block spacing ────────────────────────────────────────────── */
+
+.markdown-content.prose p + ul,
+.markdown-content.prose p + ol {
+  margin-top: -0.5rem;
+}
+
+.markdown-content.prose p + .fenced-code-block,
+.markdown-content.prose p + .markdown-table-wrap,
+.markdown-content.prose p + .markdown-embed,
+.markdown-content.prose p + .katex-display,
+.markdown-content.prose ul + .fenced-code-block,
+.markdown-content.prose ol + .fenced-code-block,
+.markdown-content.prose ul + .markdown-table-wrap,
+.markdown-content.prose ol + .markdown-table-wrap {
+  margin-top: 1.625rem;
+}
+
+.markdown-content.prose p + blockquote {
+  margin-top: 1.375rem;
+}
+
+.markdown-content.prose p + img,
+.markdown-content.prose p + figure {
+  margin-top: 1.75rem;
+}
+
+.markdown-content.prose blockquote + p,
+.markdown-content.prose .fenced-code-block + p,
+.markdown-content.prose .markdown-table-wrap + p,
+.markdown-content.prose .markdown-embed + p,
+.markdown-content.prose figure + p,
+.markdown-content.prose img + p {
+  margin-top: 0;
+}
+
+.markdown-content.prose .fenced-code-block,
+.markdown-content.prose .markdown-table-wrap,
+.markdown-content.prose .markdown-embed {
+  margin-bottom: 1.625rem;
+}
+
+.markdown-content.prose blockquote {
+  margin-bottom: 1.375rem;
+}
+
+.markdown-content.prose img,
+.markdown-content.prose figure {
+  margin-bottom: 1.75rem;
+}
+
+.markdown-content.prose .katex-display {
+  margin-top: 1.625rem;
+  margin-bottom: 1.625rem;
+}
+
+/* ── Lists ───────────────────────────────────────────────────────────────── */
+
+.markdown-content.prose ul,
+.markdown-content.prose ol {
+  margin-top: 0;
+  margin-bottom: 1.125rem;
+  padding-left: 1.5rem;
+}
+
+.markdown-content.prose ul li,
+.markdown-content.prose ol li {
+  margin-top: 0.375rem;
+  margin-bottom: 0.375rem;
+  padding-left: 0.1875rem;
+  line-height: var(--prose-body-line-height);
+}
+
+.markdown-content.prose li > ul,
+.markdown-content.prose li > ol {
+  margin-top: 0.4375rem;
+  margin-bottom: 0.3125rem;
+}
+
+.markdown-content.prose ul ul,
+.markdown-content.prose ol ol,
+.markdown-content.prose ul ol,
+.markdown-content.prose ol ul {
+  padding-left: 1.375rem;
+}
+
+.markdown-content.prose ul ul ul,
+.markdown-content.prose ol ol ol {
+  padding-left: 1.25rem;
+}
+
+.markdown-content.prose ul li::marker {
+  color: color-mix(in srgb, var(--muted-foreground) 70%, transparent);
+}
+
+.markdown-content.prose ul ul li::marker {
+  color: color-mix(in srgb, var(--muted-foreground) 55%, transparent);
+}
+
+.markdown-content.prose ol li::marker {
+  color: var(--muted-foreground);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* GFM task lists */
+.markdown-content.prose ul.contains-task-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.markdown-content.prose li.task-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  list-style: none;
+}
+
+.markdown-content.prose li.task-list-item > input[type="checkbox"] {
+  margin-top: 0.34em;
+  width: 0.9375rem;
+  height: 0.9375rem;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+  cursor: default;
+}
+
+.markdown-content.prose li.task-list-item > p {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.markdown-content.prose li.task-list-item + li.task-list-item {
+  margin-top: 0.4375rem;
+}
+
+/* ── Tables ──────────────────────────────────────────────────────────────── */
+
+/*
+ * DOM: .markdown-table-wrap (scroll) > table > thead/tbody > tr > th/td
+ *
+ * Outer frame lives on `table` (preflight zeros borders on *; edge cells must
+ * not paint over it). Inner grid uses right/bottom cell borders with
+ * border-collapse: separate — inset shadows and bottom-only borders cannot
+ * draw a continuous outer edge or round corners.
+ */
+.markdown-content.prose .markdown-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Override @tailwindcss/typography row/thead borders — cell borders are authoritative */
+.markdown-content.prose .markdown-table-wrap table thead {
+  border-bottom: none !important;
+}
+
+.markdown-content.prose .markdown-table-wrap tbody tr {
+  border-bottom: none !important;
+}
+
+.markdown-content.prose .markdown-table-wrap tfoot {
+  border-top: none !important;
+}
+
+.markdown-content.prose .markdown-table-wrap table {
+  width: 100%;
+  min-width: max-content;
+  margin: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--prose-table-outer-border) !important;
+  border-radius: var(--prose-table-radius);
+  font-family: var(--prose-font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+/* Header band — toolbar chrome + original thead typography (pre-toolbar-redesign) */
+.markdown-content.prose .markdown-table-wrap table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--prose-toolbar-bg);
+  text-align: left;
+  vertical-align: middle;
+  background-clip: padding-box;
+  border-style: solid !important;
+  border-color: var(--prose-table-row-rule) !important;
+  border-width: 0 1px 1px 0 !important;
+  border-bottom-color: var(--prose-toolbar-divider) !important;
+  box-shadow: none !important;
+  /* Typography: globals.css `.prose th` before redesign — not code-block toolbar text */
+  padding: 0.75rem 1rem;
+  font-size: inherit;
+  font-weight: 600;
+  line-height: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--foreground) !important;
+}
+
+/* Light mode: toolbar divider token is transparent for code blocks — thead needs a visible separator */
+:not(.dark) .markdown-content.prose .markdown-table-wrap table thead th {
+  border-bottom-color: var(--prose-code-border) !important;
+}
+
+.markdown-content.prose .markdown-table-wrap tbody th,
+.markdown-content.prose .markdown-table-wrap td,
+.markdown-content.prose .markdown-table-wrap tfoot td {
+  padding: 0.8125rem 1rem;
+  text-align: left;
+  vertical-align: middle;
+  background-clip: padding-box;
+  border-style: solid !important;
+  border-color: var(--prose-table-row-rule) !important;
+  border-width: 0 1px 1px 0 !important;
+  box-shadow: none !important;
+}
+
+.markdown-content.prose .markdown-table-wrap tbody th {
+  font-weight: 600;
+  color: var(--foreground) !important;
+}
+
+.markdown-content.prose .markdown-table-wrap td,
+.markdown-content.prose .markdown-table-wrap tfoot td {
+  color: var(--muted-foreground) !important;
+}
+
+/* Inner column guides — skip outer edge (table border owns the frame) */
+.markdown-content.prose .markdown-table-wrap table thead th:not(:last-child),
+.markdown-content.prose .markdown-table-wrap tbody th:not(:last-child),
+.markdown-content.prose .markdown-table-wrap td:not(:last-child),
+.markdown-content.prose .markdown-table-wrap tfoot td:not(:last-child) {
+  border-right-color: var(--prose-table-col-rule) !important;
+}
+
+.markdown-content.prose .markdown-table-wrap table thead th:last-child,
+.markdown-content.prose .markdown-table-wrap tbody th:last-child,
+.markdown-content.prose .markdown-table-wrap td:last-child,
+.markdown-content.prose .markdown-table-wrap tfoot td:last-child {
+  border-right-width: 0 !important;
+}
+
+.markdown-content.prose .markdown-table-wrap tbody tr:last-child td,
+.markdown-content.prose .markdown-table-wrap tfoot tr:last-child td {
+  border-bottom-width: 0 !important;
+}
+
+/* Rounded outer corners — header band fills the table frame */
+.markdown-content.prose .markdown-table-wrap table thead tr:first-child th:first-child {
+  border-top-left-radius: calc(var(--prose-table-radius) - 1px);
+}
+
+.markdown-content.prose .markdown-table-wrap table thead tr:first-child th:last-child {
+  border-top-right-radius: calc(var(--prose-table-radius) - 1px);
+}
+
+.markdown-content.prose .markdown-table-wrap table:not(:has(thead)) tbody tr:first-child td:first-child {
+  border-top-left-radius: calc(var(--prose-table-radius) - 1px);
+}
+
+.markdown-content.prose .markdown-table-wrap table:not(:has(thead)) tbody tr:first-child td:last-child {
+  border-top-right-radius: calc(var(--prose-table-radius) - 1px);
+}
+
+.markdown-content.prose .markdown-table-wrap tbody tr:last-child td:first-child {
+  border-bottom-left-radius: calc(var(--prose-table-radius) - 1px);
+}
+
+.markdown-content.prose .markdown-table-wrap tbody tr:last-child td:last-child {
+  border-bottom-right-radius: calc(var(--prose-table-radius) - 1px);
+}
+
+/* ── Blockquotes ─────────────────────────────────────────────────────────── */
+
+.markdown-content.prose blockquote {
+  margin-top: 1.375rem;
+  padding: 0 0 0 0.875rem;
+  border-left: 1px solid var(--prose-blockquote-accent);
+  background: transparent;
+  font-style: normal;
+  color: var(--foreground) !important;
+}
+
+.markdown-content.prose blockquote > :first-child {
+  margin-top: 0;
+}
+
+.markdown-content.prose blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown-content.prose blockquote p,
+.markdown-content.prose blockquote li {
+  color: color-mix(in srgb, var(--muted-foreground) 92%, var(--foreground)) !important;
+  margin-bottom: 0.625rem;
+  line-height: var(--prose-body-line-height);
+}
+
+.markdown-content.prose blockquote p:last-child,
+.markdown-content.prose blockquote li:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Images & figures ────────────────────────────────────────────────────── */
+
+.markdown-content.prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+  border-radius: 0.25rem;
+}
+
+.markdown-content.prose figure {
+  margin-top: 1.75rem;
+  margin-bottom: 1.75rem;
+}
+
+.markdown-content.prose figure img {
+  margin-bottom: 0;
+}
+
+.markdown-content.prose figcaption {
+  margin-top: 0.75rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  letter-spacing: 0.005em;
+  color: var(--muted-foreground) !important;
+}
+
+.markdown-content .markdown-embed {
+  overflow-x: auto;
+}
+
+.markdown-content .markdown-embed-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 5rem;
+  color: var(--muted-foreground);
+  font-family: var(--prose-font-sans);
+  font-size: 0.875rem;
+}
+
+/* KaTeX */
+.markdown-content.prose .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.125rem 0;
+}
+
+.markdown-content.prose .katex {
+  font-size: 1.04em;
+}
+
+/* ── Horizontal rules ────────────────────────────────────────────────────── */
+
+.markdown-content.prose hr {
+  border: none;
+  border-top: 1px solid var(--prose-hr-color);
+  margin-top: 2.75rem !important;
+  margin-bottom: 2.75rem !important;
+}
+
+.markdown-content.prose hr + h2 {
+  margin-top: 0 !important;
+}
+
+/* ── Homepage CTA row (opt-in via MarkdownRenderer) ──────────────────────── */
+
+.markdown-content.prose .cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0;
+}
+
+.markdown-content.prose .cta-row + hr {
+  margin-top: 2.5rem !important;
+}
+
+.markdown-content.prose a.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-base, 5px);
+  box-shadow: 4px 4px 0px 0px var(--border);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  text-decoration: none !important;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.markdown-content.prose a.cta:hover {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+
+.markdown-content.prose a.cta-primary {
+  background: var(--primary);
+  color: var(--primary-foreground) !important;
+}
+
+.markdown-content.prose a.cta-secondary {
+  background: var(--secondary-background);
+  color: var(--primary) !important;
+}
+
+/* ── Theme color overrides (beats typography plugin late load) ─────────────── */
+
+.markdown-content.prose h1,
+.markdown-content.prose h2,
+.markdown-content.prose h3,
+.markdown-content.prose h4,
+.markdown-content.prose h5,
+.markdown-content.prose h6,
+.markdown-content.prose p,
+.markdown-content.prose ul,
+.markdown-content.prose ol,
+.markdown-content.prose li,
+.markdown-content.prose strong,
+.markdown-content.prose em,
+.markdown-content.prose dd,
+.markdown-content.prose dt {
+  color: var(--foreground) !important;
+}
+
+.markdown-content.prose td {
+  color: var(--muted-foreground) !important;
+}
+
+.markdown-content.prose strong {
+  font-weight: 600;
+}
+
+.markdown-content.prose em {
+  font-style: italic;
+}
+
+/* Search highlights */
+.markdown-content.prose mark.search-highlight {
+  background-color: var(--search-highlight-bg) !important;
+  color: inherit !important;
+  border-radius: 2px;
+  padding: 0 1px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.markdown-content.prose mark.search-highlight-active {
+  background-color: var(--search-highlight-active-bg) !important;
+  box-shadow: inset 0 0 0 2px var(--selection-border);
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  :root {
+    --prose-measure: 100%;
+    --prose-body-size: 0.9375rem;
+    --prose-wide: 100%;
+  }
+
+  .fenced-code-block .hljs {
+    padding: 0.125rem 0.875rem 0.875rem;
+    font-size: 0.75rem;
+    line-height: 1.65;
+  }
+
+  .markdown-content.prose .markdown-table-wrap tbody th,
+  .markdown-content.prose .markdown-table-wrap td,
+  .markdown-content.prose .markdown-table-wrap tfoot td {
+    padding: 0.75rem 0.875rem;
+  }
+
+  .markdown-content.prose .markdown-table-wrap tbody th {
+    font-size: 0.75rem;
+  }
+
+  .markdown-content.prose .markdown-table-wrap table {
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  :root {
+    --prose-measure: 100%;
+    --prose-wide: 100%;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --prose-measure: 46rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --prose-measure: 48rem;
+    --prose-wide: min(100%, 72rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .markdown-content.prose a:not(.cta),
+  .markdown-content.prose .heading-anchor-link,
+  .markdown-content.prose .markdown-external-link-icon,
+  .fenced-code-action,
+  .markdown-content.prose a.cta {
+    transition: none;
+  }
+}
+
+@media print {
+  .markdown-content.prose {
+    max-width: none;
+  }
+
+  .markdown-content.prose pre {
+    background: #f4f4f4 !important;
+    color: #333 !important;
+  }
+
+  .markdown-content.prose :not(pre) > code {
+    background: #f4f4f4 !important;
+    color: #333 !important;
+  }
+}

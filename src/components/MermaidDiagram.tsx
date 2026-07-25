@@ -57,7 +57,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
 
   if (error) {
     return (
-      <pre className="my-4 overflow-x-auto rounded-md border border-red-500/50 bg-red-500/10 p-4 text-sm text-red-600 dark:text-red-400">
+      <pre className="markdown-embed markdown-wide not-prose overflow-x-auto p-4 text-sm text-destructive" role="alert">
         {error}
       </pre>
     );
@@ -65,15 +65,15 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
 
   if (!svg) {
     return (
-      <div className="my-4 flex items-center justify-center rounded-md border border-zinc-200 bg-zinc-50 py-8 dark:border-zinc-700 dark:bg-zinc-800">
-        <span className="text-sm text-zinc-500">Rendering diagram...</span>
+      <div className="markdown-embed markdown-embed-loading markdown-wide not-prose" aria-busy="true">
+        Rendering diagram…
       </div>
     );
   }
 
   return (
     <div
-      className="not-prose my-4 flex justify-center overflow-x-auto rounded-md border-2 border-border p-4"
+      className="markdown-embed markdown-wide not-prose flex justify-center"
       dangerouslySetInnerHTML={{ __html: svg }}
     />
   );
