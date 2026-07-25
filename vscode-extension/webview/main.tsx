@@ -66,13 +66,13 @@ function PreviewApp() {
   }, []);
 
   return (
-    <div className="preview-shell min-h-screen bg-background text-foreground">
+    <div className="preview-shell min-h-screen bg-secondary-background text-foreground antialiased">
       {fileName ? (
-        <header className="preview-header border-b border-border px-6 py-3 text-xs text-muted-foreground">
+        <header className="preview-header border-b border-border px-8 py-3 text-xs text-muted-foreground">
           {fileName.split(/[/\\]/).pop()}
         </header>
       ) : null}
-      <main className="preview-main mx-auto max-w-4xl px-6 py-8">
+      <main className="preview-main mx-auto min-w-0 max-w-full overflow-x-hidden px-8 py-8 lg:pr-12">
         {content.trim() ? (
           <MarkdownRenderer content={content} />
         ) : (
