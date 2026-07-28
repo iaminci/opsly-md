@@ -29,6 +29,11 @@ import { cn, normalizeInvalidAtxParagraphBreaks, reactNodeToPlainText } from "@/
 import { CodeBlock } from "./CodeBlock";
 import { HeadingAnchor } from "./markdown/HeadingAnchor";
 import { MarkdownLink } from "./markdown/MarkdownLink";
+import { InteractiveFormInput } from "./markdown/InteractiveFormInput";
+import {
+  collectFormControls,
+  toggleFormControl,
+} from "@/lib/markdown-form-controls";
 import {
   FENCED_CODE_INNER_CODE_CLASSNAME,
   SecureFenceExtrasContext,
@@ -74,6 +79,13 @@ const markdownRehypeSanitizeSchema: RehypeSanitizeSchema = {
     g: ["className", "style"],
     line: ["x1", "y1", "x2", "y2", "className", "style"],
     rect: ["x", "y", "width", "height", "className", "style"],
+    input: [
+      ...(defaultSchema.attributes?.input ?? []),
+      "checked",
+      "name",
+      "value",
+      ["type", "checkbox", "radio"],
+    ],
   },
   tagNames: [
     ...(defaultSchema.tagNames ?? []),
@@ -104,6 +116,8 @@ interface MarkdownRendererProps {
   activeMatchIndex?: number;
   articleRef?: RefObject<HTMLElement | null>;
   onMatchCountChange?: (count: number) => void;
+  /** When set, GFM task-list checkboxes and HTML checkbox/radio inputs update source. */
+  onContentChange?: (content: string, edit?: { startOffset: number; endOffset: number; replacement: string }) => void;
 }
 
 function isMermaidCode(lang: string | undefined): boolean {
@@ -179,6 +193,7 @@ export function MarkdownRenderer({
   activeMatchIndex = 0,
   articleRef: articleRefProp,
   onMatchCountChange,
+  onContentChange,
 }: MarkdownRendererProps) {
   const internalArticleRef = useRef<HTMLElement>(null);
   const articleRef = articleRefProp ?? internalArticleRef;
@@ -196,6 +211,28 @@ export function MarkdownRenderer({
   /** Fresh each render so heading id assignment never reuses counts from a prior render. */
   const consumedIdsRef = useRef(new Map<string, number>());
   consumedIdsRef.current = new Map();
+
+  const formControls = useMemo(
+    () => collectFormControls(normalizedContent),
+    [normalizedContent]
+  );
+  const formControlIndexRef = useRef(0);
+  formControlIndexRef.current = 0;
+
+  const handleFormControlToggle = useMemo(() => {
+    if (!onContentChange) return undefined;
+    return (controlIndex: number) => {
+      const result = toggleFormControl(
+        normalizedContent,
+        controlIndex,
+        formControls
+      );
+      if (!result) return;
+      onContentChange(result.content, result.edit);
+    };
+  }, [formControls, normalizedContent, onContentChange]);
+
+  const interactiveFormControls = Boolean(onContentChange);
 
   const baseComponents = useMemo(
     (): Components => ({
@@ -349,8 +386,76 @@ export function MarkdownRenderer({
           </div>
         );
       },
+      input({ type, checked, disabled, name, className, node: _node, ...props }) {
+        const isFormControl = type === "checkbox" || type === "radio";
+
+        if (
+          isFormControl &&
+          interactiveFormControls &&
+          handleFormControlToggle
+        ) {
+          const controlIndex = formControlIndexRef.current;
+          formControlIndexRef.current += 1;
+
+          return (
+            <InteractiveFormInput
+              type={type}
+              checked={checked}
+              disabled={disabled}
+              name={name}
+              className={className}
+              controlIndex={controlIndex}
+              interactive
+              onFormControlToggle={handleFormControlToggle}
+              {...props}
+            />
+          );
+        }
+
+        return (
+          <input
+            type={type}
+            checked={checked}
+            disabled={disabled}
+            name={name}
+            className={className}
+            {...props}
+          />
+        );
+      },
+      li({ className, children, ...props }) {
+        const isTaskItem =
+          typeof className === "string" && className.includes("task-list-item");
+
+        if (
+          isTaskItem &&
+          interactiveFormControls &&
+          handleFormControlToggle
+        ) {
+          const controlIndex = formControlIndexRef.current;
+
+          return (
+            <li
+              className={cn(className, "markdown-task-list-item--interactive")}
+              onClick={(event) => {
+                if (event.target instanceof HTMLInputElement) return;
+                handleFormControlToggle(controlIndex);
+              }}
+              {...props}
+            >
+              {children}
+            </li>
+          );
+        }
+
+        return (
+          <li className={className} {...props}>
+            {children}
+          </li>
+        );
+      },
     }),
-    [idQueueMap, ctaLinks]
+    [idQueueMap, ctaLinks, handleFormControlToggle, interactiveFormControls]
   );
 
   const components = useMemo(() => mergeOpslyMarkdownComponentsWithSecureCopy(baseComponents), [baseComponents]);

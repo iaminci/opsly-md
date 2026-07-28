@@ -95,3 +95,12 @@ body {
   background: color-mix(in srgb, var(--background) 92%, transparent);
   backdrop-filter: blur(8px);
 }
+
+/*
+ * VS Code preview has no doc column / TOC — wide blocks (code, tables) should
+ * match prose text width. Web app keeps markdown-prose wide layout as-is.
+ */
+.preview-main .markdown-content.prose > .fenced-code-block,
+.preview-main .markdown-content.prose > .markdown-table-wrap {
+  max-width: var(--prose-measure);
+}

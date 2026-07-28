@@ -74,7 +74,16 @@ function PreviewApp() {
       ) : null}
       <main className="preview-main mx-auto min-w-0 max-w-full overflow-x-hidden px-8 py-8 lg:pr-12">
         {content.trim() ? (
-          <MarkdownRenderer content={content} />
+          <MarkdownRenderer
+            content={content}
+            onContentChange={(nextContent, edit) => {
+              if (edit) {
+                vscode.postMessage({ type: "patchContent", ...edit });
+                return;
+              }
+              vscode.postMessage({ type: "updateContent", content: nextContent });
+            }}
+          />
         ) : (
           <p className="text-muted-foreground text-sm">
             This document is empty. Start writing Markdown to see a preview.

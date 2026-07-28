@@ -83,6 +83,27 @@ export class OpslyMarkdownPreviewProvider
       if (message?.type === "openLink" && typeof message.href === "string") {
         void vscode.env.openExternal(vscode.Uri.parse(message.href));
       }
+      if (
+        message?.type === "patchContent" &&
+        typeof message.startOffset === "number" &&
+        typeof message.endOffset === "number" &&
+        typeof message.replacement === "string"
+      ) {
+        const start = document.positionAt(message.startOffset);
+        const end = document.positionAt(message.endOffset);
+        const patchEdit = new vscode.WorkspaceEdit();
+        patchEdit.replace(document.uri, new vscode.Range(start, end), message.replacement);
+        void vscode.workspace.applyEdit(patchEdit);
+      }
+      if (message?.type === "updateContent" && typeof message.content === "string") {
+        const fullRange = new vscode.Range(
+          document.positionAt(0),
+          document.positionAt(document.getText().length)
+        );
+        const replaceEdit = new vscode.WorkspaceEdit();
+        replaceEdit.replace(document.uri, fullRange, message.content);
+        void vscode.workspace.applyEdit(replaceEdit);
+      }
     });
 
     webviewPanel.onDidDispose(() => {

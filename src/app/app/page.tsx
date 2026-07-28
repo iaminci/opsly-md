@@ -531,6 +531,29 @@ function AppContent() {
     URL.revokeObjectURL(url);
   }, [currentDoc]);
 
+  const handlePreviewContentChange = useCallback(
+    async (content: string) => {
+      if (!currentDoc) return;
+      const previousContent = currentDoc.content;
+      setCurrentDoc({ ...currentDoc, content });
+      try {
+        const updated = await updateDocument(currentDoc.id, { content });
+        if (updated) {
+          setCurrentDoc(updated);
+          await refresh();
+        }
+      } catch (err) {
+        setCurrentDoc({ ...currentDoc, content: previousContent });
+        if (err instanceof DuplicateNameError) {
+          toast.error(err.message);
+        } else {
+          toast.error("Failed to update document.");
+        }
+      }
+    },
+    [currentDoc, refresh]
+  );
+
   const handleSelectDocument = useCallback(
     async (doc: Document) => {
       const generation = ++selectDocumentGenerationRef.current;
@@ -894,6 +917,7 @@ function AppContent() {
                     activeMatchIndex={searchActiveMatchIndex}
                     articleRef={markdownArticleRef}
                     onMatchCountChange={handleSearchMatchCountChange}
+                    onContentChange={handlePreviewContentChange}
                   />
                 )}
               </DocumentColumn>

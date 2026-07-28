@@ -2,7 +2,7 @@
   "name": "opsly-md-preview",
   "displayName": "Opsly MD",
   "description": "Preview Markdown files with Opsly MD rendering in VS Code and Cursor (GFM, KaTeX, Mermaid, syntax highlighting)",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "publisher": "opsly",
   "license": "MIT",
   "icon": "images/favicon-64.png",

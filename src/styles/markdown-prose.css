@@ -487,6 +487,22 @@
   cursor: default;
 }
 
+.markdown-content.prose input.markdown-form-control--interactive {
+  cursor: pointer;
+}
+
+.markdown-content.prose li.task-list-item > input.markdown-form-control--interactive[type="checkbox"] {
+  cursor: pointer;
+}
+
+.markdown-content.prose li.markdown-task-list-item--interactive {
+  cursor: pointer;
+}
+
+.markdown-content.prose li.markdown-task-list-item--interactive > p {
+  cursor: pointer;
+}
+
 .markdown-content.prose li.task-list-item > p {
   margin: 0;
   flex: 1;
