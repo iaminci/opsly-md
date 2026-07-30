@@ -62,6 +62,7 @@
   margin-inline: auto;
   display: grid;
   grid-template-columns: 1fr;
+  --prose-list-wide-pull: 0rem;
   font-family: var(--prose-font-sans);
   font-size: var(--prose-body-size);
   font-weight: 400;
@@ -84,6 +85,41 @@
 .markdown-content.prose > .katex-display,
 .markdown-content.prose > p:has(> .katex-display:only-child) {
   max-width: 100%;
+}
+
+/* Lists/blockquotes with wide blocks use the same column width as top-level code blocks. */
+.markdown-content.prose
+  > :is(ul, ol):has(:is(.fenced-code-block, .markdown-table-wrap, .markdown-embed, .katex-display)),
+.markdown-content.prose
+  > blockquote:has(:is(.fenced-code-block, .markdown-table-wrap, .markdown-embed, .katex-display)) {
+  max-width: 100%;
+}
+
+.markdown-content.prose
+  :is(ul, ol, blockquote):has(:is(.fenced-code-block, .markdown-table-wrap, .markdown-embed, .katex-display)),
+.markdown-content.prose
+  li:has(:is(.fenced-code-block, .markdown-table-wrap, .markdown-embed, .katex-display)) {
+  overflow-x: visible;
+}
+
+.markdown-content.prose
+  :is(ul, ol)
+  :is(.fenced-code-block, .markdown-table-wrap, .markdown-embed, .katex-display) {
+  box-sizing: border-box;
+  width: calc(100% + var(--prose-list-wide-pull));
+  max-width: calc(100% + var(--prose-list-wide-pull));
+  margin-left: calc(-1 * var(--prose-list-wide-pull));
+  margin-right: 0;
+}
+
+.markdown-content.prose
+  blockquote
+  :is(.fenced-code-block, .markdown-table-wrap, .markdown-embed, .katex-display) {
+  box-sizing: border-box;
+  width: calc(100% + 0.875rem);
+  max-width: calc(100% + 0.875rem);
+  margin-left: -0.875rem;
+  margin-right: 0;
 }
 
 .markdown-content.prose > :first-child {
@@ -425,12 +461,17 @@
   padding-left: 1.5rem;
 }
 
+.markdown-content.prose > :is(ul, ol) {
+  --prose-list-wide-pull: calc(var(--prose-list-wide-pull) + 1.5rem);
+}
+
 .markdown-content.prose ul li,
 .markdown-content.prose ol li {
   margin-top: 0.375rem;
   margin-bottom: 0.375rem;
   padding-left: 0.1875rem;
   line-height: var(--prose-body-line-height);
+  --prose-list-wide-pull: calc(var(--prose-list-wide-pull) + 0.1875rem);
 }
 
 .markdown-content.prose li > ul,
@@ -444,11 +485,13 @@
 .markdown-content.prose ul ol,
 .markdown-content.prose ol ul {
   padding-left: 1.375rem;
+  --prose-list-wide-pull: calc(var(--prose-list-wide-pull) + 1.375rem);
 }
 
 .markdown-content.prose ul ul ul,
 .markdown-content.prose ol ol ol {
   padding-left: 1.25rem;
+  --prose-list-wide-pull: calc(var(--prose-list-wide-pull) + 1.25rem);
 }
 
 .markdown-content.prose ul li::marker {
