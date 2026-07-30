@@ -937,7 +937,7 @@ function AppContent() {
                   "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden",
                   "transition-[width,padding-left,padding-right,padding-top,padding-bottom,border-left-width] duration-150 ease-linear",
                   rightTocOpen
-                    ? "w-56 border-l-2 border-border px-3 py-6"
+                    ? "w-[17rem] border-l-2 border-border px-3 py-6"
                     : "w-0 border-l-0 px-0 py-0"
                 )}
               >
@@ -961,7 +961,7 @@ function AppContent() {
                     className={cn(
                       "fixed h-15 w-6 shadow-shadow-2 border-2 border-border bg-background top-[calc(50%-1rem)] z-30 hidden shrink-0 text-primary-hover transition-[right] duration-150 ease-linear hover:text-background hover:bg-primary",
                       "print:hidden lg:inline-flex",
-                      rightTocOpen ? "right-[13.3rem]" : "right-0"
+                      rightTocOpen ? "right-[16.3rem]" : "right-0"
                     )}
                   >
                     {rightTocOpen ? (

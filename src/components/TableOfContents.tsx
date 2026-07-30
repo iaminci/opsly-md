@@ -5,6 +5,56 @@ import { cn } from "@/lib/utils";
 import { buildHeadingManifest, type HeadingManifestEntry } from "@/lib/heading-manifest";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+const EMOJI_HEADING_PREFIX =
+  /^(\p{Extended_Pictographic}\uFE0F?\u200D?[\p{Extended_Pictographic}\uFE0F?]*)\s*/u;
+
+function isSectionHeading(level: number): boolean {
+  return level === 2;
+}
+
+function headingIndentPx(level: number): number {
+  if (level <= 2) return 0;
+  if (level === 3) return 11;
+  return 22;
+}
+
+function findActiveSectionId(
+  headings: HeadingManifestEntry[],
+  activeId: string | null
+): string | null {
+  if (!activeId) return null;
+  const activeIndex = headings.findIndex((h) => h.id === activeId);
+  if (activeIndex === -1) return null;
+  for (let i = activeIndex; i >= 0; i--) {
+    if (headings[i]!.level === 2) return headings[i]!.id;
+  }
+  return null;
+}
+
+function itemTopSpacing(
+  index: number,
+  level: number,
+  prevLevel: number | null
+): string {
+  if (index === 0) return "";
+  if (isSectionHeading(level)) return "mt-6";
+  if (level > 2 && prevLevel !== null && prevLevel > 2) return "mt-1";
+  return "mt-2";
+}
+
+function inactiveLevelStyles(level: number): string {
+  switch (level) {
+    case 2:
+      return "text-[14px] font-semibold text-foreground";
+    case 3:
+      return "text-[13px] font-medium text-sidebar-foreground";
+    default:
+      return level === 1
+        ? "text-[14px] font-semibold text-foreground"
+        : "text-[13px] font-normal text-muted-foreground";
+  }
+}
+
 interface TableOfContentsProps {
   content: string;
   scrollContainerRef?: React.RefObject<HTMLElement | null>;
@@ -72,6 +122,11 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
   const activeItemRef = useRef<HTMLAnchorElement | null>(null);
   const tickingRef = useRef(false);
   const lastSetIdRef = useRef<string | null>(null);
+
+  const activeSectionId = useMemo(
+    () => findActiveSectionId(headings, activeId),
+    [headings, activeId]
+  );
 
   // When switching documents / content, headings and scroll position relative to sections change;
   // re-sync which section is "active" and clear the throttle guard immediately.
@@ -149,31 +204,50 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
     <nav className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
       <ScrollArea
         ref={tocScrollRef}
-        className="min-h-0 min-w-0 w-full flex-1"
-        viewportClassName="pr-4 [overflow-wrap:anywhere]"
+        className="toc-scroll-area min-h-0 min-w-0 w-full flex-1"
+        viewportClassName="pr-3 [overflow-wrap:anywhere]"
       >
-        <ul className="w-full min-w-0 space-y-1 px-1.5 pb-1">
-          {headings.map(({ id, text, level }) => (
-            <li
-              key={id}
-              style={{ paddingLeft: `${(level - 1) * 8}px` }}
-              className="min-w-0 text-sm"
-            >
-              <a
-                ref={activeId === id ? activeItemRef : null}
-                href={`#${id}`}
-                onClick={(e) => handleClick(e, id)}
-                className={cn(
-                  "block w-full max-w-full min-w-0 rounded-md border-2 border-l-2 px-2 py-1 transition-colors [overflow-wrap:anywhere]",
-                  activeId === id
-                    ? "border-transparent font-bold text-primary visited:!text-primary"
-                    : "border-transparent text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-                )}
+        <ul className="w-full min-w-0 px-1 pb-2">
+          {headings.map(({ id, text, level }, index) => {
+            const isActive = activeId === id;
+            const isSection = isSectionHeading(level);
+            const isActiveSection =
+              activeSectionId === id && !isActive && isSection;
+            const prevLevel = index > 0 ? headings[index - 1]!.level : null;
+
+            return (
+              <li
+                key={id}
+                style={{ paddingLeft: `${headingIndentPx(level)}px` }}
+                className={cn("min-w-0", itemTopSpacing(index, level, prevLevel))}
               >
-                {text}
-              </a>
-            </li>
-          ))}
+                {isSection && index > 0 ? (
+                  <div
+                    className="mb-2.5 border-t border-border/20"
+                    aria-hidden
+                  />
+                ) : null}
+                <a
+                  ref={isActive ? activeItemRef : null}
+                  href={`#${id}`}
+                  onClick={(e) => handleClick(e, id)}
+                  className={cn(
+                    "block w-full max-w-full min-w-0 border-2 leading-[1.35] [overflow-wrap:anywhere] transition-[background-color,transform] duration-[120ms] ease-out",
+                    isSection && !isActive && "mb-2.5",
+                    isActive
+                      ? "rounded-md border-transparent px-2 py-1 font-bold text-primary visited:!text-primary"
+                      : cn(
+                          "line-clamp-2 rounded-md border-transparent py-1 px-2 hover:translate-x-0.5 hover:rounded-md hover:bg-sidebar-accent/45",
+                          inactiveLevelStyles(level),
+                          isActiveSection && "text-primary"
+                        )
+                  )}
+                >
+                  {text}
+                </a>
+              </li>
+            );
+          })}
         </ul>
       </ScrollArea>
     </nav>
