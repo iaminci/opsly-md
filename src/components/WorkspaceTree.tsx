@@ -60,12 +60,12 @@ export const TREE_DRAG_TARGET_SECTION = cn(
 
 /** Workspace name strip (tree rows) — borderless; name, chevron, and Layers use foreground when accent/path-highlighted. */
 const WORKSPACE_TAB_CORAL_PILL = cn(
-  "!flex !h-8 !min-h-8 !min-w-0 !flex-1 !items-center !gap-2 !rounded-md !border-0 !bg-transparent !py-1 !pl-3 !pr-0 !text-left !font-heading !font-bold !text-primary !shadow-none !outline-none !ring-0 !transition-colors focus-visible:!ring-0 focus-visible:!ring-ring"
+  "!flex !min-h-8 !min-w-0 !flex-1 !items-start !gap-2 !rounded-md !border-0 !bg-transparent !py-1 !pl-3 !pr-0 !text-left !font-heading !font-bold !text-primary !shadow-none !outline-none !ring-0 !transition-colors focus-visible:!ring-0 focus-visible:!ring-ring"
 );
 
 /** Inactive workspace row — label uses muted (icons override when path-highlighted). */
 const WORKSPACE_TAB_MUTED_PILL = cn(
-  "!flex !h-8 !min-h-8 !min-w-0 !flex-1 !items-center !gap-2 !rounded-md !border-0 !bg-transparent !py-1 !pl-3 !pr-0 !text-left !font-heading !font-normal !text-muted-foreground !shadow-none !outline-none !ring-0 !transition-colors hover:!text-primary-hover"
+  "!flex !min-h-8 !min-w-0 !flex-1 !items-start !gap-2 !rounded-md !border-0 !bg-transparent !py-1 !pl-3 !pr-0 !text-left !font-heading !font-normal !text-muted-foreground !shadow-none !outline-none !ring-0 !transition-colors hover:!text-primary-hover"
 );
 
 function useClearDragStateOnDragEnd(setDragOver: (v: boolean) => void) {
@@ -680,7 +680,7 @@ function WorkspaceSection({
             className={cn(
               workspaceDragTarget
                 ? cn(
-                    "!flex !h-8 !min-h-8 !min-w-0 !flex-1 !items-center !gap-2 !py-1 !pl-3 !pr-0 !text-left !shadow-none !outline-none !ring-0",
+                    "!flex !min-h-8 !min-w-0 !flex-1 !items-start !gap-2 !py-1 !pl-3 !pr-0 !text-left !shadow-none !outline-none !ring-0",
                     TREE_DRAG_TARGET_PILL
                   )
                 : workspaceFullRowAccent
@@ -690,7 +690,7 @@ function WorkspaceSection({
           >
             <Layers
               className={cn(
-                "size-4 shrink-0 transition-colors",
+                "mt-0.5 size-4 shrink-0 transition-colors",
                 workspaceDragTarget
                   ? "text-[var(--tree-drag-target-fg)]"
                   : workspaceShowPill || workspaceIconPrimaryOnly
@@ -701,7 +701,7 @@ function WorkspaceSection({
             />
             <span
               className={cn(
-                "min-w-0 flex-1 truncate text-left font-heading text-lg transition-colors",
+                "min-w-0 flex-1 text-left font-heading text-lg leading-snug transition-colors line-clamp-2 break-words",
                 workspaceDragTarget && "font-semibold text-[var(--tree-drag-target-fg)]",
                 workspaceIconPrimaryOnly &&
                   !workspaceShowPill &&
@@ -1040,7 +1040,7 @@ function FolderItem({
           onDragStart={handleFolderDragStart}
           onDragEnd={handleFolderDragEnd}
           className={cn(
-            "flex min-h-8 min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded-[5px] py-0.5 pl-1 pr-0 transition-colors duration-150",
+            "flex min-h-8 min-w-0 flex-1 cursor-pointer items-start gap-1.5 rounded-[5px] py-0.5 pl-1 pr-0 transition-colors duration-150",
             folderDragTarget && TREE_DRAG_TARGET_PILL,
             folderShowPill ? "opacity-100" : "opacity-[0.85]",
             folderFullRowAccent &&
@@ -1054,7 +1054,7 @@ function FolderItem({
         >
           <FolderIcon
             className={cn(
-              "size-4 shrink-0 transition-colors group-hover/folder:!text-primary-hover",
+              "mt-0.5 size-4 shrink-0 transition-colors group-hover/folder:!text-primary-hover",
               folderDragTarget
                 ? "text-[var(--tree-drag-target-fg)]"
                 : folderRowActive
@@ -1064,7 +1064,7 @@ function FolderItem({
           />
           <span
             className={cn(
-              "min-w-0 flex-1 truncate text-left font-heading text-base transition-colors",
+              "min-w-0 flex-1 text-left font-heading text-base leading-snug transition-colors line-clamp-2 break-words",
               folderDragTarget && "font-semibold text-[var(--tree-drag-target-fg)]",
               folderRowActive && !folderDragTarget && "!text-foreground",
               "group-hover/folder:!text-primary-hover"
@@ -1299,7 +1299,7 @@ function FileItem({
     >
       <div
         className={cn(
-          "flex min-h-6 min-w-0 flex-1 items-center gap-2 rounded-[5px] py-0 pl-1 pr-0 transition-colors group-hover/file:!text-primary-hover",
+          "flex min-h-6 min-w-0 flex-1 items-start gap-2 rounded-[5px] py-0 pl-1 pr-0 transition-colors group-hover/file:!text-primary-hover",
           fileLooksSelected &&
             !(treeReorderDragActive && fileLooksSelected) &&
             "text-primary"
@@ -1310,7 +1310,7 @@ function FileItem({
             <button
               type="button"
               className={cn(
-                "flex min-h-6 min-w-0 flex-1 items-center justify-start gap-2 truncate border-0 bg-transparent text-left text-base font-base transition-colors hover:bg-transparent group-hover/file:!text-primary-hover",
+                "flex min-h-6 min-w-0 flex-1 items-start justify-start gap-2 border-0 bg-transparent text-left text-base font-base transition-colors hover:bg-transparent group-hover/file:!text-primary-hover",
                 fileTintPrimary ? "opacity-100" : "opacity-[0.85]",
                 fileLooksSelected && "font-bold text-primary",
                 !fileLooksSelected && !fileMenuOpen && "text-muted-foreground",
@@ -1320,13 +1320,13 @@ function FileItem({
             >
               <FileBraces
                 className={cn(
-                  "size-4 shrink-0 transition-colors group-hover/file:!text-primary-hover",
+                  "mt-0.5 size-4 shrink-0 transition-colors group-hover/file:!text-primary-hover",
                   fileLooksSelected ? "text-primary" : "text-muted-foreground"
                 )}
               />
               <span
                 className={cn(
-                  "min-w-0 flex-1 truncate group-hover/file:!text-primary-hover",
+                  "min-w-0 flex-1 leading-snug line-clamp-2 break-words group-hover/file:!text-primary-hover",
                   treeReorderDragActive && fileLooksSelected && "font-bold text-primary"
                 )}
               >

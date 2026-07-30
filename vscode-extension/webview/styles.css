@@ -104,3 +104,12 @@ body {
 .preview-main .markdown-content.prose > .markdown-table-wrap {
   max-width: var(--prose-measure);
 }
+
+.preview-main
+  .markdown-content.prose
+  > :is(ul, ol):has(:is(.fenced-code-block, .markdown-table-wrap, .markdown-embed)),
+.preview-main
+  .markdown-content.prose
+  > blockquote:has(:is(.fenced-code-block, .markdown-table-wrap, .markdown-embed)) {
+  max-width: var(--prose-measure);
+}
