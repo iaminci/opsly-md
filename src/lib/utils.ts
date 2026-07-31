@@ -78,3 +78,20 @@ export function toMarkdownDownloadFilename(title: string): string {
   const stem = (base.replace(/\s+/g, "_") || "document").toLowerCase();
   return `${stem}.md`;
 }
+
+/** Canonical extension for encrypted Opsly documents. */
+export const OPSLY_FILE_EXTENSION = ".opsly";
+
+/** Strip known document extensions from a title or filename stem. */
+export function stripDocumentExtension(name: string): string {
+  return name
+    .replace(/\.(md|opsly|encrypted\.json|txt)$/i, "")
+    .trim();
+}
+
+/** Download name for encrypted Opsly documents. */
+export function toEncryptedDownloadFilename(title: string): string {
+  const base = stripDocumentExtension(title);
+  const stem = (base.replace(/\s+/g, "_") || "document").toLowerCase();
+  return `${stem}${OPSLY_FILE_EXTENSION}`;
+}

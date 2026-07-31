@@ -32,7 +32,7 @@ export class OpslyMarkdownPreviewProvider
   async resolveCustomTextEditor(
     document: vscode.TextDocument,
     webviewPanel: vscode.WebviewPanel,
-    _token: vscode.CancellationToken
+    token: vscode.CancellationToken
   ): Promise<void> {
     this.panels.add(webviewPanel);
     webviewPanel.onDidDispose(() => {
@@ -92,10 +92,17 @@ export class OpslyMarkdownPreviewProvider
         const start = document.positionAt(message.startOffset);
         const end = document.positionAt(message.endOffset);
         const patchEdit = new vscode.WorkspaceEdit();
-        patchEdit.replace(document.uri, new vscode.Range(start, end), message.replacement);
+        patchEdit.replace(
+          document.uri,
+          new vscode.Range(start, end),
+          message.replacement
+        );
         void vscode.workspace.applyEdit(patchEdit);
       }
-      if (message?.type === "updateContent" && typeof message.content === "string") {
+      if (
+        message?.type === "updateContent" &&
+        typeof message.content === "string"
+      ) {
         const fullRange = new vscode.Range(
           document.positionAt(0),
           document.positionAt(document.getText().length)
@@ -106,9 +113,12 @@ export class OpslyMarkdownPreviewProvider
       }
     });
 
-    webviewPanel.onDidDispose(() => {
+    const disposeSubscriptions = (): void => {
       changeSub.dispose();
       messageSub.dispose();
-    });
+    };
+
+    token.onCancellationRequested(disposeSubscriptions);
+    webviewPanel.onDidDispose(disposeSubscriptions);
   }
 }

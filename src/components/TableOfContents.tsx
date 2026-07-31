@@ -5,9 +5,6 @@ import { cn } from "@/lib/utils";
 import { buildHeadingManifest, type HeadingManifestEntry } from "@/lib/heading-manifest";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-const EMOJI_HEADING_PREFIX =
-  /^(\p{Extended_Pictographic}\uFE0F?\u200D?[\p{Extended_Pictographic}\uFE0F?]*)\s*/u;
-
 function isSectionHeading(level: number): boolean {
   return level === 2;
 }

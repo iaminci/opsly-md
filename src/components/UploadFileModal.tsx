@@ -18,7 +18,12 @@ import { toast } from "sonner";
 
 function isAcceptedUploadFile(file: File): boolean {
   const name = file.name.toLowerCase();
-  return name.endsWith(".md") || name.endsWith(".txt");
+  return (
+    name.endsWith(".md") ||
+    name.endsWith(".txt") ||
+    name.endsWith(".opsly") ||
+    name.endsWith(".encrypted.json")
+  );
 }
 
 function pickUploadFiles(files: FileList | null): {
@@ -46,6 +51,12 @@ function mergeSelectedFiles(existing: File[], incoming: File[]): File[] {
   }
   return merged;
 }
+
+const settingsActionButtonClassName =
+  "w-full min-w-0 justify-center rounded-md border-2 border-border text-primary shadow-none hover:border-border hover:bg-primary hover:text-black hover:translate-x-0 hover:translate-y-0";
+
+const settingsCancelButtonClassName =
+  "w-full min-w-0 justify-center rounded-md border-2 border-border bg-background text-foreground shadow-none hover:border-border hover:bg-sidebar-accent hover:text-foreground hover:translate-x-0 hover:translate-y-0";
 
 interface UploadFileModalProps {
   open: boolean;
@@ -103,7 +114,9 @@ export function UploadFileModal({
   const addFiles = (files: FileList | null, append = false) => {
     const { accepted, rejectedCount } = pickUploadFiles(files);
     if (rejectedCount > 0) {
-      toast.error("File not supported. Only .md and .txt files can be uploaded.");
+      toast.error(
+        "File not supported. Only .md, .opsly, and legacy .encrypted.json files can be uploaded."
+      );
     }
     if (!accepted.length) return;
     setSelectedFiles((prev) =>
@@ -151,7 +164,9 @@ export function UploadFileModal({
     if (!selectedFiles.length || !selectedWorkspaceId) return;
     const validFiles = selectedFiles.filter(isAcceptedUploadFile);
     if (validFiles.length !== selectedFiles.length) {
-      toast.error("File not supported. Only .md and .txt files can be uploaded.");
+      toast.error(
+        "File not supported. Only .md, .opsly, and legacy .encrypted.json files can be uploaded."
+      );
       setSelectedFiles(validFiles);
       return;
     }
@@ -192,26 +207,26 @@ export function UploadFileModal({
       >
         <DialogHeader className="flex flex-row items-center justify-between gap-4 space-y-0 border-b-2 border-border px-6 py-5">
           <DialogTitle className="flex min-w-0 items-center gap-2.5">
-            <FileBraces className="size-4 shrink-0 text-primary" aria-hidden />
+            <Upload className="size-4 shrink-0 text-primary" aria-hidden />
             Upload File
           </DialogTitle>
           <DialogClose asChild>
             <Button
               type="button"
-              variant="neutral"
+              variant="ghost"
               size="icon-sm"
-              className="shrink-0 bg-background text-foreground hover:bg-sidebar-accent hover:text-foreground"
+              className="shrink-0 rounded-md border-2 border-border bg-background text-foreground shadow-none hover:border-border hover:bg-sidebar-accent hover:text-foreground hover:translate-x-0 hover:translate-y-0"
               aria-label="Close upload dialog"
             >
               <X className="size-4" />
             </Button>
           </DialogClose>
           <DialogDescription className="sr-only">
-            Choose a workspace, folder, and one or more .md or .txt files to upload
+            Choose a workspace, folder, and one or more .md or .opsly files to upload
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-5 px-6 pt-7">
+        <div className="flex flex-col gap-8 px-6 pt-7">
           {!hasSyncedWorkspacesAtLeastOnce ? (
             <p className="text-sm text-muted-foreground">Loading workspaces…</p>
           ) : sortedWorkspaces.length === 0 ? (
@@ -223,24 +238,19 @@ export function UploadFileModal({
               {!hideLocationSelectors ? (
                 <InlineLocationSelectors
                   idPrefix="upload-modal"
+                  variant="settings"
                   selectedWorkspaceId={selectedWorkspaceId}
                   setSelectedWorkspaceId={setSelectedWorkspaceId}
                   selectedFolderId={selectedFolderId}
                   setSelectedFolderId={setSelectedFolderId}
                 />
               ) : null}
-              <div className="flex flex-col gap-1">
-                <label
-                  htmlFor="upload-modal-file"
-                  className="block text-sm font-medium text-foreground"
-                >
-                  Files
-                </label>
+              <div>
                 <input
                   ref={fileInputRef}
                   id="upload-modal-file"
                   type="file"
-                  accept=".md,.txt"
+                  accept=".md,.txt,.opsly,.encrypted.json"
                   multiple
                   onChange={handleFileChange}
                   className="hidden"
@@ -251,7 +261,7 @@ export function UploadFileModal({
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
                   className={cn(
-                    "flex min-h-[7.5rem] flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed border-border bg-background px-4 py-5 text-center transition-colors",
+                    "flex min-h-[7.5rem] flex-col items-center justify-center gap-3 rounded-base border-2 border-dashed border-border bg-background px-4 py-5 text-center transition-colors",
                     dragActive && "border-primary bg-primary/5"
                   )}
                 >
@@ -265,25 +275,25 @@ export function UploadFileModal({
                   <p className="text-sm text-muted-foreground">
                     {dragActive
                       ? "Drop files to upload"
-                      : "Drag and drop .md or .txt files here"}
+                      : "Drag and drop .md or .opsly files here"}
                   </p>
-                  <div className="flex min-w-0 w-full flex-col items-center gap-2">
+                  <div className="flex min-w-0 w-full flex-col items-center gap-3">
                     <Button
                       type="button"
-                      variant="neutral"
-                      size="icon-sm"
-                      className="shrink-0 bg-background"
-                      aria-label="Choose files"
+                      variant="ghost"
+                      size="sm"
+                      className={settingsActionButtonClassName}
                       onClick={() => fileInputRef.current?.click()}
                     >
-                      <Upload className="size-4" />
+                      <Upload className="size-4 shrink-0" />
+                      Choose files
                     </Button>
                     {selectedFiles.length > 0 ? (
                       <div className="flex min-w-0 w-full max-w-full flex-wrap items-center justify-center gap-2">
                         {selectedFiles.map((file) => (
                           <span
                             key={fileKey(file)}
-                            className="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-md border-2 border-border bg-sidebar-accent px-2.5 py-1 text-sm font-semibold text-primary"
+                            className="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-base border-2 border-border bg-sidebar-accent px-2.5 py-1 text-sm font-semibold text-primary"
                           >
                             <FileBraces className="size-3.5 shrink-0" aria-hidden />
                             <span className="truncate">{file.name}</span>
@@ -298,31 +308,33 @@ export function UploadFileModal({
                   </div>
                 </div>
               </div>
-              <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
-                <Button
-                  type="button"
-                  variant="neutral"
-                  size="sm"
-                  className="shrink-0 bg-background"
-                  onClick={() => onOpenChange(false)}
-                  disabled={uploading}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  variant="neutral"
-                  size="sm"
-                  className="shrink-0 bg-background hover:bg-main hover:text-black"
-                  onClick={() => void handleSubmit()}
-                  disabled={!selectedFiles.length || !selectedWorkspaceId || uploading}
-                >
-                  {uploading
-                    ? "Uploading…"
-                    : selectedFiles.length > 1
-                      ? `Upload ${selectedFiles.length} files`
-                      : "Upload"}
-                </Button>
+              <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className={settingsCancelButtonClassName}
+                    onClick={() => onOpenChange(false)}
+                    disabled={uploading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className={settingsActionButtonClassName}
+                    onClick={() => void handleSubmit()}
+                    disabled={
+                      !selectedFiles.length || !selectedWorkspaceId || uploading
+                    }
+                  >
+                    {uploading
+                      ? "Uploading…"
+                      : selectedFiles.length > 1
+                        ? `Upload ${selectedFiles.length} files`
+                        : "Upload"}
+                  </Button>
               </div>
             </>
           )}

@@ -259,7 +259,7 @@ export function Sidebar({
         reader.onerror = () => reject(reader.error);
         reader.readAsText(file);
       });
-      const stem = file.name.replace(/\.(md|txt)$/i, "").trim();
+      const stem = file.name.replace(/\.(md|txt|opsly|encrypted\.json)$/i, "").trim();
       const isReadmeName = stem.toLowerCase() === "readme";
       const title = isReadmeName
         ? titleFromMarkdownContent(content)

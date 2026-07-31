@@ -386,7 +386,8 @@ export function MarkdownRenderer({
           </div>
         );
       },
-      input({ type, checked, disabled, name, className, node: _node, ...props }) {
+      input({ type, checked, disabled, name, className, node, ...props }) {
+        void node;
         const isFormControl = type === "checkbox" || type === "radio";
 
         if (

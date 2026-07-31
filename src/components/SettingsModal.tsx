@@ -83,9 +83,9 @@ export function SettingsModal({
           <DialogClose asChild>
             <Button
               type="button"
-              variant="neutral"
+              variant="ghost"
               size="icon-sm"
-              className="shrink-0 bg-background text-foreground hover:bg-sidebar-accent hover:text-foreground"
+              className="shrink-0 rounded-md border-2 border-border bg-background text-foreground shadow-none hover:border-border hover:bg-sidebar-accent hover:text-foreground hover:translate-x-0 hover:translate-y-0"
               aria-label="Close settings"
             >
               <X className="size-4" />

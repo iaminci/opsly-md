@@ -35,7 +35,19 @@ type InlineLocationSelectorsProps = {
   setSelectedWorkspaceId: (v: string) => void;
   selectedFolderId: string | null;
   setSelectedFolderId: (v: string | null) => void;
+  /** Flat bordered controls matching Settings modal actions (no hard shadow). */
+  variant?: "workspace" | "settings";
+  /** Smaller labels and triggers (h-8, text-xs). */
+  compact?: boolean;
+  /** Render workspace/folder as siblings for parent grid layouts. */
+  layout?: "grid" | "split";
 };
+
+const settingsSelectTriggerClassName =
+  "flex h-9 w-full min-w-0 items-center gap-2 rounded-md border-2 border-border bg-background px-3 text-left text-sm font-medium text-foreground shadow-none transition-colors hover:border-border hover:bg-sidebar-accent hover:translate-x-0 hover:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
+
+const compactSelectTriggerClassName =
+  "flex h-9 w-full min-w-0 items-center gap-2 rounded-md border-2 border-border bg-background px-3 text-left text-sm font-medium text-foreground shadow-none transition-colors hover:border-border hover:bg-sidebar-accent hover:translate-x-0 hover:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
 
 export function InlineLocationSelectors({
   idPrefix,
@@ -43,6 +55,9 @@ export function InlineLocationSelectors({
   setSelectedWorkspaceId,
   selectedFolderId,
   setSelectedFolderId,
+  variant = "workspace",
+  compact = false,
+  layout = "grid",
 }: InlineLocationSelectorsProps) {
   const { sortedWorkspaces, getFoldersInWorkspace } = useWorkspaceTree();
   const [openMenu, setOpenMenu] = useState<"workspace" | "folder" | null>(null);
@@ -98,12 +113,28 @@ export function InlineLocationSelectors({
     );
   }, [selectedFolderId, folderOptions]);
 
-  return (
-    <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:items-end">
-      <div className="flex min-w-0 flex-col gap-1">
+  const triggerClassName =
+    variant === "settings"
+      ? compact
+        ? compactSelectTriggerClassName
+        : settingsSelectTriggerClassName
+      : cn(
+          workspaceNeutralChipClassName,
+          "flex w-full min-w-0 items-center gap-2 px-3 text-left",
+          compact && "h-9 gap-2 px-3 text-sm"
+        );
+
+  const labelClassName = "block text-sm font-medium text-foreground";
+
+  const fieldGapClassName = "gap-1";
+
+  const chevronClassName = "size-4 shrink-0";
+
+  const workspaceField = (
+      <div className={cn("flex min-w-0 flex-col", fieldGapClassName)}>
         <label
           htmlFor={`${idPrefix}-workspace`}
-          className="block text-sm font-medium text-foreground"
+          className={labelClassName}
         >
           Workspace
         </label>
@@ -116,13 +147,10 @@ export function InlineLocationSelectors({
             <button
               type="button"
               id={`${idPrefix}-workspace`}
-              className={cn(
-                workspaceNeutralChipClassName,
-                "flex w-full min-w-0 items-center gap-2 px-3 text-left"
-              )}
+              className={triggerClassName}
             >
               <span className="min-w-0 flex-1 truncate">{workspaceTriggerLabel}</span>
-              <ChevronDown className="size-4 shrink-0" />
+              <ChevronDown className={chevronClassName} />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -154,10 +182,13 @@ export function InlineLocationSelectors({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <div className="flex min-w-0 flex-col gap-1">
+  );
+
+  const folderField = (
+      <div className={cn("flex min-w-0 flex-col", fieldGapClassName)}>
         <label
           htmlFor={`${idPrefix}-folder`}
-          className="block text-sm font-medium text-foreground"
+          className={labelClassName}
         >
           Folder
         </label>
@@ -170,13 +201,10 @@ export function InlineLocationSelectors({
             <button
               type="button"
               id={`${idPrefix}-folder`}
-              className={cn(
-                workspaceNeutralChipClassName,
-                "flex w-full min-w-0 items-center gap-2 px-3 text-left"
-              )}
+              className={triggerClassName}
             >
               <span className="min-w-0 flex-1 truncate">{folderTriggerLabel}</span>
-              <ChevronDown className="size-4 shrink-0" />
+              <ChevronDown className={chevronClassName} />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -220,6 +248,26 @@ export function InlineLocationSelectors({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+  );
+
+  if (layout === "split") {
+    return (
+      <>
+        {workspaceField}
+        {folderField}
+      </>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "grid min-w-0 grid-cols-1 sm:grid-cols-2 sm:items-end",
+        compact ? "gap-2" : "gap-3"
+      )}
+    >
+      {workspaceField}
+      {folderField}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -28,7 +29,6 @@ import {
   deleteDocument,
   DuplicateNameError,
 } from "@/lib/storage";
-import { toMarkdownDownloadFilename } from "@/lib/utils";
 import { scrollToSearchMatch } from "@/lib/search-highlight";
 import { SAMPLE_MARKDOWN } from "@/lib/sample-document";
 import { EmptyState } from "@/components/EmptyState";
@@ -45,16 +45,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import {
   SidebarProvider,
   SidebarInset,
@@ -76,6 +66,21 @@ import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
 import { Feedback } from "@/components/Feedback";
 import { GitHubIcon } from "@/components/GitHubIcon";
 import { WorkspaceTreeProvider } from "@/context/WorkspaceTreeContext";
+import {
+  useDocumentEncryption,
+  EncryptedDocumentPlaceholder,
+  DocumentSecurityMenu,
+  DocumentDownloadButton,
+  DocumentSecurityState,
+  isStoredContentEncrypted,
+  getStoredDownloadPayload,
+  getExportMarkdownPayload,
+  triggerBrowserDownload,
+  ExportMarkdownDialog,
+  buildEncryptionDetails,
+  getSecurityStatusLabel,
+  type DocumentEncryptionCallbacks,
+} from "@/features/document-encryption";
 
 const CURRENT_DOC_KEY = "md-viewer-current-doc";
 const RIGHT_TOC_OPEN_KEY = "md-viewer-right-toc-open";
@@ -108,9 +113,9 @@ function formatDate(ts: number): string {
   });
 }
 
-function DocumentInfo({ doc }: { doc: Document }) {
-  const wordCount = doc.content.trim()
-    ? doc.content.trim().split(/\s+/).length
+function DocumentInfo({ doc, content }: { doc: Document; content: string }) {
+  const wordCount = content.trim()
+    ? content.trim().split(/\s+/).length
     : 0;
   const readingMinutes = wordCount === 0 ? 0 : Math.max(1, Math.ceil(wordCount / 200));
   return (
@@ -207,7 +212,7 @@ function DocumentRightSidebar({
         value="info"
         className="mt-0 flex min-h-0 flex-1 flex-col overflow-auto pr-4"
       >
-        <DocumentInfo doc={doc} />
+        <DocumentInfo doc={doc} content={content} />
       </TabsContent>
     </Tabs>
   );
@@ -230,7 +235,7 @@ function AppContent() {
   const scrollTopBeforeEditRef = useRef(0);
   const shouldRestoreScrollRef = useRef(false);
   const [rightTocOpen, setRightTocOpen] = useState(true);
-  const [downloadConfirmOpen, setDownloadConfirmOpen] = useState(false);
+  const [exportConfirmOpen, setExportConfirmOpen] = useState(false);
   const [documentStackEnabled, setDocumentStackEnabled] = useState(true);
   const [docStackIds, setDocStackIds] = useState<string[]>([]);
   const contentScrollRef = useRef<HTMLDivElement>(null);
@@ -242,10 +247,54 @@ function AppContent() {
   const [editAutosaveSecs, setEditAutosaveSecs] = useState<number | null>(null);
   const [mainPanelDocDragOver, setMainPanelDocDragOver] = useState(false);
 
+  const encryptionPersistenceRef = useRef<
+    Pick<DocumentEncryptionCallbacks, "onDocumentEncrypted" | "onEncryptionRemoved">
+  >({});
+
+  const encryption = useDocumentEncryption(currentDoc, {
+    onDocumentEncrypted: (args) =>
+      encryptionPersistenceRef.current.onDocumentEncrypted?.(args) ??
+      Promise.resolve(),
+    onEncryptionRemoved: (args) =>
+      encryptionPersistenceRef.current.onEncryptionRemoved?.(args) ??
+      Promise.resolve(),
+  });
+  const displayContent =
+    encryption.session.documentId === currentDoc?.id
+      ? encryption.session.displayContent
+      : (currentDoc?.content ?? "");
+
+  const isEncryptedAtRest =
+    encryption.session.documentId === currentDoc?.id &&
+    isStoredContentEncrypted(encryption.session.storedContent);
+
+  const securityStatusLabel = getSecurityStatusLabel(
+    encryption.session.securityState,
+    isEncryptedAtRest
+  );
+
+  const encryptionDetails = useMemo(
+    () =>
+      buildEncryptionDetails(
+        encryption.session.documentId === currentDoc?.id
+          ? encryption.session.storedContent
+          : "",
+        encryption.session.securityState,
+        encryption.session.lastUnlockedAt
+      ),
+    [
+      currentDoc?.id,
+      encryption.session.documentId,
+      encryption.session.storedContent,
+      encryption.session.securityState,
+      encryption.session.lastUnlockedAt,
+    ]
+  );
+
   const editDirty =
     editMode &&
     !!currentDoc &&
-    draftContent !== currentDoc.content;
+    draftContent !== displayContent;
   useDeploymentReloadBlock(editMode);
   useEffect(() => {
     if (!editDirty) return;
@@ -277,14 +326,42 @@ function AppContent() {
     if (typeof window === "undefined") return;
     localStorage.setItem(RIGHT_TOC_OPEN_KEY, rightTocOpen ? "1" : "0");
   }, [rightTocOpen]);
+  const currentDocId = currentDoc?.id;
+
+  useEffect(() => {
+    if (!currentDocId) return;
+    if (encryption.session.documentId !== currentDocId) return;
+    if (encryption.session.securityState !== DocumentSecurityState.Unlocked) return;
+    setCurrentDoc((prev) =>
+      prev?.id === currentDocId
+        ? { ...prev, content: encryption.session.displayContent }
+        : prev
+    );
+  }, [
+    currentDocId,
+    encryption.session.documentId,
+    encryption.session.securityState,
+    encryption.session.displayContent,
+  ]);
+
   const refresh = useCallback(async () => {
     const docs = await getDocuments();
     setDocuments(docs);
     setCurrentDoc((prev) => {
       if (!prev) return prev;
-      return docs.find((d) => d.id === prev.id) ?? prev;
+      const fresh = docs.find((d) => d.id === prev.id) ?? prev;
+      if (encryption.session.documentId !== fresh.id) {
+        return fresh;
+      }
+      if (
+        encryption.session.securityState === DocumentSecurityState.Unlocked ||
+        encryption.session.securityState === DocumentSecurityState.Encrypted
+      ) {
+        return { ...fresh, content: encryption.session.displayContent };
+      }
+      return fresh;
     });
-  }, []);
+  }, [encryption.session]);
 
   const loadSampleHandledRef = useRef(false);
 
@@ -367,15 +444,28 @@ function AppContent() {
     ): Promise<boolean> => {
       const wsId = workspaceId ?? "default";
       try {
+        const decision = await encryption.prepareContentForSave(content, {
+          interactive: true,
+        });
+        if (!decision || decision.action === "cancel") {
+          return false;
+        }
+
         const doc = await addDocument(
-          { title, content, workspaceId: wsId, folderId: folderId ?? null },
+          { title, content: decision.content, workspaceId: wsId, folderId: folderId ?? null },
           { workspaceId: wsId, folderId: folderId ?? null }
         );
         const updated = await getDocuments();
         justSelectedDocIdRef.current = doc.id;
         currentDocIdRef.current = doc.id;
+        encryption.onSaveSucceeded(
+          doc.id,
+          decision.content,
+          content,
+          decision.passphrase ?? null
+        );
         setDocuments(updated);
-        setCurrentDoc(doc);
+        setCurrentDoc({ ...doc, content });
         if (documentStackEnabled) {
           setDocStackIds((prev) => [...prev.filter((i) => i !== doc.id), doc.id]);
         }
@@ -392,7 +482,7 @@ function AppContent() {
         return false;
       }
     },
-    [router, pathname, searchParams, documentStackEnabled]
+    [router, pathname, searchParams, documentStackEnabled, encryption]
   );
 
   const handleDeleteDocument = useCallback(
@@ -415,12 +505,12 @@ function AppContent() {
   );
 
   const handleEnterEditMode = useCallback(() => {
-    if (!currentDoc) return;
+    if (!currentDoc || encryption.isLocked) return;
     const vp = contentScrollRef.current;
     scrollTopBeforeEditRef.current = vp?.scrollTop ?? 0;
-    setDraftContent(currentDoc.content);
+    setDraftContent(displayContent);
     setEditMode(true);
-  }, [currentDoc]);
+  }, [currentDoc, displayContent, encryption.isLocked]);
 
   const handleExitEditMode = useCallback((restoreScroll: boolean) => {
     shouldRestoreScrollRef.current = restoreScroll;
@@ -451,11 +541,33 @@ function AppContent() {
         setEditAutosaveUi("saving");
       }
       try {
+        const decision = await encryption.prepareContentForSave(draftContent, {
+          interactive: exitEditAfter,
+        });
+        if (!decision) {
+          if (!exitEditAfter) {
+            setEditAutosaveUi("idle");
+          }
+          return;
+        }
+        if (decision.action === "cancel") {
+          if (!exitEditAfter) {
+            setEditAutosaveUi("idle");
+          }
+          return;
+        }
+
         const updated = await updateDocument(currentDoc.id, {
-          content: draftContent,
+          content: decision.content,
         });
         if (updated) {
-          setCurrentDoc(updated);
+          encryption.onSaveSucceeded(
+            currentDoc.id,
+            decision.content,
+            draftContent,
+            decision.passphrase ?? encryption.session.passphrase
+          );
+          setCurrentDoc({ ...updated, content: draftContent });
           await refresh();
         }
         if (exitEditAfter) {
@@ -474,7 +586,7 @@ function AppContent() {
         }
       }
     },
-    [currentDoc, draftContent, refresh, handleExitEditMode]
+    [currentDoc, draftContent, refresh, handleExitEditMode, encryption]
   );
 
   const handleEditSaveRef = useRef(handleEditSave);
@@ -486,7 +598,7 @@ function AppContent() {
   });
   editAutosaveLatestRef.current = {
     draft: draftContent,
-    savedContent: currentDoc?.content ?? "",
+    savedContent: displayContent,
   };
 
   useEffect(() => {
@@ -520,26 +632,119 @@ function AppContent() {
     };
   }, [editMode, currentDoc?.id]);
 
-  const performDownload = useCallback(() => {
+  const performDownloadStored = useCallback(async () => {
     if (!currentDoc) return;
-    const blob = new Blob([currentDoc.content], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = toMarkdownDownloadFilename(currentDoc.title);
-    a.click();
-    URL.revokeObjectURL(url);
+    const fresh = await getDocument(currentDoc.id);
+    if (!fresh) {
+      toast.error("Failed to download document.");
+      return;
+    }
+    triggerBrowserDownload(
+      getStoredDownloadPayload(fresh.content, fresh.title)
+    );
   }, [currentDoc]);
+
+  const performExportMarkdown = useCallback(() => {
+    if (!currentDoc || encryption.isLocked) return;
+    triggerBrowserDownload(
+      getExportMarkdownPayload(displayContent, currentDoc.title)
+    );
+    setExportConfirmOpen(false);
+  }, [currentDoc, displayContent, encryption.isLocked]);
+
+  const handleExportMarkdownRequest = useCallback(() => {
+    if (!currentDoc) return;
+    if (encryption.isLocked) {
+      encryption.reopenUnlockDialog();
+      return;
+    }
+    setExportConfirmOpen(true);
+  }, [currentDoc, encryption]);
+
+  const handleLockNow = useCallback(() => {
+    if (editMode) {
+      handleExitEditMode(false);
+    }
+    encryption.lockDocument();
+  }, [editMode, handleExitEditMode, encryption]);
+
+  const handleEncryptDocumentRequest = useCallback(() => {
+    if (!currentDoc || isEncryptedAtRest) return;
+    const content = editMode ? draftContent : displayContent;
+    encryption.openEncryptDocumentDialog(content);
+  }, [
+    currentDoc,
+    isEncryptedAtRest,
+    editMode,
+    draftContent,
+    displayContent,
+    encryption,
+  ]);
+
+  const handleRemoveEncryptionRequest = useCallback(() => {
+    encryption.openRemoveEncryptionDialog();
+  }, [encryption]);
+
+  encryptionPersistenceRef.current = {
+    onDocumentEncrypted: async ({
+      documentId,
+      encrypted,
+      markdown,
+      passphrase,
+    }) => {
+      const updated = await updateDocument(documentId, { content: encrypted });
+      if (!updated) {
+        toast.error("Failed to encrypt document.");
+        return;
+      }
+      encryption.onSaveSucceeded(documentId, encrypted, markdown, passphrase);
+      setCurrentDoc({ ...updated, content: markdown });
+      if (editMode && currentDoc?.id === documentId) {
+        setDraftContent(markdown);
+      }
+      await refresh();
+      toast.success("Document encrypted.");
+    },
+    onEncryptionRemoved: async ({ documentId, markdown }) => {
+      const updated = await updateDocument(documentId, { content: markdown });
+      if (!updated) {
+        toast.error("Failed to remove encryption.");
+        return;
+      }
+      encryption.onSaveSucceeded(documentId, markdown, markdown, null);
+      setCurrentDoc({ ...updated, content: markdown });
+      if (editMode && currentDoc?.id === documentId) {
+        setDraftContent(markdown);
+      }
+      await refresh();
+      toast.success("Encryption removed.");
+    },
+  };
 
   const handlePreviewContentChange = useCallback(
     async (content: string) => {
-      if (!currentDoc) return;
-      const previousContent = currentDoc.content;
+      if (!currentDoc || encryption.isLocked) return;
+      const previousContent = displayContent;
       setCurrentDoc({ ...currentDoc, content });
       try {
-        const updated = await updateDocument(currentDoc.id, { content });
+        const decision = await encryption.prepareContentForSave(content, {
+          interactive: true,
+        });
+        if (!decision || decision.action === "cancel") {
+          setCurrentDoc({ ...currentDoc, content: previousContent });
+          return;
+        }
+        const updated = await updateDocument(currentDoc.id, {
+          content: decision.content,
+        });
         if (updated) {
-          setCurrentDoc(updated);
+          encryption.onSaveSucceeded(
+            currentDoc.id,
+            decision.content,
+            content,
+            decision.passphrase ?? encryption.session.passphrase
+          );
+          setCurrentDoc({ ...updated, content });
           await refresh();
         }
       } catch (err) {
@@ -551,7 +756,7 @@ function AppContent() {
         }
       }
     },
-    [currentDoc, refresh]
+    [currentDoc, displayContent, refresh, encryption]
   );
 
   const handleSelectDocument = useCallback(
@@ -559,6 +764,7 @@ function AppContent() {
       const generation = ++selectDocumentGenerationRef.current;
       navigatingToHomeRef.current = false;
       justSelectedDocIdRef.current = doc.id;
+      setEditMode(false);
       setCurrentDoc(doc);
       const fresh = await getDocument(doc.id);
       if (generation !== selectDocumentGenerationRef.current) return;
@@ -690,7 +896,7 @@ function AppContent() {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      if (downloadConfirmOpen || hasOpenEscapeBlockingOverlay()) return;
+      if (exportConfirmOpen || hasOpenEscapeBlockingOverlay()) return;
       if (!currentDoc) return;
       if (editMode) return;
       e.preventDefault();
@@ -702,7 +908,7 @@ function AppContent() {
   }, [
     currentDoc,
     editMode,
-    downloadConfirmOpen,
+    exportConfirmOpen,
     handleCloseDocument,
   ]);
 
@@ -833,6 +1039,19 @@ function AppContent() {
             <>
               <DocumentColumn rightTocOpen={rightTocOpen}>
                 <div className="mb-6 flex min-w-0 w-full max-w-full flex-wrap items-center justify-start gap-2 print:mb-4 sm:justify-end sm:gap-3 md:gap-5">
+                      {!editMode && (
+                        <DocumentSecurityMenu
+                          className="mr-auto sm:mr-0 sm:order-first"
+                          securityState={encryption.session.securityState}
+                          isEncryptedAtRest={isEncryptedAtRest}
+                          statusLabel={securityStatusLabel}
+                          details={encryptionDetails}
+                          onEncryptDocument={handleEncryptDocumentRequest}
+                          onLockNow={handleLockNow}
+                          onUnlock={encryption.reopenUnlockDialog}
+                          onRemoveEncryption={handleRemoveEncryptionRequest}
+                        />
+                      )}
                       {editMode ? (
                         <>
                           <Button
@@ -874,18 +1093,17 @@ function AppContent() {
                             size="sm"
                             className="shrink-0 bg-background"
                             onClick={handleEnterEditMode}
+                            disabled={encryption.isLocked}
                           >
                             Edit
                           </Button>
-                          <Button
-                            type="button"
-                            variant="neutral"
-                            size="sm"
-                            className="shrink-0 bg-background hover:bg-main hover:text-black"
-                            onClick={() => setDownloadConfirmOpen(true)}
-                          >
-                            Download
-                          </Button>
+                          <DocumentDownloadButton
+                            isEncryptedAtRest={isEncryptedAtRest}
+                            isLocked={encryption.isLocked}
+                            onDownloadPlain={() => void performDownloadStored()}
+                            onDownloadEncrypted={() => void performDownloadStored()}
+                            onExportMarkdown={handleExportMarkdownRequest}
+                          />
                         </>
                       )}
                       {!editMode && (
@@ -909,10 +1127,15 @@ function AppContent() {
                     className="h-[calc(100svh-12rem)] min-h-[calc(100svh-12rem)] leading-relaxed"
                     textareaClassName="leading-relaxed"
                   />
+                ) : encryption.isLocked ? (
+                  <EncryptedDocumentPlaceholder
+                    documentTitle={currentDoc.title}
+                    onUnlockRequest={encryption.reopenUnlockDialog}
+                  />
                 ) : (
                   <MarkdownRenderer
                     key={currentDoc.id}
-                    content={currentDoc.content}
+                    content={displayContent}
                     searchQuery={documentSearchQuery}
                     activeMatchIndex={searchActiveMatchIndex}
                     articleRef={markdownArticleRef}
@@ -944,7 +1167,7 @@ function AppContent() {
                 <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col">
                   <DocumentRightSidebar
                     doc={currentDoc}
-                    content={currentDoc.content}
+                    content={displayContent}
                     contentScrollRef={contentScrollRef}
                   />
                 </div>
@@ -983,34 +1206,13 @@ function AppContent() {
         </div>
       </SidebarInset>
 
-      <AlertDialog
-        open={downloadConfirmOpen && !!currentDoc}
-        onOpenChange={(open) => {
-          setDownloadConfirmOpen(open);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Download document?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Save this document as{" "}
-              <span className="font-mono font-medium text-foreground">
-                {currentDoc ? toMarkdownDownloadFilename(currentDoc.title) : ""}
-              </span>
-              .
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="hover:!bg-primary hover:!text-black border-2 text-foreground"
-              onClick={() => performDownload()}
-            >
-              Download
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {encryption.dialogs}
+
+      <ExportMarkdownDialog
+        open={exportConfirmOpen && !!currentDoc}
+        onOpenChange={setExportConfirmOpen}
+        onExport={performExportMarkdown}
+      />
 
     </SidebarProvider>
     </WorkspaceTreeProvider>
