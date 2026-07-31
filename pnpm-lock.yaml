@@ -220,8 +220,8 @@ importers:
         specifier: ^11.16.0
         version: 11.16.0
       opsly-mask:
-        specifier: file:../../mask
-        version: file:../mask(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: ^0.10.0
+        version: 0.10.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -5020,12 +5020,6 @@ packages:
 
   opsly-mask@0.10.0:
     resolution: {integrity: sha512-0g06hJGVAAmhZqSDl4mURKU9bWpssZnlrm7UkPr9DDMKzL0z16JDZfK08lSsgSNS2sSDdztS/UbEpd5HYDi2iw==}
-    peerDependencies:
-      react: ^19.0.0
-      react-dom: ^19.0.0
-
-  opsly-mask@file:../mask:
-    resolution: {directory: ../mask, type: directory}
     peerDependencies:
       react: ^19.0.0
       react-dom: ^19.0.0
@@ -11364,19 +11358,6 @@ snapshots:
       is-wsl: 2.2.0
 
   opsly-mask@0.10.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
-    dependencies:
-      mdast-util-to-hast: 13.2.1
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
-      react-markdown: 10.1.0(@types/react@19.2.17)(react@19.2.7)
-      remark-gfm: 4.0.1
-      unified: 11.0.5
-      unist-util-visit: 5.1.0
-    transitivePeerDependencies:
-      - '@types/react'
-      - supports-color
-
-  opsly-mask@file:../mask(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
     dependencies:
       mdast-util-to-hast: 13.2.1
       react: 19.2.7

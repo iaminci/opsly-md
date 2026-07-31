@@ -104,7 +104,7 @@
     "lucide-react": "^1.23.0",
     "mdast-util-to-string": "^4.0.0",
     "mermaid": "^11.16.0",
-    "opsly-mask": "file:../../mask",
+    "opsly-mask": "^0.10.0",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "react-markdown": "^10.1.0",
