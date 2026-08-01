@@ -58,6 +58,7 @@ export interface UseDocumentEncryptionResult {
   ) => void;
   dialogs: React.ReactNode;
   reopenUnlockDialog: () => void;
+  unlockFocusRequest: number;
   lockDocument: () => void;
   openEncryptDocumentDialog: (markdown: string) => void;
   openRemoveEncryptionDialog: () => void;
@@ -103,16 +104,14 @@ export function useDocumentEncryption(
   const [secureBlocksDialogOpen, setSecureBlocksDialogOpen] = useState(false);
   const [setPassphraseDialogOpen, setSetPassphraseDialogOpen] = useState(false);
   const [documentEncryptDialogOpen, setDocumentEncryptDialogOpen] = useState(false);
-  const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
+  const [unlockFocusRequest, setUnlockFocusRequest] = useState(0);
   const [removeEncryptionDialogOpen, setRemoveEncryptionDialogOpen] =
     useState(false);
   const [removeEncryptionSubmitting, setRemoveEncryptionSubmitting] =
     useState(false);
-  const [unlockDocumentTitle, setUnlockDocumentTitle] = useState<string>();
 
   const clearSession = useCallback(() => {
     setSession(EMPTY_SESSION);
-    setUnlockDialogOpen(false);
     setSecureBlocksDialogOpen(false);
     setSetPassphraseDialogOpen(false);
     setDocumentEncryptDialogOpen(false);
@@ -138,8 +137,6 @@ export function useDocumentEncryption(
         passphrase: null,
         lastUnlockedAt: null,
       });
-      setUnlockDocumentTitle(doc.title);
-      setUnlockDialogOpen(true);
       return;
     }
 
@@ -151,7 +148,6 @@ export function useDocumentEncryption(
       passphrase: null,
       lastUnlockedAt: null,
     });
-    setUnlockDialogOpen(false);
   }, []);
 
   const applyUnlock = useCallback(async (passphrase: string): Promise<string> => {
@@ -169,7 +165,6 @@ export function useDocumentEncryption(
       passphrase,
       lastUnlockedAt: Date.now(),
     });
-    setUnlockDialogOpen(false);
     return decrypted;
   }, []);
 
@@ -298,17 +293,6 @@ export function useDocumentEncryption(
     setSecureBlocksDialogOpen(true);
   }, []);
 
-  const handleUnlockSubmit = useCallback(
-    async (passphrase: string) => {
-      await applyUnlock(passphrase);
-    },
-    [applyUnlock]
-  );
-
-  const handleUnlockCancel = useCallback(() => {
-    setUnlockDialogOpen(false);
-  }, []);
-
   const lockDocument = useCallback(() => {
     setSession((prev) => {
       if (prev.securityState !== DocumentSecurityState.Unlocked) return prev;
@@ -322,11 +306,8 @@ export function useDocumentEncryption(
   }, []);
 
   const reopenUnlockDialog = useCallback(() => {
-    if (currentDoc) {
-      setUnlockDocumentTitle(currentDoc.title);
-    }
-    setUnlockDialogOpen(true);
-  }, [currentDoc]);
+    setUnlockFocusRequest((current) => current + 1);
+  }, []);
 
   const openEncryptDocumentDialog = useCallback((markdown: string) => {
     pendingDocumentEncryptRef.current = markdown;
@@ -405,12 +386,9 @@ export function useDocumentEncryption(
       setSetPassphraseDialogOpen={setSetPassphraseDialogOpen}
       documentEncryptDialogOpen={documentEncryptDialogOpen}
       setDocumentEncryptDialogOpen={setDocumentEncryptDialogOpen}
-      unlockDialogOpen={unlockDialogOpen}
-      setUnlockDialogOpen={setUnlockDialogOpen}
       removeEncryptionDialogOpen={removeEncryptionDialogOpen}
       setRemoveEncryptionDialogOpen={setRemoveEncryptionDialogOpen}
       removeEncryptionSubmitting={removeEncryptionSubmitting}
-      unlockDocumentTitle={unlockDocumentTitle}
       onEncryptChoice={handleEncryptChoice}
       onSaveWithoutEncryption={handleSaveWithoutEncryption}
       onSaveCancel={handleSaveCancel}
@@ -418,8 +396,6 @@ export function useDocumentEncryption(
       onSetPassphraseCancel={handleSetPassphraseCancel}
       onDocumentEncryptSubmit={handleDocumentEncryptSubmit}
       onDocumentEncryptCancel={handleDocumentEncryptCancel}
-      onUnlockSubmit={handleUnlockSubmit}
-      onUnlockCancel={handleUnlockCancel}
       onRemoveEncryptionConfirm={() => void handleRemoveEncryptionConfirm()}
     />
   );
@@ -434,6 +410,7 @@ export function useDocumentEncryption(
     onSaveSucceeded,
     dialogs,
     reopenUnlockDialog,
+    unlockFocusRequest,
     lockDocument,
     openEncryptDocumentDialog,
     openRemoveEncryptionDialog,

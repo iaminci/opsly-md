@@ -30,7 +30,6 @@ import {
   DuplicateNameError,
 } from "@/lib/storage";
 import { scrollToSearchMatch } from "@/lib/search-highlight";
-import { SAMPLE_MARKDOWN } from "@/lib/sample-document";
 import { EmptyState } from "@/components/EmptyState";
 import { HeaderLogo } from "@/components/HeaderLogo";
 import { Sidebar } from "@/components/Sidebar";
@@ -77,7 +76,6 @@ import {
   getExportMarkdownPayload,
   triggerBrowserDownload,
   ExportMarkdownDialog,
-  buildEncryptionDetails,
   getSecurityStatusLabel,
   type DocumentEncryptionCallbacks,
 } from "@/features/document-encryption";
@@ -273,24 +271,6 @@ function AppContent() {
     isEncryptedAtRest
   );
 
-  const encryptionDetails = useMemo(
-    () =>
-      buildEncryptionDetails(
-        encryption.session.documentId === currentDoc?.id
-          ? encryption.session.storedContent
-          : "",
-        encryption.session.securityState,
-        encryption.session.lastUnlockedAt
-      ),
-    [
-      currentDoc?.id,
-      encryption.session.documentId,
-      encryption.session.storedContent,
-      encryption.session.securityState,
-      encryption.session.lastUnlockedAt,
-    ]
-  );
-
   const editDirty =
     editMode &&
     !!currentDoc &&
@@ -362,8 +342,6 @@ function AppContent() {
       return fresh;
     });
   }, [encryption.session]);
-
-  const loadSampleHandledRef = useRef(false);
 
   useEffect(() => {
     refresh().finally(() => setLoading(false));
@@ -912,23 +890,6 @@ function AppContent() {
     handleCloseDocument,
   ]);
 
-  useEffect(() => {
-    const loadSample = searchParams.get("loadSample");
-    if (
-      !loading &&
-      loadSample === "1" &&
-      documents.length === 0 &&
-      !loadSampleHandledRef.current
-    ) {
-      loadSampleHandledRef.current = true;
-      handleAddDocument("Welcome", SAMPLE_MARKDOWN);
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete("loadSample");
-      const newSearch = params.toString();
-      router.replace(pathname + (newSearch ? `?${newSearch}` : ""), { scroll: false });
-    }
-  }, [loading, documents.length, searchParams, pathname, router, handleAddDocument]);
-
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -1039,13 +1000,12 @@ function AppContent() {
             <>
               <DocumentColumn rightTocOpen={rightTocOpen}>
                 <div className="mb-6 flex min-w-0 w-full max-w-full flex-wrap items-center justify-start gap-2 print:mb-4 sm:justify-end sm:gap-3 md:gap-5">
-                      {!editMode && (
+                      {!editMode && !encryption.isLocked && (
                         <DocumentSecurityMenu
                           className="mr-auto sm:mr-0 sm:order-first"
                           securityState={encryption.session.securityState}
                           isEncryptedAtRest={isEncryptedAtRest}
                           statusLabel={securityStatusLabel}
-                          details={encryptionDetails}
                           onEncryptDocument={handleEncryptDocumentRequest}
                           onLockNow={handleLockNow}
                           onUnlock={encryption.reopenUnlockDialog}
@@ -1086,25 +1046,26 @@ function AppContent() {
                           )}
                         </>
                       ) : (
-                        <>
-                          <Button
-                            type="button"
-                            variant="neutral"
-                            size="sm"
-                            className="shrink-0 bg-background"
-                            onClick={handleEnterEditMode}
-                            disabled={encryption.isLocked}
-                          >
-                            Edit
-                          </Button>
-                          <DocumentDownloadButton
-                            isEncryptedAtRest={isEncryptedAtRest}
-                            isLocked={encryption.isLocked}
-                            onDownloadPlain={() => void performDownloadStored()}
-                            onDownloadEncrypted={() => void performDownloadStored()}
-                            onExportMarkdown={handleExportMarkdownRequest}
-                          />
-                        </>
+                        !encryption.isLocked && (
+                          <>
+                            <Button
+                              type="button"
+                              variant="neutral"
+                              size="sm"
+                              className="shrink-0 bg-background"
+                              onClick={handleEnterEditMode}
+                            >
+                              Edit
+                            </Button>
+                            <DocumentDownloadButton
+                              isEncryptedAtRest={isEncryptedAtRest}
+                              isLocked={encryption.isLocked}
+                              onDownloadPlain={() => void performDownloadStored()}
+                              onDownloadEncrypted={() => void performDownloadStored()}
+                              onExportMarkdown={handleExportMarkdownRequest}
+                            />
+                          </>
+                        )
                       )}
                       {!editMode && (
                         <button
@@ -1130,7 +1091,10 @@ function AppContent() {
                 ) : encryption.isLocked ? (
                   <EncryptedDocumentPlaceholder
                     documentTitle={currentDoc.title}
-                    onUnlockRequest={encryption.reopenUnlockDialog}
+                    onUnlock={async (passphrase) => {
+                      await encryption.applyUnlock(passphrase);
+                    }}
+                    focusRequest={encryption.unlockFocusRequest}
                   />
                 ) : (
                   <MarkdownRenderer

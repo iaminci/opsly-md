@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -30,12 +31,14 @@ export function UnlockDocumentDialog({
   onCancel,
 }: UnlockDocumentDialogProps) {
   const [passphrase, setPassphrase] = useState("");
+  const [showPassphrase, setShowPassphrase] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (open) {
       setPassphrase("");
+      setShowPassphrase(false);
       setError(null);
       setSubmitting(false);
     }
@@ -89,17 +92,32 @@ export function UnlockDocumentDialog({
             <label htmlFor="unlock-passphrase" className="text-sm font-medium">
               Passphrase
             </label>
-            <Input
-              id="unlock-passphrase"
-              type="password"
-              value={passphrase}
-              onChange={(e) => {
-                setPassphrase(e.target.value);
-                setError(null);
-              }}
-              autoComplete="current-password"
-              autoFocus
-            />
+            <div className="relative">
+              <Input
+                id="unlock-passphrase"
+                type={showPassphrase ? "text" : "password"}
+                value={passphrase}
+                onChange={(e) => {
+                  setPassphrase(e.target.value);
+                  setError(null);
+                }}
+                autoComplete="current-password"
+                autoFocus
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassphrase((current) => !current)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-sm p-1 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                aria-label={showPassphrase ? "Hide passphrase" : "Show passphrase"}
+              >
+                {showPassphrase ? (
+                  <EyeOff className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
+                ) : (
+                  <Eye className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
+                )}
+              </button>
+            </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
           <DialogFooter>

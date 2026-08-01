@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   },
 };
 
-const APP_URL = "/app?loadSample=1";
+const APP_URL = "/app";
 
 const HOME_CONTAINER =
   "mx-auto w-full max-w-[1440px] px-6 sm:px-8 lg:px-10 xl:px-12";

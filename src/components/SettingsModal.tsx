@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Dialog,
   DialogClose,
@@ -10,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Settings, Upload, Download, Trash2, X } from "lucide-react";
+import { Settings, Upload, Download, Lock, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SettingsModalProps {
@@ -19,7 +20,7 @@ interface SettingsModalProps {
   documentStackEnabled: boolean;
   onDocumentStackEnabledChange: (enabled: boolean) => void;
   onImport: () => void;
-  onExport: () => void;
+  onExport: (mode: "plain" | "encrypted") => void;
   onDeleteAll: () => void;
   deleteLabel: string;
 }
@@ -65,7 +66,16 @@ export function SettingsModal({
   onDeleteAll,
   deleteLabel,
 }: SettingsModalProps) {
+  const [exportChoiceOpen, setExportChoiceOpen] = useState(false);
+
+  const handleExportChoice = (mode: "plain" | "encrypted") => {
+    setExportChoiceOpen(false);
+    onOpenChange(false);
+    onExport(mode);
+  };
+
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="gap-0 overflow-hidden px-0 pb-6 pt-0 duration-150 sm:max-w-[31rem] data-[state=closed]:zoom-out-[0.98] data-[state=open]:zoom-in-[0.98]"
@@ -128,7 +138,7 @@ export function SettingsModal({
                 variant="ghost"
                 size="sm"
                 className={settingsActionButtonClassName}
-                onClick={onExport}
+                onClick={() => setExportChoiceOpen(true)}
               >
                 <Download className="size-4 shrink-0" />
                 Export
@@ -159,5 +169,39 @@ export function SettingsModal({
         </div>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={exportChoiceOpen} onOpenChange={setExportChoiceOpen}>
+      <DialogContent className="gap-0 overflow-hidden px-0 pb-6 pt-0 sm:max-w-sm">
+        <DialogHeader className="border-b-2 border-border px-6 py-5">
+          <DialogTitle>Export format</DialogTitle>
+          <DialogDescription className="pt-1">
+            Choose how to export your data.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-2 gap-3 px-6 pt-6">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className={settingsActionButtonClassName}
+            onClick={() => handleExportChoice("plain")}
+          >
+            <Download className="size-4 shrink-0" />
+            Plain
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className={settingsActionButtonClassName}
+            onClick={() => handleExportChoice("encrypted")}
+          >
+            <Lock className="size-4 shrink-0" />
+            Encrypted
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

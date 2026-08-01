@@ -1,7 +1,21 @@
 import { formatDistanceToNow } from "date-fns";
-import type { EncryptedDocument } from "opsly-mask/crypto";
+import { PBKDF2_ITERATIONS, type EncryptedDocument } from "opsly-mask/crypto";
 import { parseStoredContent } from "./stored-content";
 import { DocumentSecurityState } from "./types";
+
+export interface EncryptionSpecLine {
+  label: string;
+  value: string;
+}
+
+export function getDefaultEncryptionSpecs(): EncryptionSpecLine[] {
+  return [
+    { label: "Algorithm", value: "AES-256-GCM" },
+    { label: "Key derivation", value: "PBKDF2-SHA256" },
+    { label: "Version", value: "v1" },
+    { label: "Iterations", value: PBKDF2_ITERATIONS.toLocaleString() },
+  ];
+}
 
 export interface EncryptionDetailsViewModel {
   status: string;

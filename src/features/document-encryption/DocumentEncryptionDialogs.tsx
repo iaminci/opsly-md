@@ -2,7 +2,6 @@
 
 import { SecureBlocksDetectedDialog } from "./components/SecureBlocksDetectedDialog";
 import { SetPassphraseDialog } from "./components/SetPassphraseDialog";
-import { UnlockDocumentDialog } from "./components/UnlockDocumentDialog";
 import { RemoveEncryptionDialog } from "./components/RemoveEncryptionDialog";
 
 interface DocumentEncryptionDialogsProps {
@@ -12,12 +11,9 @@ interface DocumentEncryptionDialogsProps {
   setSetPassphraseDialogOpen: (open: boolean) => void;
   documentEncryptDialogOpen: boolean;
   setDocumentEncryptDialogOpen: (open: boolean) => void;
-  unlockDialogOpen: boolean;
-  setUnlockDialogOpen: (open: boolean) => void;
   removeEncryptionDialogOpen: boolean;
   setRemoveEncryptionDialogOpen: (open: boolean) => void;
   removeEncryptionSubmitting?: boolean;
-  unlockDocumentTitle?: string;
   onEncryptChoice: () => void;
   onSaveWithoutEncryption: () => void;
   onSaveCancel: () => void;
@@ -25,8 +21,6 @@ interface DocumentEncryptionDialogsProps {
   onSetPassphraseCancel: () => void;
   onDocumentEncryptSubmit: (passphrase: string) => void | Promise<void>;
   onDocumentEncryptCancel: () => void;
-  onUnlockSubmit: (passphrase: string) => void | Promise<void>;
-  onUnlockCancel: () => void;
   onRemoveEncryptionConfirm: () => void;
 }
 
@@ -37,12 +31,9 @@ export function DocumentEncryptionDialogs({
   setSetPassphraseDialogOpen,
   documentEncryptDialogOpen,
   setDocumentEncryptDialogOpen,
-  unlockDialogOpen,
-  setUnlockDialogOpen,
   removeEncryptionDialogOpen,
   setRemoveEncryptionDialogOpen,
   removeEncryptionSubmitting = false,
-  unlockDocumentTitle,
   onEncryptChoice,
   onSaveWithoutEncryption,
   onSaveCancel,
@@ -50,8 +41,6 @@ export function DocumentEncryptionDialogs({
   onSetPassphraseCancel,
   onDocumentEncryptSubmit,
   onDocumentEncryptCancel,
-  onUnlockSubmit,
-  onUnlockCancel,
   onRemoveEncryptionConfirm,
 }: DocumentEncryptionDialogsProps) {
   return (
@@ -84,13 +73,6 @@ export function DocumentEncryptionDialogs({
         }
         submitLabel="Encrypt"
         submittingLabel="Encrypting…"
-      />
-      <UnlockDocumentDialog
-        open={unlockDialogOpen}
-        documentTitle={unlockDocumentTitle}
-        onOpenChange={setUnlockDialogOpen}
-        onUnlock={onUnlockSubmit}
-        onCancel={onUnlockCancel}
       />
       <RemoveEncryptionDialog
         open={removeEncryptionDialogOpen}

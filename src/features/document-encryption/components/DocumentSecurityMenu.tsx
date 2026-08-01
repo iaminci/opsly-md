@@ -19,14 +19,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import type { EncryptionDetailsViewModel } from "../encryption-details";
 import { DocumentSecurityState } from "../types";
 
 export interface DocumentSecurityMenuProps {
   securityState: DocumentSecurityState;
   isEncryptedAtRest: boolean;
   statusLabel: string;
-  details: EncryptionDetailsViewModel;
   className?: string;
   onEncryptDocument?: () => void;
   onLockNow?: () => void;
@@ -77,15 +75,6 @@ function SecuritySection({
   );
 }
 
-function InfoLine({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-4 px-2 py-1.5 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="text-right font-medium text-foreground">{value}</span>
-    </div>
-  );
-}
-
 function ComingSoonRow({ label }: { label: string }) {
   return (
     <div className="flex items-center justify-between gap-3 px-2 py-1.5 text-sm text-muted-foreground">
@@ -127,40 +116,38 @@ function AccessContext({
   );
 }
 
-function PrimaryActionRow({
+function ActionRow({
   label,
   description,
   onClick,
+  className,
 }: {
   label: string;
   description: string;
   onClick: () => void;
+  className?: string;
 }) {
   return (
-    <div className="mt-4">
-      <p className="px-2 text-[0.65rem] font-heading uppercase tracking-wide text-muted-foreground">
-        Primary Action
-      </p>
-      <button
-        type="button"
-        onClick={onClick}
-        className={cn(
-          "mt-2 flex w-full items-center justify-between gap-3 rounded-base border-2 border-border bg-background px-3 py-2.5 text-left transition-colors",
-          "hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-        )}
-      >
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-foreground">{label}</p>
-          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            {description}
-          </p>
-        </div>
-        <ChevronRight
-          className="size-4 shrink-0 self-center text-muted-foreground"
-          aria-hidden
-        />
-      </button>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex w-full items-center justify-between gap-3 rounded-base border-2 border-border bg-background px-3 py-2.5 text-left transition-colors",
+        "hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+        className
+      )}
+    >
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-foreground">{label}</p>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+          {description}
+        </p>
+      </div>
+      <ChevronRight
+        className="size-4 shrink-0 self-center text-muted-foreground"
+        aria-hidden
+      />
+    </button>
   );
 }
 
@@ -232,7 +219,6 @@ export function DocumentSecurityMenu({
   securityState,
   isEncryptedAtRest,
   statusLabel,
-  details,
   className,
   onEncryptDocument,
   onLockNow,
@@ -311,7 +297,8 @@ export function DocumentSecurityMenu({
                     helper="This document is currently stored as plain Markdown."
                   />
                   {onEncryptDocument && (
-                    <PrimaryActionRow
+                    <ActionRow
+                      className="mt-4"
                       label="Encrypt"
                       description="Encrypt this document with a passphrase. The encrypted document will be stored as a .opsly file extension."
                       onClick={() => closeAnd(onEncryptDocument)}
@@ -327,7 +314,8 @@ export function DocumentSecurityMenu({
                     helper="Unlock the document to view, edit, and export plain Markdown."
                   />
                   {onUnlock && (
-                    <PrimaryActionRow
+                    <ActionRow
+                      className="mt-4"
                       label="Unlock"
                       description="After unlocking, decrypted content exists only in memory. Saving re-encrypts automatically."
                       onClick={() => closeAnd(onUnlock)}
@@ -336,75 +324,45 @@ export function DocumentSecurityMenu({
                 </>
               )}
               {isUnlocked && (
-                <>
-                  <AccessContext
-                    icon={LockOpen}
-                    headline="Document is currently unlocked"
-                    helper="Decrypted content exists only in memory until the document is locked or the tab is closed."
-                  />
-                  {onLockNow && (
-                    <PrimaryActionRow
-                      label="Lock Now"
-                      description="Immediately clears decrypted content from memory."
-                      onClick={() => closeAnd(onLockNow)}
-                    />
-                  )}
-                </>
+                <AccessContext
+                  icon={LockOpen}
+                  headline="Document is currently unlocked"
+                  helper=""
+                />
               )}
             </SecuritySection>
 
-            {isEncryptedAtRest && (
-              <SecuritySection
-                title="Encryption"
-                className="border-t-2 border-border pt-6"
-              >
-                {details.algorithm && (
-                  <InfoLine label="Algorithm" value={details.algorithm} />
-                )}
-                {details.keyDerivation && (
-                  <InfoLine label="Key derivation" value={details.keyDerivation} />
-                )}
-                {details.encryptionVersion && (
-                  <InfoLine label="Version" value={details.encryptionVersion} />
-                )}
-                {details.iterations != null && (
-                  <InfoLine
-                    label="Iterations"
-                    value={details.iterations.toLocaleString()}
-                  />
-                )}
-                {details.unlockedLabel != null && (
-                  <InfoLine label="Unlocked" value={details.unlockedLabel} />
-                )}
-                {details.lastUnlockedLabel != null && (
-                  <InfoLine
-                    label="Last unlocked"
-                    value={details.lastUnlockedLabel}
-                  />
-                )}
-              </SecuritySection>
-            )}
-
-            {isEncryptedAtRest && onRemoveEncryption && (
+            {isEncryptedAtRest && (onLockNow || onRemoveEncryption) && (
               <SecuritySection
                 title="Security"
                 className="border-t-2 border-border pt-6"
               >
-                <DangerActionRow
-                  label="Remove Encryption"
-                  description="Decrypts the document permanently and converts it back into a normal Markdown document."
-                  disabled={!isUnlocked}
-                  disabledReason={
-                    !isUnlocked
-                      ? "Unlock the document to remove encryption."
-                      : undefined
-                  }
-                  onClick={
-                    isUnlocked
-                      ? () => closeAnd(onRemoveEncryption)
-                      : undefined
-                  }
-                />
+                {isUnlocked && onLockNow && (
+                  <ActionRow
+                    label="Lock Now"
+                    description="Locks the document again."
+                    onClick={() => closeAnd(onLockNow)}
+                  />
+                )}
+                {onRemoveEncryption && (
+                  <div className={isUnlocked && onLockNow ? "mt-3" : undefined}>
+                    <DangerActionRow
+                      label="Remove Encryption"
+                      description="Removes encryption permanently."
+                      disabled={!isUnlocked}
+                      disabledReason={
+                        !isUnlocked
+                          ? "Unlock the document to remove encryption."
+                          : undefined
+                      }
+                      onClick={
+                        isUnlocked
+                          ? () => closeAnd(onRemoveEncryption)
+                          : undefined
+                      }
+                    />
+                  </div>
+                )}
               </SecuritySection>
             )}
 

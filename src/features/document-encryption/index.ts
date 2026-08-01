@@ -41,6 +41,9 @@ export { DocumentDownloadButton } from "./components/DocumentDownloadButton";
 export type { DocumentDownloadButtonProps } from "./components/DocumentDownloadButton";
 export {
   buildEncryptionDetails,
+  getDefaultEncryptionSpecs,
   getSecurityStatusLabel,
   type EncryptionDetailsViewModel,
+  type EncryptionSpecLine,
 } from "./encryption-details";
+export { EncryptionSpecsList } from "./components/EncryptionSpecsList";

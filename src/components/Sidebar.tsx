@@ -36,7 +36,7 @@ import {
   type WorkspaceExport,
   type AllWorkspacesExport,
 } from "@/lib/storage";
-import { cn, titleFromMarkdownContent } from "@/lib/utils";
+import { cn, OPSLY_FILE_EXTENSION, titleFromMarkdownContent } from "@/lib/utils";
 import { CreateNameDialog } from "./CreateNameDialog";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import {
@@ -65,6 +65,34 @@ import { UploadFileModal } from "./UploadFileModal";
 import { CreateMarkdownModal } from "./CreateMarkdownModal";
 import { workspaceTabBaseClassName } from "./WorkspaceSwitcher";
 import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
+import {
+  decryptWorkspaceExport,
+  encryptWorkspaceExport,
+  isEncryptedWorkspaceExport,
+} from "@/lib/workspace-export-crypto";
+import { SetPassphraseDialog } from "@/features/document-encryption/components/SetPassphraseDialog";
+import { UnlockDocumentDialog } from "@/features/document-encryption/components/UnlockDocumentDialog";
+
+type ExportMode = "plain" | "encrypted";
+
+interface PendingExport {
+  data: AllWorkspacesExport | WorkspaceExport;
+  filename: string;
+}
+
+function downloadExportFile(content: string, filename: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+function toEncryptedExportFilename(jsonFilename: string): string {
+  return jsonFilename.replace(/\.json$/i, OPSLY_FILE_EXTENSION);
+}
 
 interface SidebarProps {
   documents: Document[];
@@ -123,6 +151,11 @@ export function Sidebar({
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [exportConfirmDialogOpen, setExportConfirmDialogOpen] = useState(false);
   const [exportSelectedIds, setExportSelectedIds] = useState<Set<string>>(new Set());
+  const [exportMode, setExportMode] = useState<ExportMode>("plain");
+  const [exportPassphraseDialogOpen, setExportPassphraseDialogOpen] = useState(false);
+  const [pendingExport, setPendingExport] = useState<PendingExport | null>(null);
+  const [importUnlockDialogOpen, setImportUnlockDialogOpen] = useState(false);
+  const [pendingEncryptedImport, setPendingEncryptedImport] = useState<string | null>(null);
   const { sortedWorkspaces, getFoldersInWorkspace } = useWorkspaceTree();
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
   const [workspaceSwitcherMenuOpen, setWorkspaceSwitcherMenuOpen] = useState(false);
@@ -163,6 +196,8 @@ export function Sidebar({
     deleteDocDialogOpen ||
     exportDialogOpen ||
     exportConfirmDialogOpen ||
+    exportPassphraseDialogOpen ||
+    importUnlockDialogOpen ||
     commandPaletteOpen ||
     settingsModalOpen ||
     uploadModalOpen ||
@@ -426,7 +461,24 @@ export function Sidebar({
     await onRefresh();
   };
 
-  const handleExportClick = () => {
+  const queueExportDownload = useCallback(
+    (data: AllWorkspacesExport | WorkspaceExport, filename: string) => {
+      if (exportMode === "encrypted") {
+        setPendingExport({ data, filename });
+        setExportPassphraseDialogOpen(true);
+        return;
+      }
+      downloadExportFile(
+        JSON.stringify(data, null, 2),
+        filename,
+        "application/json"
+      );
+    },
+    [exportMode]
+  );
+
+  const handleExportClick = (mode: ExportMode = "plain") => {
+    setExportMode(mode);
     if (selectedWorkspaceId) {
       setExportConfirmDialogOpen(true);
     } else {
@@ -445,16 +497,8 @@ export function Sidebar({
   const handleExportWorkspace = async (workspaceId: string) => {
     const data = await exportWorkspaceData(workspaceId);
     if (!data) return;
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: "application/json",
-    });
     const filename = `${data.workspace.name.replace(/[^\w\s-]/g, "").replace(/\s+/g, "-")}-export.json`;
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+    queueExportDownload(data, filename);
   };
 
   const handleExportSelected = async () => {
@@ -465,20 +509,92 @@ export function Sidebar({
         ? await exportAllWorkspacesData()
         : await exportWorkspacesData(ids);
     if (!data) return;
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: "application/json",
-    });
     const filename =
       ids.length === sortedWorkspaces.length
         ? "all-workspaces-export.json"
         : "workspaces-export.json";
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+    queueExportDownload(data, filename);
     setExportDialogOpen(false);
+  };
+
+  const handleEncryptedExportSubmit = async (passphrase: string) => {
+    if (!pendingExport) return;
+    const encrypted = await encryptWorkspaceExport(pendingExport.data, passphrase);
+    downloadExportFile(
+      encrypted,
+      toEncryptedExportFilename(pendingExport.filename),
+      "application/vnd.opsly+encrypted"
+    );
+    setExportPassphraseDialogOpen(false);
+    setPendingExport(null);
+  };
+
+  const processImportedExportData = async (
+    data: AllWorkspacesExport | WorkspaceExport
+  ) => {
+    if (
+      "type" in data &&
+      data.type === "all" &&
+      "workspaces" in data &&
+      Array.isArray(data.workspaces)
+    ) {
+      await importAllWorkspacesData(data as AllWorkspacesExport);
+      setSelectedWorkspaceId(null);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(WORKSPACE_KEY, "");
+      }
+      return;
+    }
+
+    if (
+      "workspace" in data &&
+      "folders" in data &&
+      "documents" in data &&
+      Array.isArray((data as WorkspaceExport).folders) &&
+      Array.isArray((data as WorkspaceExport).documents)
+    ) {
+      const result = await importWorkspaceData(data as WorkspaceExport);
+      if (result) {
+        setSelectedWorkspaceId(null);
+        if (typeof window !== "undefined") {
+          localStorage.setItem(WORKSPACE_KEY, "");
+        }
+      }
+    } else {
+      throw new Error("Invalid workspace export file");
+    }
+  };
+
+  const handleImportFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      if (isEncryptedWorkspaceExport(text)) {
+        setPendingEncryptedImport(text);
+        setImportUnlockDialogOpen(true);
+        e.target.value = "";
+        return;
+      }
+      const data = JSON.parse(text) as unknown;
+      if (!data || typeof data !== "object" || !("version" in data)) {
+        throw new Error("Invalid workspace export file");
+      }
+      await processImportedExportData(data as AllWorkspacesExport | WorkspaceExport);
+      await onRefresh();
+    } catch {
+      toast.error("Failed to import workspace. The file may be invalid or corrupted.");
+    }
+    e.target.value = "";
+  };
+
+  const handleEncryptedImportUnlock = async (passphrase: string) => {
+    if (!pendingEncryptedImport) return;
+    const data = await decryptWorkspaceExport(pendingEncryptedImport, passphrase);
+    await processImportedExportData(data);
+    await onRefresh();
+    setImportUnlockDialogOpen(false);
+    setPendingEncryptedImport(null);
   };
 
   const toggleExportWorkspace = (id: string) => {
@@ -500,47 +616,6 @@ export function Sidebar({
 
   const handleImportWorkspace = () => {
     importInputRef.current?.click();
-  };
-
-  const handleImportFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const text = await file.text();
-      const data = JSON.parse(text) as unknown;
-      if (!data || typeof data !== "object" || !("version" in data)) {
-        throw new Error("Invalid workspace export file");
-      }
-      if ("type" in data && data.type === "all" && "workspaces" in data && Array.isArray(data.workspaces)) {
-        const imported = await importAllWorkspacesData(data as AllWorkspacesExport);
-        if (imported.length > 0) {
-          setSelectedWorkspaceId(imported[0].id);
-          if (typeof window !== "undefined") {
-            localStorage.setItem(WORKSPACE_KEY, imported[0].id);
-          }
-        }
-      } else if (
-        "workspace" in data &&
-        "folders" in data &&
-        "documents" in data &&
-        Array.isArray((data as WorkspaceExport).folders) &&
-        Array.isArray((data as WorkspaceExport).documents)
-      ) {
-        const result = await importWorkspaceData(data as WorkspaceExport);
-        if (result) {
-          setSelectedWorkspaceId(result.workspace.id);
-          if (typeof window !== "undefined") {
-            localStorage.setItem(WORKSPACE_KEY, result.workspace.id);
-          }
-        }
-      } else {
-        throw new Error("Invalid workspace export file");
-      }
-      await onRefresh();
-    } catch {
-      toast.error("Failed to import workspace. The file may be invalid or corrupted.");
-    }
-    e.target.value = "";
   };
 
   const handleRenameFolder = (id: string, name: string) => {
@@ -614,7 +689,7 @@ export function Sidebar({
       <input
         ref={importInputRef}
         type="file"
-        accept=".json,application/json"
+        accept=".json,.opsly,application/json"
         onChange={handleImportFileChange}
         className="hidden"
       />
@@ -774,16 +849,27 @@ export function Sidebar({
       <AlertDialog open={exportConfirmDialogOpen} onOpenChange={setExportConfirmDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Export workspace</AlertDialogTitle>
+            <AlertDialogTitle>
+              {exportMode === "encrypted" ? "Export workspace encrypted" : "Export workspace"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Export &quot;{selectedWorkspaceName}&quot; as a JSON file? This will include the
-              workspace, all folders, and documents.
+              {exportMode === "encrypted" ? (
+                <>
+                  Export &quot;{selectedWorkspaceName}&quot; as an encrypted file? You will choose a
+                  passphrase next. The export includes the workspace, all folders, and documents.
+                </>
+              ) : (
+                <>
+                  Export &quot;{selectedWorkspaceName}&quot; as a JSON file? This will include the
+                  workspace, all folders, and documents.
+                </>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={() => void handleExportConfirm()}>
-              Export
+              {exportMode === "encrypted" ? "Continue" : "Export"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -920,7 +1006,11 @@ export function Sidebar({
       <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
         <DialogContent className="sm:max-w-sm" showCloseButton>
           <DialogHeader>
-            <DialogTitle>Export workspaces</DialogTitle>
+            <DialogTitle>
+              {exportMode === "encrypted"
+                ? "Export workspaces encrypted"
+                : "Export workspaces"}
+            </DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-2 py-2">
             <label className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-sidebar-accent">
@@ -961,7 +1051,7 @@ export function Sidebar({
               disabled={exportSelectedIds.size === 0}
               className="bg-background text-foreground hover:bg-primary/90"
             >
-              Export
+              {exportMode === "encrypted" ? "Continue" : "Export"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -976,15 +1066,45 @@ export function Sidebar({
           setSettingsModalOpen(false);
           window.setTimeout(() => importInputRef.current?.click(), 0);
         }}
-        onExport={() => {
+        onExport={(mode) => {
           setSettingsModalOpen(false);
-          handleExportClick();
+          handleExportClick(mode);
         }}
         onDeleteAll={() => {
           setSettingsModalOpen(false);
           handleDeleteAllClick();
         }}
         deleteLabel={selectedWorkspaceId ? "Delete Workspace" : "Delete Everything"}
+      />
+
+      <SetPassphraseDialog
+        open={exportPassphraseDialogOpen}
+        onOpenChange={setExportPassphraseDialogOpen}
+        title="Encrypt export"
+        description={
+          <>
+            Choose a passphrase to encrypt this export. You will need it to import the
+            file later.
+          </>
+        }
+        submitLabel="Export"
+        submittingLabel="Encrypting…"
+        onSubmit={handleEncryptedExportSubmit}
+        onCancel={() => {
+          setExportPassphraseDialogOpen(false);
+          setPendingExport(null);
+        }}
+      />
+
+      <UnlockDocumentDialog
+        open={importUnlockDialogOpen}
+        onOpenChange={setImportUnlockDialogOpen}
+        documentTitle="Encrypted export"
+        onUnlock={handleEncryptedImportUnlock}
+        onCancel={() => {
+          setImportUnlockDialogOpen(false);
+          setPendingEncryptedImport(null);
+        }}
       />
 
       <UploadFileModal
@@ -1021,7 +1141,7 @@ export function Sidebar({
             ),
           onSearchDocuments: () => setOpen(true),
           onSwitchWorkspace: () => setOpen(true),
-          onExportWorkspace: handleExportClick,
+          onExportWorkspace: () => handleExportClick("plain"),
           onImportWorkspace: handleImportWorkspace,
         }}
       />
