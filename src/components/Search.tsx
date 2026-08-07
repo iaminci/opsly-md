@@ -21,6 +21,11 @@ import {
 } from "@/lib/search-highlight";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  workspaceControlChromeClassName,
+  workspaceIconActionClassName,
+} from "@/components/WorkspaceSwitcher";
+import { cn } from "@/lib/utils";
 
 const SEARCH_RESULTS_PANEL_WIDTH_PX = 520;
 const SEARCH_RESULTS_VIEWPORT_PADDING_PX = 8;
@@ -293,8 +298,8 @@ export function Search({
   return (
     <div className="relative overflow-visible">
       <div ref={anchorRef}>
-        <div className="group/search relative transition-[transform,box-shadow] hover:translate-x-boxShadowX hover:translate-y-boxShadowY">
-        <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 z-10 size-4 -translate-y-1/2 text-foreground" />
+        <div className="relative">
+        <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 z-10 size-4 -translate-y-1/2 text-primary" />
         <Input
           type="text"
           placeholder="Search"
@@ -303,10 +308,11 @@ export function Search({
           onFocus={() => query && setIsOpen(true)}
           onBlur={() => setTimeout(() => setIsOpen(false), 150)}
           onKeyDown={handleSearchKeyDown}
-          className={
-            "!h-9 !border-2 !border-sidebar-border !bg-input text-sm font-medium !shadow-shadow !rounded-[5px] group-hover/search:!shadow-none focus-visible:!border-sidebar-ring focus-visible:!ring-1 focus-visible:!ring-sidebar-ring focus-visible:!ring-offset-0 pl-8 " +
-            (showClear ? "pr-9 " : "pr-2.5 ")
-          }
+          className={cn(
+            workspaceControlChromeClassName,
+            "!h-9 text-sm font-medium pl-8",
+            showClear ? "pr-9" : "pr-2.5"
+          )}
           autoComplete="off"
         />
         {showClear && (
@@ -327,26 +333,22 @@ export function Search({
             {matchNavigation.activeIndex + 1} / {matchNavigation.total}
           </span>
           <div className="flex shrink-0 items-center gap-1">
-            <Button
+            <button
               type="button"
-              variant="neutral"
-              size="icon-sm"
-              className="size-7 shrink-0 bg-background shadow-none"
+              className={cn(workspaceIconActionClassName, "!size-7 !text-primary")}
               aria-label="Previous match"
               onClick={matchNavigation.onPrevious}
             >
               <ChevronUp className="size-4" />
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
-              variant="neutral"
-              size="icon-sm"
-              className="size-7 shrink-0 bg-background shadow-none"
+              className={cn(workspaceIconActionClassName, "!size-7 !text-primary")}
               aria-label="Next match"
               onClick={matchNavigation.onNext}
             >
               <ChevronDown className="size-4" />
-            </Button>
+            </button>
           </div>
         </div>
       )}

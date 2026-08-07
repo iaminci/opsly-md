@@ -41,7 +41,7 @@ const workspaceSwitcherDropdownMaxHeightClassName =
 export const workspaceTabBaseClassName =
   "!h-9 !min-h-9 !rounded-[5px] !border-2 !border-border !font-heading !font-bold !shadow-shadow !outline-0 transition-[transform,box-shadow] hover:!translate-x-boxShadowX hover:!translate-y-boxShadowY hover:!shadow-none hover:!outline-0 focus-visible:!outline-0 focus-visible:!shadow-shadow";
 
-const workspaceControlChromeClassName =
+export const workspaceControlChromeClassName =
   "rounded-md border-2 border-border bg-background shadow-none transition-colors hover:border-border hover:bg-sidebar-accent hover:translate-x-0 hover:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
 
 export const workspaceDropdownTriggerClassName = cn(
@@ -50,8 +50,14 @@ export const workspaceDropdownTriggerClassName = cn(
 );
 
 export const workspaceIconActionClassName = cn(
-  "inline-flex size-9 shrink-0 cursor-pointer items-center justify-center p-0 text-muted-foreground hover:text-primary",
+  "inline-flex size-9 shrink-0 cursor-pointer items-center justify-center p-0 text-primary hover:text-primary-hover",
   workspaceControlChromeClassName
+);
+
+/** Flat toolbar label buttons (Edit, Download, Cancel, Save). */
+export const workspaceToolbarTextActionClassName = cn(
+  workspaceControlChromeClassName,
+  "inline-flex h-9 shrink-0 cursor-pointer items-center justify-center px-3.5 text-sm font-medium text-primary"
 );
 
 /** (+) “New workspace” and single-workspace ⋯ — same chrome as tabs, neutral surface. */

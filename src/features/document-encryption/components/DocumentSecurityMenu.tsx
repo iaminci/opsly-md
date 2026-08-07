@@ -7,7 +7,7 @@ import {
   LockOpen,
   Shield,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Popover,
   PopoverContent,
@@ -18,7 +18,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { workspaceIconActionClassName } from "@/components/WorkspaceSwitcher";
 import { DocumentSecurityState } from "../types";
 
 export interface DocumentSecurityMenuProps {
@@ -244,11 +244,13 @@ export function DocumentSecurityMenu({
       <Tooltip delayDuration={300}>
         <TooltipTrigger asChild>
           <PopoverTrigger asChild>
-            <Button
+            <button
               type="button"
-              variant="neutral"
-              size="sm"
-              className={cn("relative shrink-0 bg-background px-2.5", className)}
+              className={cn(
+                workspaceIconActionClassName,
+                "relative shrink-0 !text-primary",
+                className
+              )}
               aria-label={`Document security: ${statusLabel}. Click to open.`}
               aria-haspopup="dialog"
               aria-expanded={open}
@@ -263,7 +265,7 @@ export function DocumentSecurityMenu({
                   aria-hidden
                 />
               )}
-            </Button>
+            </button>
           </PopoverTrigger>
         </TooltipTrigger>
         <TooltipContent side="bottom" align="center" className="max-w-[14rem] text-center">

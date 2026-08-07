@@ -39,8 +39,8 @@ export function EmptyState({ hasDocuments = false }: { hasDocuments?: boolean })
       <div className="mx-auto flex max-w-xl flex-col gap-8 px-4 text-left">
         <InfoCallout
           icon={FileTextIcon}
-          iconClassName="text-sky-600"
-          className="bg-sky-50"
+          iconClassName="text-sky-600 dark:text-sky-400"
+          className="bg-sky-50 dark:bg-sky-950/45"
         >
           {hasDocuments ? (
             <>
@@ -56,8 +56,8 @@ export function EmptyState({ hasDocuments = false }: { hasDocuments?: boolean })
         </InfoCallout>
         <InfoCallout
           icon={AlertTriangleIcon}
-          iconClassName="text-amber-500"
-          className="bg-amber-50"
+          iconClassName="text-amber-500 dark:text-amber-400"
+          className="bg-amber-50 dark:bg-amber-950/40"
         >
           <span className="font-semibold text-destructive">
             All documents are stored locally in this browser.
@@ -67,9 +67,9 @@ export function EmptyState({ hasDocuments = false }: { hasDocuments?: boolean })
         </InfoCallout>
         <InfoCallout
           icon={ShieldIcon}
-          iconClassName="text-violet-600"
+          iconClassName="text-violet-600 dark:text-violet-400"
           title="Document encryption"
-          className="bg-violet-50"
+          className="bg-violet-50 dark:bg-violet-950/40"
         >
           <p>
             <span className="font-semibold">Encrypt sensitive documents</span> with a passphrase from
@@ -82,7 +82,7 @@ export function EmptyState({ hasDocuments = false }: { hasDocuments?: boolean })
               </span>
               <span>
                 Encrypted files are stored as{" "}
-                <code className="rounded border border-border bg-background px-1 py-0.5 text-xs text-foreground">
+                <code className="rounded border border-border bg-background px-1 py-0.5 text-xs text-foreground dark:bg-input">
                   .opsly
                 </code>{" "}
                 documents.

@@ -48,6 +48,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { cn, appCapsuleClassName } from "@/lib/utils";
+import { workspaceToolbarTextActionClassName } from "@/components/WorkspaceSwitcher";
 import {
   getTreeDocumentDragId,
   isTreeDocumentDrag,
@@ -154,7 +155,7 @@ function SidebarExpandTrigger() {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <SidebarTrigger className="absolute left-2 top-2 z-20 size-9 shrink-0 bg-background print:hidden" />
+        <SidebarTrigger className="absolute left-2 top-2 z-20 print:hidden" />
       </TooltipTrigger>
       <TooltipContent side="right" align="start">
         Open sidebar
@@ -1014,20 +1015,16 @@ function AppContent() {
                       )}
                       {editMode ? (
                         <>
-                          <Button
+                          <button
                             type="button"
-                            variant="neutral"
-                            size="sm"
-                            className="shrink-0 bg-background"
+                            className={workspaceToolbarTextActionClassName}
                             onClick={() => handleExitEditMode(true)}
                           >
                             Cancel
-                          </Button>
-                          <Button
+                          </button>
+                          <button
                             type="button"
-                            variant="neutral"
-                            size="sm"
-                            className="shrink-0 bg-background hover:bg-main"
+                            className={workspaceToolbarTextActionClassName}
                             onClick={() => void handleEditSave()}
                           >
                             {editAutosaveUi === "saving"
@@ -1035,7 +1032,7 @@ function AppContent() {
                               : editAutosaveSecs !== null
                                 ? `Save (${editAutosaveSecs}s)`
                                 : "Save"}
-                          </Button>
+                          </button>
                           {(editAutosaveUi === "saving" || editAutosaveUi === "saved") && (
                             <span
                               className="min-w-0 max-w-full basis-full pt-1 text-left text-xs text-muted-foreground sm:basis-auto sm:pt-0 sm:text-right"
@@ -1048,15 +1045,13 @@ function AppContent() {
                       ) : (
                         !encryption.isLocked && (
                           <>
-                            <Button
+                            <button
                               type="button"
-                              variant="neutral"
-                              size="sm"
-                              className="shrink-0 bg-background"
+                              className={workspaceToolbarTextActionClassName}
                               onClick={handleEnterEditMode}
                             >
                               Edit
-                            </Button>
+                            </button>
                             <DocumentDownloadButton
                               isEncryptedAtRest={isEncryptedAtRest}
                               isLocked={encryption.isLocked}
@@ -1071,7 +1066,9 @@ function AppContent() {
                         <button
                           type="button"
                           aria-label="Close document and return to overview"
-                          className="flex size-7 shrink-0 items-center justify-center rounded-[4px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground print:hidden"
+                          className={cn(
+                            "inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md p-0 text-primary transition-colors hover:text-primary-hover print:hidden"
+                          )}
                           onClick={handleCloseDocument}
                         >
                           <X className="size-4 shrink-0" strokeWidth={2.5} aria-hidden />

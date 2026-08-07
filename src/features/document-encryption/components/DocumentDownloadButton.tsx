@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { workspaceToolbarTextActionClassName } from "@/components/WorkspaceSwitcher";
 
 export interface DocumentDownloadButtonProps {
   isEncryptedAtRest: boolean;
@@ -29,29 +29,25 @@ export function DocumentDownloadButton({
 }: DocumentDownloadButtonProps) {
   if (!isEncryptedAtRest) {
     return (
-      <Button
+      <button
         type="button"
-        variant="neutral"
-        size="sm"
-        className={cn("shrink-0 bg-background", className)}
+        className={cn(workspaceToolbarTextActionClassName, className)}
         onClick={onDownloadPlain}
       >
         Download
-      </Button>
+      </button>
     );
   }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
+        <button
           type="button"
-          variant="neutral"
-          size="sm"
-          className={cn("shrink-0 bg-background", className)}
+          className={cn(workspaceToolbarTextActionClassName, className)}
         >
           Download
-        </Button>
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
