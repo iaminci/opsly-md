@@ -252,7 +252,10 @@ function AppContent() {
   const currentDocIdRef = useRef<string | null>(null);
   currentDocIdRef.current = currentDoc?.id ?? null;
   const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(false);
+  const [documentViewMode, setDocumentViewMode] = useState<"edit" | "preview">(
+    "preview"
+  );
+  const editMode = documentViewMode === "edit";
   const [draftContent, setDraftContent] = useState("");
   const scrollTopBeforeEditRef = useRef(0);
   const shouldRestoreScrollRef = useRef(false);
@@ -298,19 +301,19 @@ function AppContent() {
     isEncryptedAtRest
   );
 
-  const editDirty =
-    editMode &&
-    !!currentDoc &&
-    draftContent !== displayContent;
-  useDeploymentReloadBlock(editMode);
+  const hasUnsavedDraft =
+    !!currentDoc && draftContent !== displayContent;
+  const editDirty = editMode && hasUnsavedDraft;
+  const previewContent = hasUnsavedDraft ? draftContent : displayContent;
+  useDeploymentReloadBlock(editMode || hasUnsavedDraft);
   useEffect(() => {
-    if (!editDirty) return;
+    if (!hasUnsavedDraft) return;
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
     };
     window.addEventListener("beforeunload", onBeforeUnload);
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, [editDirty]);
+  }, [hasUnsavedDraft]);
 
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
@@ -437,7 +440,7 @@ function AppContent() {
       prevDocIdForEditRef.current = docId;
 
       if (!docId) {
-        setEditMode(false);
+        setDocumentViewMode("preview");
         shouldRestoreScrollRef.current = false;
         return;
       }
@@ -448,12 +451,13 @@ function AppContent() {
         scrollTopBeforeEditRef.current = 0;
         if (contentScrollRef.current) contentScrollRef.current.scrollTop = 0;
         setDraftContent(currentDoc?.content ?? "");
-        setEditMode(true);
+        setDocumentViewMode("edit");
         return;
       }
 
-      setEditMode(false);
+      setDocumentViewMode("preview");
       shouldRestoreScrollRef.current = false;
+      setDraftContent(currentDoc?.content ?? "");
     }
   }, [currentDoc?.id, currentDoc?.content]);
 
@@ -509,7 +513,7 @@ function AppContent() {
           scrollTopBeforeEditRef.current = 0;
           if (contentScrollRef.current) contentScrollRef.current.scrollTop = 0;
           setDraftContent(content);
-          setEditMode(true);
+          setDocumentViewMode("edit");
         }
         setCurrentDoc({ ...doc, content });
         if (documentStackEnabled) {
@@ -550,18 +554,18 @@ function AppContent() {
     [documentStackEnabled, docStackIds]
   );
 
-  const handleEnterEditMode = useCallback(() => {
+  const handleShowEditView = useCallback(() => {
     if (!currentDoc || encryption.isLocked) return;
     const vp = contentScrollRef.current;
     scrollTopBeforeEditRef.current = vp?.scrollTop ?? 0;
     if (vp) vp.scrollTop = 0;
     setDraftContent(displayContent);
-    setEditMode(true);
+    setDocumentViewMode("edit");
   }, [currentDoc, displayContent, encryption.isLocked]);
 
-  const handleExitEditMode = useCallback((restoreScroll: boolean) => {
+  const handleShowPreviewView = useCallback((restoreScroll: boolean) => {
     shouldRestoreScrollRef.current = restoreScroll;
-    setEditMode(false);
+    setDocumentViewMode("preview");
   }, []);
 
   useEffect(() => {
@@ -618,7 +622,7 @@ function AppContent() {
           await refresh();
         }
         if (exitEditAfter) {
-          handleExitEditMode(true);
+          handleShowPreviewView(true);
         } else {
           setEditAutosaveUi("saved");
         }
@@ -633,7 +637,7 @@ function AppContent() {
         }
       }
     },
-    [currentDoc, draftContent, refresh, handleExitEditMode, encryption]
+    [currentDoc, draftContent, refresh, handleShowPreviewView, encryption]
   );
 
   const handleEditSaveRef = useRef(handleEditSave);
@@ -649,7 +653,7 @@ function AppContent() {
   };
 
   useEffect(() => {
-    if (!editMode || !currentDoc?.id) {
+    if (!currentDoc?.id || !hasUnsavedDraft) {
       setEditAutosaveSecs(null);
       return;
     }
@@ -677,7 +681,7 @@ function AppContent() {
       window.clearInterval(id);
       setEditAutosaveSecs(null);
     };
-  }, [editMode, currentDoc?.id]);
+  }, [currentDoc?.id, hasUnsavedDraft]);
 
   const performDownloadStored = useCallback(async () => {
     if (!currentDoc) return;
@@ -710,10 +714,10 @@ function AppContent() {
 
   const handleLockNow = useCallback(() => {
     if (editMode) {
-      handleExitEditMode(false);
+      handleShowPreviewView(false);
     }
     encryption.lockDocument();
-  }, [editMode, handleExitEditMode, encryption]);
+  }, [editMode, handleShowPreviewView, encryption]);
 
   const handleEncryptDocumentRequest = useCallback(() => {
     if (!currentDoc || isEncryptedAtRest) return;
@@ -811,7 +815,7 @@ function AppContent() {
       const generation = ++selectDocumentGenerationRef.current;
       navigatingToHomeRef.current = false;
       justSelectedDocIdRef.current = doc.id;
-      setEditMode(false);
+      setDocumentViewMode("preview");
       setCurrentDoc(doc);
       const fresh = await getDocument(doc.id);
       if (generation !== selectDocumentGenerationRef.current) return;
@@ -1063,67 +1067,89 @@ function AppContent() {
                           onRemoveEncryption={handleRemoveEncryptionRequest}
                         />
                       )}
-                      {editMode ? (
+                      {!encryption.isLocked && (
                         <>
-                          <button
-                            type="button"
-                            className={workspaceToolbarTextActionClassName}
-                            onClick={() => handleExitEditMode(true)}
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            type="button"
-                            className={workspaceToolbarTextActionClassName}
-                            onClick={() => void handleEditSave()}
-                          >
-                            {editAutosaveUi === "saving"
-                              ? "Save · …"
-                              : editAutosaveSecs !== null
-                                ? `Save (${editAutosaveSecs}s)`
-                                : "Save"}
-                          </button>
-                          {(editAutosaveUi === "saving" || editAutosaveUi === "saved") && (
+                          {editMode ? (
+                            <>
+                              <button
+                                type="button"
+                                className={workspaceToolbarTextActionClassName}
+                                onClick={() => handleShowPreviewView(true)}
+                              >
+                                Preview
+                              </button>
+                              <button
+                                type="button"
+                                className={workspaceToolbarTextActionClassName}
+                                onClick={() =>
+                                  void handleEditSave({ exitEditAfter: false })
+                                }
+                              >
+                                {editAutosaveUi === "saving"
+                                  ? "Save · …"
+                                  : editAutosaveSecs !== null
+                                    ? `Save (${editAutosaveSecs}s)`
+                                    : "Save"}
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                className={workspaceToolbarTextActionClassName}
+                                onClick={handleShowEditView}
+                              >
+                                Edit
+                              </button>
+                              {hasUnsavedDraft ? (
+                                <button
+                                  type="button"
+                                  className={workspaceToolbarTextActionClassName}
+                                  onClick={() =>
+                                    void handleEditSave({ exitEditAfter: false })
+                                  }
+                                >
+                                  {editAutosaveUi === "saving"
+                                    ? "Save · …"
+                                    : editAutosaveSecs !== null
+                                      ? `Save (${editAutosaveSecs}s)`
+                                      : "Save"}
+                                </button>
+                              ) : (
+                                <DocumentDownloadButton
+                                  isEncryptedAtRest={isEncryptedAtRest}
+                                  isLocked={encryption.isLocked}
+                                  onDownloadPlain={() =>
+                                    void performDownloadStored()
+                                  }
+                                  onDownloadEncrypted={() =>
+                                    void performDownloadStored()
+                                  }
+                                  onExportMarkdown={handleExportMarkdownRequest}
+                                />
+                              )}
+                            </>
+                          )}
+                          {editAutosaveUi === "saving" && (
                             <span
                               className="min-w-0 max-w-full basis-full pt-1 text-left text-xs text-muted-foreground sm:basis-auto sm:pt-0 sm:text-right"
                               aria-live="polite"
                             >
-                              {editAutosaveUi === "saving" ? "Saving…" : "Auto-saved."}
+                              Saving…
                             </span>
                           )}
                         </>
-                      ) : (
-                        !encryption.isLocked && (
-                          <>
-                            <button
-                              type="button"
-                              className={workspaceToolbarTextActionClassName}
-                              onClick={handleEnterEditMode}
-                            >
-                              Edit
-                            </button>
-                            <DocumentDownloadButton
-                              isEncryptedAtRest={isEncryptedAtRest}
-                              isLocked={encryption.isLocked}
-                              onDownloadPlain={() => void performDownloadStored()}
-                              onDownloadEncrypted={() => void performDownloadStored()}
-                              onExportMarkdown={handleExportMarkdownRequest}
-                            />
-                          </>
-                        )
                       )}
-                      {!editMode && (
-                        <button
-                          type="button"
-                          aria-label="Close document and return to overview"
-                          className={cn(
-                            "inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md p-0 text-primary transition-colors hover:text-primary-hover print:hidden"
-                          )}
-                          onClick={handleCloseDocument}
-                        >
-                          <X className="size-4 shrink-0" strokeWidth={2.5} aria-hidden />
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        aria-label="Close document and return to overview"
+                        className={cn(
+                          "inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md p-0 text-primary transition-colors hover:text-primary-hover print:hidden"
+                        )}
+                        onClick={handleCloseDocument}
+                      >
+                        <X className="size-4 shrink-0" strokeWidth={2.5} aria-hidden />
+                      </button>
                 </div>
                 {editMode ? (
                   <MarkdownEditor
@@ -1144,7 +1170,7 @@ function AppContent() {
                 ) : (
                   <MarkdownRenderer
                     key={currentDoc.id}
-                    content={displayContent}
+                    content={previewContent}
                     searchQuery={documentSearchQuery}
                     activeMatchIndex={searchActiveMatchIndex}
                     articleRef={markdownArticleRef}

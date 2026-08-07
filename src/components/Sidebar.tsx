@@ -991,11 +991,11 @@ export function Sidebar({
             type="button"
             className={cn(
               workspaceToolbarTextActionClassName,
-              "w-full min-w-0 shrink-0 gap-2"
+              "w-full min-w-0 shrink-0 gap-2 text-foreground"
             )}
             onClick={() => setSettingsModalOpen(true)}
           >
-            <Settings className="size-4 shrink-0" />
+            <Settings className="size-4 shrink-0 text-primary" />
             Settings
           </button>
         </div>

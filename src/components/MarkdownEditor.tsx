@@ -1,12 +1,11 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef } from "react";
 import {
   Bold,
   ChevronDown,
   Code,
   Code2,
-  Heading,
   Italic,
   Link,
   List,
@@ -14,7 +13,6 @@ import {
   Quote,
 } from "lucide-react";
 import { LineNumberedTextarea } from "@/components/LineNumberedTextarea";
-import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,8 +29,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
-type EditorTab = "write" | "preview";
 
 interface MarkdownEditorProps {
   value: string;
@@ -81,32 +77,6 @@ function ToolbarDivider() {
   );
 }
 
-function EditorTabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      className={cn(
-        "relative -mb-px border-2 px-3 py-2 text-sm font-medium transition-colors",
-        active
-          ? "rounded-t-md border-border border-b-background bg-background text-foreground"
-          : "border-transparent text-muted-foreground hover:text-foreground"
-      )}
-      aria-pressed={active}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  );
-}
-
 function MarkdownFormatToolbar({
   textareaRef,
   value,
@@ -150,7 +120,7 @@ function MarkdownFormatToolbar({
 
   return (
     <div
-      className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-0.5 py-0.5"
+      className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-0.5"
       role="toolbar"
       aria-label="Markdown formatting"
     >
@@ -164,8 +134,8 @@ function MarkdownFormatToolbar({
                 aria-label="Heading"
                 onMouseDown={(e) => e.preventDefault()}
               >
-                <Heading className="size-4" strokeWidth={2} />
-                <ChevronDown className="size-3 opacity-60" />
+                <span className="text-base font-bold leading-none">H</span>
+                <ChevronDown className="size-4 shrink-0" strokeWidth={2.5} />
               </button>
             </DropdownMenuTrigger>
           </TooltipTrigger>
@@ -228,7 +198,6 @@ export function MarkdownEditor({
   className,
   autoFocus = false,
 }: MarkdownEditorProps) {
-  const [tab, setTab] = useState<EditorTab>("write");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   return (
@@ -238,55 +207,26 @@ export function MarkdownEditor({
         className
       )}
     >
-      <div className="flex shrink-0 items-end gap-3 border-b-2 border-border bg-input px-3 pt-1.5">
-        <div className="flex shrink-0 items-end">
-          <EditorTabButton
-            active={tab === "write"}
-            onClick={() => setTab("write")}
-          >
-            Write
-          </EditorTabButton>
-          <EditorTabButton
-            active={tab === "preview"}
-            onClick={() => setTab("preview")}
-          >
-            Preview
-          </EditorTabButton>
-        </div>
-        {tab === "write" ? (
-          <MarkdownFormatToolbar
-            textareaRef={textareaRef}
-            value={value}
-            onChange={onChange}
-          />
-        ) : (
-          <div className="min-w-0 flex-1 pb-2" aria-hidden />
-        )}
+      <div className="flex shrink-0 items-center border-b-2 border-border bg-input px-2 py-1.5">
+        <MarkdownFormatToolbar
+          textareaRef={textareaRef}
+          value={value}
+          onChange={onChange}
+        />
       </div>
 
       <div className="min-h-0 flex-1 overflow-hidden bg-background">
-        {tab === "write" ? (
-          <LineNumberedTextarea
-            ref={textareaRef}
-            autoFocus={autoFocus}
-            embedded
-            showLineNumbers={false}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-            spellCheck={false}
-            className="h-full min-h-0 leading-relaxed"
-            textareaClassName="h-full min-h-[12rem] resize-y leading-relaxed placeholder:text-muted-foreground"
-          />
-        ) : (
-          <div className="native-scrollbar h-full min-h-[12rem] overflow-y-auto px-4 py-3">
-            {value.trim() ? (
-              <MarkdownRenderer content={value} />
-            ) : (
-              <p className="text-sm text-muted-foreground">Nothing to preview</p>
-            )}
-          </div>
-        )}
+        <LineNumberedTextarea
+          ref={textareaRef}
+          autoFocus={autoFocus}
+          embedded
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          spellCheck={false}
+          className="h-full min-h-0 leading-relaxed"
+          textareaClassName="h-full min-h-[12rem] resize-y leading-relaxed placeholder:text-muted-foreground"
+        />
       </div>
     </div>
   );
