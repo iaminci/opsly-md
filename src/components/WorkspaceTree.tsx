@@ -132,15 +132,17 @@ export const TREE_DRAG_TARGET_SECTION = cn(
   "rounded-md border-2 border-[var(--tree-drag-target-border)] transition-colors duration-150"
 );
 
-/** Workspace name strip (tree rows) — borderless; name, chevron, and Layers use foreground when accent/path-highlighted. */
+/** Workspace name strip when the open document lives in this workspace. */
 const WORKSPACE_TAB_CORAL_PILL = cn(
-  "!flex !min-h-8 !min-w-0 !flex-1 !items-start !gap-2 !rounded-md !border-0 !bg-transparent !py-1 !pl-3 !pr-0 !text-left !font-heading !font-bold !text-primary !shadow-none !outline-none !ring-0 !transition-colors focus-visible:!ring-0 focus-visible:!ring-ring"
+  "!flex !min-h-8 !min-w-0 !flex-1 !items-center !gap-2 !rounded-md !border-0 !bg-sidebar-accent/80 !py-1 !pl-2 !pr-0 !text-left !text-sm !font-semibold !text-foreground !shadow-none !outline-none !ring-0 !transition-colors focus-visible:!ring-0 focus-visible:!ring-ring"
 );
 
-/** Inactive workspace row — label uses muted (icons override when path-highlighted). */
+/** Inactive workspace row. */
 const WORKSPACE_TAB_MUTED_PILL = cn(
-  "!flex !min-h-8 !min-w-0 !flex-1 !items-start !gap-2 !rounded-md !border-0 !bg-transparent !py-1 !pl-3 !pr-0 !text-left !font-heading !font-normal !text-muted-foreground !shadow-none !outline-none !ring-0 !transition-colors hover:!text-primary-hover"
+  "!flex !min-h-8 !min-w-0 !flex-1 !items-center !gap-2 !rounded-md !border-0 !bg-transparent !py-1 !pl-2 !pr-0 !text-left !text-sm !font-medium !text-muted-foreground !shadow-none !outline-none !ring-0 !transition-colors hover:!text-foreground"
 );
+
+const TREE_ROW_SELECTED = "bg-sidebar-accent text-primary";
 
 function useClearDragStateOnDragEnd(setDragOver: (v: boolean) => void) {
   useEffect(() => {
@@ -310,17 +312,17 @@ export function WorkspaceTree({
     () => workspaces.map((w) => w.id),
     [workspaces]
   );
+  const workspaceIdsKey = workspaceIds.join("\0");
 
   const [expandedWorkspaces, setExpandedWorkspaces] = useState<string[]>(() => {
-    if (typeof window === "undefined" || workspaceIds.length === 0) return workspaceIds;
+    if (typeof window === "undefined" || workspaceIds.length === 0) return [];
     try {
       const stored = localStorage.getItem(EXPANDED_WORKSPACES_KEY);
-      if (!stored) return workspaceIds;
+      if (!stored) return [];
       const parsed = JSON.parse(stored) as string[];
-      const restored = workspaceIds.filter((id) => parsed.includes(id));
-      return restored.length > 0 ? restored : workspaceIds;
+      return workspaceIds.filter((id) => parsed.includes(id));
     } catch {
-      return workspaceIds;
+      return [];
     }
   });
 
@@ -403,13 +405,14 @@ export function WorkspaceTree({
     }
   }, [pendingTreeRename, ensureWorkspaceExpanded, ensureFolderExpanded]);
 
-  /** When the selected document lives inside a folder, expand the workspace and folder path so it is visible. */
+  /** Reveal the active document without collapsing anything the user already expanded. */
   useEffect(() => {
     if (!currentId) return;
     const doc = flatDocuments.find((d) => d.id === currentId);
     if (!doc) return;
     ensureWorkspaceExpanded(doc.workspaceId);
     if (!doc.folderId) return;
+
     const folderList = getFoldersFlat(doc.workspaceId);
     const idsToExpand: string[] = [];
     let fid: string | null = doc.folderId;
@@ -418,30 +421,25 @@ export function WorkspaceTree({
       const f = folderList.find((x) => x.id === fid);
       fid = f?.parentFolderId ?? null;
     }
+
     setExpandedFolders((prev) => {
       const next = new Set([...prev, ...idsToExpand]);
-      return Array.from(next);
+      return next.size === prev.length ? prev : Array.from(next);
     });
   }, [currentId, flatDocuments, getFoldersFlat, ensureWorkspaceExpanded]);
 
+  /** Auto-expand newly added workspaces only (do not expand every workspace on re-render). */
   useEffect(() => {
-    if (typeof window === "undefined" || workspaceIds.length === 0) return;
-    let parsed: string[] = [];
-    try {
-      const stored = localStorage.getItem(EXPANDED_WORKSPACES_KEY);
-      if (stored) parsed = JSON.parse(stored) as string[];
-    } catch {
-      /* ignore */
-    }
+    if (workspaceIds.length === 0) return;
     setExpandedWorkspaces((prev) => {
-      const restored = workspaceIds.filter((id) => parsed.includes(id));
-      const newIds = workspaceIds.filter((id) => !parsed.includes(id));
-      if (restored.length > 0 || newIds.length > 0) {
-        return [...restored, ...newIds];
+      const validPrev = prev.filter((id) => workspaceIds.includes(id));
+      const added = workspaceIds.filter((id) => !validPrev.includes(id));
+      if (added.length === 0) {
+        return validPrev.length === prev.length ? prev : validPrev;
       }
-      return prev.length > 0 ? prev : workspaceIds;
+      return [...validPrev, ...added];
     });
-  }, [workspaceIds]);
+  }, [workspaceIdsKey, workspaceIds]);
 
   const workspaceValue = expandedWorkspaces.filter((id) => workspaceIds.includes(id));
 
@@ -530,7 +528,7 @@ export function WorkspaceTree({
       key={workspaceIds.join(",")}
       value={workspaceValue}
       onValueChange={handleWorkspaceValueChange}
-      className="flex w-full max-w-full flex-col gap-0"
+      className="flex w-full max-w-full flex-col gap-1"
     >
       {treeSections}
     </Accordion>
@@ -872,13 +870,13 @@ function WorkspaceSection({
           >
             <Layers
               className={cn(
-                "mt-0.5 size-4 shrink-0 transition-colors",
+                "size-4 shrink-0 transition-colors",
                 workspaceDragTarget
                   ? "text-[var(--tree-drag-target-fg)]"
                   : workspaceShowPill || workspaceIconPrimaryOnly
-                    ? "text-foreground"
+                    ? "text-primary"
                     : "text-muted-foreground",
-                "group-hover/ws:text-primary-hover"
+                "group-hover/ws:text-foreground"
               )}
             />
             {showPendingWorkspaceRename &&
@@ -895,12 +893,12 @@ function WorkspaceSection({
             ) : (
               <span
                 className={cn(
-                  "min-w-0 flex-1 text-left font-heading text-lg leading-snug transition-colors line-clamp-2 break-words",
+                  "min-w-0 flex-1 text-left text-sm leading-snug transition-colors line-clamp-2 break-words",
                   workspaceDragTarget && "font-semibold text-[var(--tree-drag-target-fg)]",
                   workspaceIconPrimaryOnly &&
                     !workspaceShowPill &&
-                    "!text-foreground",
-                  "group-hover/ws:!text-primary-hover"
+                    "font-semibold !text-foreground",
+                  "group-hover/ws:!text-foreground"
                 )}
               >
                 {workspace.name}
@@ -912,7 +910,7 @@ function WorkspaceSection({
                 className={cn(
                   "pointer-events-none size-[1.125rem] shrink-0 transition-[transform,color] duration-200",
                   workspaceDragTarget || workspaceShowPill ? "text-inherit" : "text-muted-foreground",
-                  "group-hover/ws:text-primary-hover",
+                  "group-hover/ws:text-foreground",
                   "group-data-[state=open]/ws:rotate-90",
                 )}
               />
@@ -940,9 +938,9 @@ function WorkspaceSection({
                         tabIndex={0}
                         aria-label="Workspace actions"
                         className={cn(
-                          "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary-hover focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
+                          "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
                           workspaceShowPill ? "text-foreground" : "text-muted-foreground",
-                          "group-hover/ws:text-primary-hover"
+                          "group-hover/ws:text-foreground"
                         )}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") e.preventDefault();
@@ -1267,25 +1265,19 @@ function FolderItem({
           onDragStart={handleFolderDragStart}
           onDragEnd={handleFolderDragEnd}
           className={cn(
-            "flex min-h-8 min-w-0 flex-1 cursor-pointer items-start gap-1.5 rounded-[5px] py-0.5 pl-1 pr-0 transition-colors duration-150",
+            "flex min-h-8 min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded-md py-0.5 pl-1 pr-0 transition-colors duration-150",
             folderDragTarget && TREE_DRAG_TARGET_PILL,
-            folderShowPill ? "opacity-100" : "opacity-[0.85]",
-            folderFullRowAccent &&
-              !folderDragTarget &&
-              "text-foreground hover:text-foreground",
-            folderIconPrimaryOnly &&
-              !folderDragTarget &&
-              "text-foreground hover:text-foreground",
+            folderShowPill && !folderDragTarget && TREE_ROW_SELECTED,
             !folderShowPill && "text-muted-foreground hover:text-foreground"
           )}
         >
           <FolderIcon
             className={cn(
-              "mt-0.5 size-4 shrink-0 transition-colors group-hover/folder:!text-primary-hover",
+              "size-4 shrink-0 transition-colors group-hover/folder:text-foreground",
               folderDragTarget
                 ? "text-[var(--tree-drag-target-fg)]"
                 : folderRowActive
-                  ? "text-foreground"
+                  ? "text-primary"
                   : "text-muted-foreground"
             )}
           />
@@ -1303,10 +1295,10 @@ function FolderItem({
           ) : (
             <span
               className={cn(
-                "min-w-0 flex-1 text-left font-heading text-base leading-snug transition-colors line-clamp-2 break-words",
+                "min-w-0 flex-1 text-left text-sm font-medium leading-snug transition-colors line-clamp-2 break-words",
                 folderDragTarget && "font-semibold text-[var(--tree-drag-target-fg)]",
-                folderRowActive && !folderDragTarget && "!text-foreground",
-                "group-hover/folder:!text-primary-hover"
+                folderRowActive && !folderDragTarget && "font-semibold",
+                "group-hover/folder:text-foreground"
               )}
             >
               {folder.name}
@@ -1316,7 +1308,7 @@ function FolderItem({
             <ChevronRight
               aria-hidden
               className={cn(
-                "pointer-events-none size-[1.125rem] shrink-0 text-inherit transition-[transform,color] duration-200 group-hover/folder:text-primary-hover",
+                "pointer-events-none size-[1.125rem] shrink-0 text-inherit transition-[transform,color] duration-200 group-hover/folder:text-foreground",
                 "group-data-[state=open]/folder:rotate-90",
               )}
             />
@@ -1345,9 +1337,9 @@ function FolderItem({
                       tabIndex={0}
                       aria-label="Folder actions"
                       className={cn(
-                        "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary-hover focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
+                        "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
                         folderRowActive ? "text-foreground" : "text-muted-foreground",
-                        "group-hover/folder:text-primary-hover"
+                        "group-hover/folder:text-foreground"
                       )}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") e.preventDefault();
@@ -1526,11 +1518,6 @@ function FileItem({
   const [fileMenuOpen, setFileMenuOpen] = useState(false);
   const isRenaming = matchesPendingTreeRenameFile(pendingTreeRename, doc.id);
   const fileLooksSelected = isActive && !suppressDocHighlights && !isRenaming;
-  const fileTintPrimary = fileLooksSelected || fileMenuOpen;
-  const showGuideHighlight =
-    isActive &&
-    !suppressDocHighlights &&
-    !(treeReorderDragActive && isActive);
 
   const fileActionsRef = useRef<HTMLDivElement>(null);
 
@@ -1555,17 +1542,7 @@ function FileItem({
     onPendingTreeRenameCancel
   ) {
     return (
-      <div
-        className={cn(
-          "flex items-center rounded-md py-0.5 pl-1 pr-1",
-          showGuideHighlight &&
-            "relative before:pointer-events-none before:absolute before:inset-y-0 before:z-[1] before:w-0.5 before:bg-primary",
-          showGuideHighlight &&
-            treeGuideInset &&
-            "before:-left-[calc(0.25rem+2px)]",
-          showGuideHighlight && !treeGuideInset && "before:-left-0.5"
-        )}
-      >
+      <div className="flex items-center rounded-md py-0.5 pl-1 pr-1">
         <InlineTreeCreateRow
           type="file"
           rename
@@ -1583,13 +1560,8 @@ function FileItem({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       className={cn(
-        "group/file flex cursor-pointer items-center rounded-md py-0.5 pl-1 pr-0",
-        showGuideHighlight &&
-          "relative before:pointer-events-none before:absolute before:inset-y-0 before:z-[1] before:w-0.5 before:bg-primary",
-        showGuideHighlight &&
-          treeGuideInset &&
-          "before:-left-[calc(0.25rem+2px)]",
-        showGuideHighlight && !treeGuideInset && "before:-left-0.5"
+        "group/file flex min-h-8 cursor-pointer items-center rounded-md py-0.5 pl-1 pr-0 transition-colors hover:bg-sidebar-accent/50",
+        fileLooksSelected && TREE_ROW_SELECTED
       )}
       onClick={(e) => {
         if (!(e.target as HTMLElement).closest("[data-slot='dropdown-menu-trigger']")) {
@@ -1599,10 +1571,8 @@ function FileItem({
     >
       <div
         className={cn(
-          "flex min-h-6 min-w-0 flex-1 items-start gap-2 rounded-[5px] py-0 pl-1 pr-0 transition-colors group-hover/file:!text-primary-hover",
-          fileLooksSelected &&
-            !(treeReorderDragActive && fileLooksSelected) &&
-            "text-primary"
+          "flex min-h-8 min-w-0 flex-1 items-center gap-2 rounded-[5px] py-0 pl-1 pr-0 transition-colors",
+          fileLooksSelected && "font-medium"
         )}
       >
         <Tooltip delayDuration={1000}>
@@ -1610,9 +1580,7 @@ function FileItem({
             <button
               type="button"
               className={cn(
-                "flex min-h-6 min-w-0 flex-1 items-start justify-start gap-2 border-0 bg-transparent text-left text-base font-base transition-colors hover:bg-transparent group-hover/file:!text-primary-hover",
-                fileTintPrimary ? "opacity-100" : "opacity-[0.85]",
-                fileLooksSelected && "font-bold text-primary",
+                "flex min-h-8 min-w-0 flex-1 items-center justify-start gap-2 border-0 bg-transparent text-left text-sm transition-colors hover:bg-transparent",
                 !fileLooksSelected && !fileMenuOpen && "text-muted-foreground",
                 !fileLooksSelected && fileMenuOpen && "text-foreground",
                 nameTruncated && "min-w-0"
@@ -1620,14 +1588,14 @@ function FileItem({
             >
               <FileBraces
                 className={cn(
-                  "mt-0.5 size-4 shrink-0 transition-colors group-hover/file:!text-primary-hover",
-                  fileLooksSelected ? "text-primary" : "text-muted-foreground"
+                  "size-4 shrink-0 transition-colors",
+                  fileLooksSelected ? "text-primary" : "text-muted-foreground group-hover/file:text-foreground"
                 )}
               />
               <span
                 className={cn(
-                  "min-w-0 flex-1 leading-snug line-clamp-2 break-words group-hover/file:!text-primary-hover",
-                  treeReorderDragActive && fileLooksSelected && "font-bold text-primary"
+                  "min-w-0 flex-1 leading-snug line-clamp-2 break-words",
+                  fileLooksSelected && "text-primary"
                 )}
               >
                 {displayName}
@@ -1661,8 +1629,8 @@ function FileItem({
                     tabIndex={0}
                     aria-label="Document actions"
                     className={cn(
-                      "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary-hover focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
-                      "text-muted-foreground group-hover/file:text-primary-hover"
+                      "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
+                      "text-muted-foreground group-hover/file:text-foreground"
                     )}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") e.preventDefault();

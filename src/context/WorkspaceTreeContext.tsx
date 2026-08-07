@@ -53,9 +53,18 @@ export function WorkspaceTreeProvider({
     setHasSyncedAtLeastOnce(true);
   }, []);
 
+  const documentsKey = useMemo(
+    () =>
+      documents
+        .map((d) => d.id)
+        .sort()
+        .join("\0"),
+    [documents]
+  );
+
   useEffect(() => {
     void loadWorkspacesAndFolders();
-  }, [documents, loadWorkspacesAndFolders]);
+  }, [documentsKey, loadWorkspacesAndFolders]);
 
   const sortedWorkspaces = useMemo(
     () =>

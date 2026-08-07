@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import type { Document } from "@/types/document";
 import type { Folder } from "@/types/workspace";
 import { INLINE_TREE_EDIT_SELECTOR } from "./InlineTreeCreateRow";
@@ -71,7 +71,6 @@ import { CommandPalette } from "./CommandPalette";
 import { SettingsModal } from "./SettingsModal";
 import { UploadFileModal } from "./UploadFileModal";
 import { CreateMarkdownModal } from "./CreateMarkdownModal";
-import { workspaceToolbarTextActionClassName } from "./WorkspaceSwitcher";
 import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
 import {
   decryptWorkspaceExport,
@@ -211,13 +210,15 @@ export function Sidebar({
   const defaultWorkspace =
     sortedWorkspaces.find((w) => w.id === "default") ?? sortedWorkspaces[0];
 
-  const displayedWorkspaces = workspacesEnabled
-    ? selectedWorkspaceId
-      ? sortedWorkspaces.filter((w) => w.id === selectedWorkspaceId)
-      : sortedWorkspaces
-    : defaultWorkspace
-      ? [defaultWorkspace]
-      : sortedWorkspaces.filter((w) => w.id === "default");
+  const displayedWorkspaces = useMemo(() => {
+    if (workspacesEnabled) {
+      return selectedWorkspaceId
+        ? sortedWorkspaces.filter((w) => w.id === selectedWorkspaceId)
+        : sortedWorkspaces;
+    }
+    if (defaultWorkspace) return [defaultWorkspace];
+    return sortedWorkspaces.filter((w) => w.id === "default");
+  }, [workspacesEnabled, selectedWorkspaceId, sortedWorkspaces, defaultWorkspace]);
 
   const searchDocuments = workspacesEnabled
     ? selectedWorkspaceId
@@ -881,10 +882,10 @@ export function Sidebar({
         onChange={handleImportFileChange}
         className="hidden"
       />
-      <SidebarContent className="flex flex-col min-h-0 overflow-hidden">
-        <div className="flex flex-1 min-h-0 flex-col">
-        <div className="flex shrink-0 flex-col border-b-0 border-sidebar-border pb-0">
-          <SidebarGroup>
+      <SidebarContent className="flex min-h-0 flex-col overflow-hidden px-3">
+        <div className="flex min-h-0 flex-1 flex-col">
+        <div className="shrink-0 border-b border-border/60 pb-3 pt-3">
+          <SidebarGroup className="p-0">
             <SidebarGroupLabel className="sr-only">Search</SidebarGroupLabel>
             <SidebarGroupContent>
               <div className="flex min-w-0 items-start gap-2">
@@ -910,7 +911,7 @@ export function Sidebar({
           </SidebarGroup>
         </div>
 
-        <div className="mb-2 shrink-0 flex flex-col gap-1.5 pt-2">
+        <div className="mb-0 shrink-0 border-b border-border/60 pb-3 pt-3">
           {workspacesEnabled ? (
             <SidebarGroup>
               <SidebarGroupLabel className="sr-only">Workspace</SidebarGroupLabel>
@@ -949,9 +950,9 @@ export function Sidebar({
           )}
         </div>
 
-        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-          <SidebarGroup className="flex-1 border-b-0">
-            <SidebarGroupContent className="-translate-x-[5px]">
+        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden py-2">
+          <SidebarGroup className="flex-1 border-b-0 p-0">
+            <SidebarGroupContent>
               <WorkspaceTree
               workspaces={displayedWorkspaces}
               folders={getFoldersSync}
@@ -986,13 +987,10 @@ export function Sidebar({
           </SidebarGroup>
         </div>
 
-        <div className="shrink-0 px-2 py-2">
+        <div className="shrink-0 border-t border-border/60 py-2">
           <button
             type="button"
-            className={cn(
-              workspaceToolbarTextActionClassName,
-              "w-full min-w-0 shrink-0 gap-2 text-foreground"
-            )}
+            className="flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-foreground transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
             onClick={() => setSettingsModalOpen(true)}
           >
             <Settings className="size-4 shrink-0 text-primary" />

@@ -38,7 +38,7 @@ export function WorkspaceActionBar({
           className={cn(workspaceDropdownTriggerClassName, "cursor-default")}
           aria-label={`Workspace: ${label}`}
         >
-          <span className="min-w-0 flex-1 truncate font-heading font-semibold">
+          <span className="min-w-0 flex-1 truncate text-sm font-semibold">
             {label}
           </span>
         </div>
