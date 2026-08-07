@@ -38,6 +38,7 @@ interface CreateMarkdownModalProps {
   initialWorkspaceId: string;
   initialFolderId: string | null;
   hideLocationSelectors?: boolean;
+  workspacesEnabled?: boolean;
   onCreate: (
     title: string,
     content: string,
@@ -52,6 +53,7 @@ export function CreateMarkdownModal({
   initialWorkspaceId,
   initialFolderId,
   hideLocationSelectors = false,
+  workspacesEnabled = true,
   onCreate,
 }: CreateMarkdownModalProps) {
   const { sortedWorkspaces, hasSyncedWorkspacesAtLeastOnce } = useWorkspaceTree();
@@ -63,12 +65,12 @@ export function CreateMarkdownModal({
 
   useEffect(() => {
     if (!open) return;
-    setSelectedWorkspaceId(initialWorkspaceId);
+    setSelectedWorkspaceId(workspacesEnabled ? initialWorkspaceId : "default");
     setSelectedFolderId(initialFolderId);
     setTitle(DEFAULT_NEW_DOCUMENT_TITLE);
     setMarkdown("");
     setCreating(false);
-  }, [open, initialWorkspaceId, initialFolderId]);
+  }, [open, initialWorkspaceId, initialFolderId, workspacesEnabled]);
 
   useEffect(() => {
     if (!open) return;
@@ -167,7 +169,9 @@ export function CreateMarkdownModal({
                   "grid shrink-0 gap-2 px-6 pt-5",
                   hideLocationSelectors
                     ? "grid-cols-1"
-                    : "grid-cols-1 sm:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,1fr)] sm:items-end"
+                    : workspacesEnabled
+                      ? "grid-cols-1 sm:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,1fr)] sm:items-end"
+                      : "grid-cols-1 sm:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] sm:items-end"
                 )}
               >
                 <div className="flex min-w-0 flex-col gap-1">
@@ -191,6 +195,7 @@ export function CreateMarkdownModal({
                     variant="settings"
                     compact
                     layout="split"
+                    hideWorkspaceSelector={!workspacesEnabled}
                     selectedWorkspaceId={selectedWorkspaceId}
                     setSelectedWorkspaceId={setSelectedWorkspaceId}
                     selectedFolderId={selectedFolderId}

@@ -35,6 +35,7 @@ type InlineLocationSelectorsProps = {
   setSelectedWorkspaceId: (v: string) => void;
   selectedFolderId: string | null;
   setSelectedFolderId: (v: string | null) => void;
+  hideWorkspaceSelector?: boolean;
   /** Flat bordered controls matching Settings modal actions (no hard shadow). */
   variant?: "workspace" | "settings";
   /** Smaller labels and triggers (h-8, text-xs). */
@@ -55,6 +56,7 @@ export function InlineLocationSelectors({
   setSelectedWorkspaceId,
   selectedFolderId,
   setSelectedFolderId,
+  hideWorkspaceSelector = false,
   variant = "workspace",
   compact = false,
   layout = "grid",
@@ -253,7 +255,7 @@ export function InlineLocationSelectors({
   if (layout === "split") {
     return (
       <>
-        {workspaceField}
+        {!hideWorkspaceSelector ? workspaceField : null}
         {folderField}
       </>
     );
@@ -262,11 +264,12 @@ export function InlineLocationSelectors({
   return (
     <div
       className={cn(
-        "grid min-w-0 grid-cols-1 sm:grid-cols-2 sm:items-end",
+        "grid min-w-0 grid-cols-1 sm:items-end",
+        hideWorkspaceSelector ? "sm:grid-cols-1" : "sm:grid-cols-2",
         compact ? "gap-2" : "gap-3"
       )}
     >
-      {workspaceField}
+      {!hideWorkspaceSelector ? workspaceField : null}
       {folderField}
     </div>
   );

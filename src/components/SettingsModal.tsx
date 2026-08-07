@@ -13,12 +13,24 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Settings, Upload, Download, Lock, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Feedback } from "@/components/Feedback";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { GitHubIcon } from "@/components/GitHubIcon";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+const GITHUB_URL = "https://github.com/iaminci/opsly-md";
 
 interface SettingsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   documentStackEnabled: boolean;
   onDocumentStackEnabledChange: (enabled: boolean) => void;
+  workspacesEnabled: boolean;
+  onWorkspacesEnabledChange: (enabled: boolean) => void;
   onImport: () => void;
   onExport: (mode: "plain" | "encrypted") => void;
   onDeleteAll: () => void;
@@ -61,6 +73,8 @@ export function SettingsModal({
   onOpenChange,
   documentStackEnabled,
   onDocumentStackEnabledChange,
+  workspacesEnabled,
+  onWorkspacesEnabledChange,
   onImport,
   onExport,
   onDeleteAll,
@@ -106,19 +120,59 @@ export function SettingsModal({
           </DialogDescription>
         </DialogHeader>
 
+        <div className="flex items-center justify-center gap-2 border-b-2 border-border px-6 py-4">
+          <Feedback />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="neutral"
+                size="icon-sm"
+                className="bg-background"
+                asChild
+              >
+                <a
+                  href={GITHUB_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="View on GitHub"
+                >
+                  <GitHubIcon className="size-4" />
+                </a>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" align="center">
+              View on GitHub
+            </TooltipContent>
+          </Tooltip>
+          <ThemeToggle />
+        </div>
+
         <div className="flex flex-col gap-8 px-6 pt-7">
           <SettingsSection title="General">
-            <label className="inline-flex w-fit cursor-pointer items-center gap-8 py-0.5">
-              <span className="text-sm font-medium text-foreground">
-                Stack Docs
-              </span>
-              <Switch
-                size="sm"
-                checked={documentStackEnabled}
-                onCheckedChange={onDocumentStackEnabledChange}
-                aria-label="Stack viewed documents when closing"
-              />
-            </label>
+            <div className="flex flex-col gap-4">
+              <label className="inline-flex w-fit cursor-pointer items-center gap-8 py-0.5">
+                <span className="text-sm font-medium text-foreground">
+                  Stack Docs
+                </span>
+                <Switch
+                  size="sm"
+                  checked={documentStackEnabled}
+                  onCheckedChange={onDocumentStackEnabledChange}
+                  aria-label="Stack viewed documents when closing"
+                />
+              </label>
+              <label className="inline-flex w-fit cursor-pointer items-center gap-8 py-0.5">
+                <span className="text-sm font-medium text-foreground">
+                  Workspaces
+                </span>
+                <Switch
+                  size="sm"
+                  checked={workspacesEnabled}
+                  onCheckedChange={onWorkspacesEnabledChange}
+                  aria-label="Enable workspaces"
+                />
+              </label>
+            </div>
           </SettingsSection>
 
           <SettingsSection title="Data" contentClassName="mt-5">

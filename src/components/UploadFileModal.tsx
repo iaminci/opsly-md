@@ -64,6 +64,7 @@ interface UploadFileModalProps {
   initialWorkspaceId: string;
   initialFolderId: string | null;
   hideLocationSelectors?: boolean;
+  workspacesEnabled?: boolean;
   onUpload: (
     files: File[],
     workspaceId: string,
@@ -80,6 +81,7 @@ export function UploadFileModal({
   initialWorkspaceId,
   initialFolderId,
   hideLocationSelectors = false,
+  workspacesEnabled = true,
   onUpload,
 }: UploadFileModalProps) {
   const { sortedWorkspaces, hasSyncedWorkspacesAtLeastOnce } = useWorkspaceTree();
@@ -93,13 +95,13 @@ export function UploadFileModal({
 
   useEffect(() => {
     if (!open) return;
-    setSelectedWorkspaceId(initialWorkspaceId);
+    setSelectedWorkspaceId(workspacesEnabled ? initialWorkspaceId : "default");
     setSelectedFolderId(initialFolderId);
     setSelectedFiles([]);
     setUploading(false);
     setDragActive(false);
     dragDepthRef.current = 0;
-  }, [open, initialWorkspaceId, initialFolderId]);
+  }, [open, initialWorkspaceId, initialFolderId, workspacesEnabled]);
 
   useEffect(() => {
     if (!open) return;
@@ -239,6 +241,7 @@ export function UploadFileModal({
                 <InlineLocationSelectors
                   idPrefix="upload-modal"
                   variant="settings"
+                  hideWorkspaceSelector={!workspacesEnabled}
                   selectedWorkspaceId={selectedWorkspaceId}
                   setSelectedWorkspaceId={setSelectedWorkspaceId}
                   selectedFolderId={selectedFolderId}

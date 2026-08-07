@@ -101,18 +101,15 @@ export async function addDocument(
   const folderId = options?.folderId ?? doc.folderId ?? null;
 
   const docsInLocation = await getDocumentsInFolder(workspaceId, folderId);
-  const titleTrimmed = doc.title.trim();
-  const titleLower = titleTrimmed.toLowerCase();
-  const isDuplicate = docsInLocation.some(
-    (d) => (d.title ?? "").toLowerCase() === titleLower
+  const titleTrimmed = doc.title.trim() || doc.title;
+  const uniqueTitle = makeTitleUnique(
+    titleTrimmed,
+    docsInLocation.map((d) => d.title ?? "")
   );
-  if (isDuplicate) {
-    throw new DuplicateNameError(`A file named "${titleTrimmed || doc.title}" with the same title already exists in this location.`);
-  }
 
   const newDoc: Document = {
     ...doc,
-    title: titleTrimmed || doc.title,
+    title: uniqueTitle,
     id: crypto.randomUUID(),
     createdAt: Date.now(),
     workspaceId,
@@ -190,13 +187,13 @@ export async function getWorkspaces(): Promise<Workspace[]> {
 
 export async function addWorkspace(name: string): Promise<Workspace> {
   const existing = await getWorkspaces();
-  const nameLower = name.trim().toLowerCase();
-  if (existing.some((w) => w.name.toLowerCase() === nameLower)) {
-    throw new DuplicateNameError(`A workspace named "${name.trim()}" already exists.`);
-  }
+  const uniqueName = makeTitleUnique(
+    name.trim(),
+    existing.map((w) => w.name)
+  );
   const ws: Workspace = {
     id: crypto.randomUUID(),
-    name: name.trim(),
+    name: uniqueName,
     createdAt: Date.now(),
   };
   const db = await getSqliteDb();
@@ -226,6 +223,43 @@ export async function deleteWorkspace(id: string): Promise<void> {
   db.run("DELETE FROM folders WHERE workspaceId = ?", [id]);
   db.run("DELETE FROM documents WHERE workspaceId = ?", [id]);
   await saveSqliteDb(db);
+}
+
+export async function getNonDefaultWorkspaces(): Promise<Workspace[]> {
+  const workspaces = await getWorkspaces();
+  return workspaces.filter((w) => w.id !== "default");
+}
+
+async function uniqueRootFolderNameInDefault(baseName: string): Promise<string> {
+  const existing = await getFolders("default", null);
+  return makeTitleUnique(
+    baseName.trim(),
+    existing.map((f) => f.name)
+  );
+}
+
+/** Move non-default workspace contents into named folders under default, then delete those workspaces. */
+export async function consolidateWorkspacesIntoDefault(): Promise<void> {
+  const nonDefault = await getNonDefaultWorkspaces();
+  for (const ws of nonDefault) {
+    const rootFolders = await getFolders(ws.id, null);
+    const rootDocs = await getDocumentsInFolder(ws.id, null);
+    const hasContent = rootFolders.length > 0 || rootDocs.length > 0;
+
+    if (hasContent) {
+      const folderName = await uniqueRootFolderNameInDefault(ws.name);
+      const workspaceFolder = await addFolder("default", folderName, null);
+
+      for (const folder of rootFolders) {
+        await moveFolder(folder.id, "default", workspaceFolder.id);
+      }
+      for (const doc of rootDocs) {
+        await moveDocument(doc.id, "default", workspaceFolder.id);
+      }
+    }
+
+    await deleteWorkspace(ws.id);
+  }
 }
 
 export async function deleteAllData(): Promise<void> {
@@ -296,15 +330,15 @@ export async function addFolder(
   parentFolderId: string | null = null
 ): Promise<Folder> {
   const siblings = await getFolders(workspaceId, parentFolderId);
-  const nameLower = name.trim().toLowerCase();
-  if (siblings.some((f) => f.name.toLowerCase() === nameLower)) {
-    throw new DuplicateNameError(`A folder named "${name.trim()}" already exists in this location.`);
-  }
+  const uniqueName = makeTitleUnique(
+    name.trim(),
+    siblings.map((f) => f.name)
+  );
   const folder: Folder = {
     id: crypto.randomUUID(),
     workspaceId,
     parentFolderId,
-    name: name.trim(),
+    name: uniqueName,
     createdAt: Date.now(),
   };
   const db = await getSqliteDb();

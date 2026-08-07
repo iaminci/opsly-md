@@ -9,7 +9,6 @@ import {
   useRef,
   useState,
 } from "react";
-import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 function hashContent(s: string): number {
@@ -31,9 +30,7 @@ import {
 } from "@/lib/storage";
 import { scrollToSearchMatch } from "@/lib/search-highlight";
 import { EmptyState } from "@/components/EmptyState";
-import { HeaderLogo } from "@/components/HeaderLogo";
 import { Sidebar } from "@/components/Sidebar";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { LineNumberedTextarea } from "@/components/LineNumberedTextarea";
 import { TableOfContents } from "@/components/TableOfContents";
@@ -50,7 +47,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
+import { cn, appCapsuleClassName } from "@/lib/utils";
 import {
   getTreeDocumentDragId,
   isTreeDocumentDrag,
@@ -62,8 +59,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
-import { Feedback } from "@/components/Feedback";
-import { GitHubIcon } from "@/components/GitHubIcon";
 import { WorkspaceTreeProvider } from "@/context/WorkspaceTreeContext";
 import {
   useDocumentEncryption,
@@ -83,7 +78,7 @@ import {
 const CURRENT_DOC_KEY = "md-viewer-current-doc";
 const RIGHT_TOC_OPEN_KEY = "md-viewer-right-toc-open";
 const DOC_STACK_ENABLED_KEY = "md-viewer-doc-stack-enabled";
-const GITHUB_URL = "https://github.com/iaminci/opsly-md";
+const WORKSPACES_ENABLED_KEY = "md-viewer-workspaces-enabled";
 const EDIT_AUTOSAVE_INTERVAL_SEC = 10;
 
 /**
@@ -150,6 +145,24 @@ function useLgAndUp() {
   return lg;
 }
 
+/** Shown on the main panel when the sidebar is collapsed (off-canvas or mobile sheet closed). */
+function SidebarExpandTrigger() {
+  const { state, isMobile, openMobile } = useSidebar();
+  const sidebarCollapsed = isMobile ? !openMobile : state === "collapsed";
+  if (!sidebarCollapsed) return null;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <SidebarTrigger className="absolute left-2 top-2 z-20 size-9 shrink-0 bg-background print:hidden" />
+      </TooltipTrigger>
+      <TooltipContent side="right" align="start">
+        Open sidebar
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 /** Wider reading column when the left sidebar or right TOC (or both) is collapsed. */
 function DocumentColumn({
   rightTocOpen,
@@ -195,10 +208,17 @@ function DocumentRightSidebar({
 }) {
   return (
     <Tabs defaultValue="on-this-page" className="flex min-h-0 flex-1 flex-col">
-      <TabsList className="mb-5 h-11 w-full shrink-0 justify-start">
-        <TabsTrigger value="on-this-page">On This Page</TabsTrigger>
-        <TabsTrigger value="info">Info</TabsTrigger>
-      </TabsList>
+      <div className="mb-3 shrink-0">
+        <TabsList className="h-9 w-full shrink-0 justify-start gap-1.5 border-0 bg-transparent p-0">
+          <TabsTrigger value="on-this-page" className="h-9 flex-none px-3">
+            On This Page
+          </TabsTrigger>
+          <TabsTrigger value="info" className="h-9 flex-none px-3">
+            Info
+          </TabsTrigger>
+        </TabsList>
+        <div className="-mx-3 mt-2 border-b-2 border-border" aria-hidden />
+      </div>
       <TabsContent value="on-this-page" className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden">
         <TableOfContents
           key={`${doc.id}-${hashContent(content)}`}
@@ -235,6 +255,7 @@ function AppContent() {
   const [rightTocOpen, setRightTocOpen] = useState(true);
   const [exportConfirmOpen, setExportConfirmOpen] = useState(false);
   const [documentStackEnabled, setDocumentStackEnabled] = useState(true);
+  const [workspacesEnabled, setWorkspacesEnabled] = useState(false);
   const [docStackIds, setDocStackIds] = useState<string[]>([]);
   const contentScrollRef = useRef<HTMLDivElement>(null);
   const markdownArticleRef = useRef<HTMLElement>(null);
@@ -297,10 +318,21 @@ function AppContent() {
     if (v === "0") setDocumentStackEnabled(false);
   }, []);
 
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    const v = localStorage.getItem(WORKSPACES_ENABLED_KEY);
+    if (v === "1") setWorkspacesEnabled(true);
+  }, []);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     localStorage.setItem(DOC_STACK_ENABLED_KEY, documentStackEnabled ? "1" : "0");
   }, [documentStackEnabled]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(WORKSPACES_ENABLED_KEY, workspacesEnabled ? "1" : "0");
+  }, [workspacesEnabled]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -420,7 +452,7 @@ function AppContent() {
       workspaceId?: string,
       folderId?: string | null
     ): Promise<boolean> => {
-      const wsId = workspaceId ?? "default";
+      const wsId = workspacesEnabled ? (workspaceId ?? "default") : "default";
       try {
         const decision = await encryption.prepareContentForSave(content, {
           interactive: true,
@@ -875,6 +907,7 @@ function AppContent() {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       if (exportConfirmOpen || hasOpenEscapeBlockingOverlay()) return;
+      if (document.querySelector('[data-inline-tree-edit="true"]')) return;
       if (!currentDoc) return;
       if (editMode) return;
       e.preventDefault();
@@ -900,7 +933,7 @@ function AppContent() {
 
   return (
     <WorkspaceTreeProvider documents={documents}>
-    <SidebarProvider className="h-svh overflow-hidden">
+    <SidebarProvider className="h-svh min-h-0">
       <Sidebar
         documents={documents}
         currentId={currentDoc?.id ?? null}
@@ -913,6 +946,8 @@ function AppContent() {
             setDocStackIds([currentDoc.id]);
           }
         }}
+        workspacesEnabled={workspacesEnabled}
+        onWorkspacesEnabledChange={setWorkspacesEnabled}
         onSelectDocument={handleSelectDocument}
         documentSearchQuery={documentSearchQuery}
         onDocumentSearchQueryChange={handleDocumentSearchQueryChange}
@@ -935,46 +970,11 @@ function AppContent() {
         onRefresh={refresh}
       />
 
-      <SidebarInset className="min-h-0 overflow-hidden">
-        <header className="relative flex h-14.5 shrink-0 items-center gap-5 border-b-2 px-4">
-          <SidebarTrigger className="shrink-0 text-foreground hover:text-foreground" />
-          <Link
-            href="/"
-            className="flex min-w-0 items-center leading-none no-underline cursor-pointer transition-opacity hover:opacity-80 shrink-0"
-            aria-label="Go to home"
-          >
-            <HeaderLogo className="h-7 w-auto max-w-[min(100%,20rem)] sm:h-8" />
-          </Link>
-          <div className="ml-auto flex items-center gap-5">
-            <Feedback />
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="neutral"
-                  size="icon-sm"
-                  className="bg-background"
-                  asChild
-                >
-                  <a
-                    href={GITHUB_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="View on GitHub"
-                  >
-                    <GitHubIcon className="size-4" />
-                  </a>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" align="center">
-                View on GitHub
-              </TooltipContent>
-            </Tooltip>
-            <ThemeToggle />
-          </div>
-        </header>
+      <SidebarInset className={cn(appCapsuleClassName, "relative flex min-h-0 flex-1 flex-col")}>
+        <SidebarExpandTrigger />
         <div
           className={cn(
-            "min-h-0 flex-1 overflow-hidden",
+            "relative min-h-0 flex-1 overflow-hidden",
             currentDoc
               ? "flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:grid-rows-1"
               : "flex flex-col"
@@ -1085,7 +1085,7 @@ function AppContent() {
                     onChange={(e) => setDraftContent(e.target.value)}
                     placeholder="Markdown content..."
                     spellCheck={false}
-                    className="h-[calc(100svh-12rem)] min-h-[calc(100svh-12rem)] leading-relaxed"
+                    className="min-h-[16rem] flex-1 leading-relaxed"
                     textareaClassName="leading-relaxed"
                   />
                 ) : encryption.isLocked ? (
@@ -1116,56 +1116,63 @@ function AppContent() {
           </div>
 
           {currentDoc && (
-            <div className="relative z-[2] hidden min-h-0 min-w-0 shrink-0 print:hidden lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:flex lg:h-full lg:min-h-0 lg:flex-col">
-              <div
-                id="document-outline-panel"
-                aria-hidden={!rightTocOpen}
-                className={cn(
-                  "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden",
-                  "transition-[width,padding-left,padding-right,padding-top,padding-bottom,border-left-width] duration-150 ease-linear",
-                  rightTocOpen
-                    ? "w-[17rem] border-l-2 border-border px-3 py-6"
-                    : "w-0 border-l-0 px-0 py-0"
-                )}
-              >
-                <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col">
+            <div
+              className={cn(
+                "hidden min-h-0 min-w-0 shrink-0 print:hidden lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:flex lg:h-full lg:min-h-0 lg:flex-col",
+                rightTocOpen ? "p-2 pl-0" : "w-0 p-0"
+              )}
+            >
+              {rightTocOpen && (
+                <aside
+                  id="document-outline-panel"
+                  aria-hidden={!rightTocOpen}
+                  className={cn(
+                    appCapsuleClassName,
+                    "flex min-h-0 w-[17rem] flex-1 flex-col px-3 pt-2 pb-4"
+                  )}
+                >
                   <DocumentRightSidebar
                     doc={currentDoc}
                     content={displayContent}
                     contentScrollRef={contentScrollRef}
                   />
-                </div>
-              </div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-expanded={rightTocOpen}
-                    aria-controls="document-outline-panel"
-                    onClick={() => setRightTocOpen((o) => !o)}
-                    className={cn(
-                      "fixed h-15 w-6 shadow-shadow-2 border-2 border-border bg-background top-[calc(50%-1rem)] z-30 hidden shrink-0 text-primary-hover transition-[right] duration-150 ease-linear hover:text-background hover:bg-primary",
-                      "print:hidden lg:inline-flex",
-                      rightTocOpen ? "right-[16.3rem]" : "right-0"
-                    )}
-                  >
-                    {rightTocOpen ? (
-                      <ChevronRight aria-hidden />
-                    ) : (
-                      <ChevronLeft aria-hidden />
-                    )}
-                    <span className="sr-only">
-                      {rightTocOpen ? "Hide outline" : "Show outline"}
-                    </span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left" align="center">
-                  {rightTocOpen ? "Hide outline" : "Show outline"}
-                </TooltipContent>
-              </Tooltip>
+                </aside>
+              )}
             </div>
+          )}
+
+          {currentDoc && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-expanded={rightTocOpen}
+                  aria-controls="document-outline-panel"
+                  onClick={() => setRightTocOpen((o) => !o)}
+                  className={cn(
+                    "absolute top-1/2 z-30 hidden h-15 w-6 shrink-0 -translate-y-1/2 border-2 border-border bg-background text-primary-hover shadow-shadow transition-[right] duration-150 ease-linear hover:bg-primary hover:text-background",
+                    "print:hidden lg:inline-flex",
+                    rightTocOpen
+                      ? "right-[calc(17rem+0.5rem-0.75rem)]"
+                      : "right-2"
+                  )}
+                >
+                  {rightTocOpen ? (
+                    <ChevronRight aria-hidden />
+                  ) : (
+                    <ChevronLeft aria-hidden />
+                  )}
+                  <span className="sr-only">
+                    {rightTocOpen ? "Hide outline" : "Show outline"}
+                  </span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left" align="center">
+                {rightTocOpen ? "Hide outline" : "Show outline"}
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
       </SidebarInset>

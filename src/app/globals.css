@@ -83,7 +83,7 @@ mark.search-highlight-active {
 :root {
   --background: #fafaf7;
   --secondary-background: #ffffff;
-  --sidebar: #fafafa;
+  --sidebar: var(--secondary-background);
   --card: #ffffff;
   --popover: #ffffff;
   --input: #fcfcfd;
@@ -129,7 +129,7 @@ mark.search-highlight-active {
 .dark {
   --background: #24283b;
   --secondary-background: #24283b;
-  --sidebar: #1d2333;
+  --sidebar: var(--secondary-background);
   --card: #272f45;
   --popover: #2d3750;
   --input: #32384d;

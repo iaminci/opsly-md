@@ -3,7 +3,9 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import type { Document } from "@/types/document";
 import type { Folder } from "@/types/workspace";
-import { WorkspaceTree } from "./WorkspaceTree";
+import { INLINE_TREE_EDIT_SELECTOR } from "./InlineTreeCreateRow";
+import { WORKSPACE_SWITCHER_DROPDOWN_SELECTOR } from "./WorkspaceSwitcher";
+import { WorkspaceTree, type PendingTreeCreate, type PendingTreeRename } from "./WorkspaceTree";
 import { Search, type SearchMatchNavigation } from "./Search";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +14,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useWorkspaceTree } from "@/context/WorkspaceTreeContext";
@@ -32,13 +35,14 @@ import {
   exportWorkspacesData,
   importWorkspaceData,
   importAllWorkspacesData,
+  consolidateWorkspacesIntoDefault,
   DuplicateNameError,
   type WorkspaceExport,
   type AllWorkspacesExport,
 } from "@/lib/storage";
 import { cn, OPSLY_FILE_EXTENSION, titleFromMarkdownContent } from "@/lib/utils";
-import { CreateNameDialog } from "./CreateNameDialog";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
+import { WorkspaceActionBar } from "./WorkspaceActionBar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,6 +63,11 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Settings } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { CommandPalette } from "./CommandPalette";
 import { SettingsModal } from "./SettingsModal";
 import { UploadFileModal } from "./UploadFileModal";
@@ -108,6 +117,8 @@ interface SidebarProps {
   onRefresh: () => void;
   documentStackEnabled: boolean;
   onDocumentStackEnabledChange: (enabled: boolean) => void;
+  workspacesEnabled: boolean;
+  onWorkspacesEnabledChange: (enabled: boolean) => void;
   documentSearchQuery: string;
   onDocumentSearchQueryChange: (query: string) => void;
   onSearchSelectDocument: (doc: Document) => void;
@@ -123,24 +134,16 @@ export function Sidebar({
   onRefresh,
   documentStackEnabled,
   onDocumentStackEnabledChange,
+  workspacesEnabled,
+  onWorkspacesEnabledChange,
   documentSearchQuery,
   onDocumentSearchQueryChange,
   onSearchSelectDocument,
   searchMatchNavigation,
 }: SidebarProps) {
   const { setOpen } = useSidebar();
-  const [workspaceDialogOpen, setWorkspaceDialogOpen] = useState(false);
-  const [folderDialogOpen, setFolderDialogOpen] = useState(false);
-  const [folderDialogTarget, setFolderDialogTarget] = useState<{
-    workspaceId: string;
-    parentFolderId: string | null;
-  } | null>(null);
-  const [renameWorkspaceOpen, setRenameWorkspaceOpen] = useState(false);
-  const [renameWorkspaceTarget, setRenameWorkspaceTarget] = useState<{ id: string; name: string } | null>(null);
-  const [renameFolderOpen, setRenameFolderOpen] = useState(false);
-  const [renameFolderTarget, setRenameFolderTarget] = useState<{ id: string; name: string } | null>(null);
-  const [renameDocOpen, setRenameDocOpen] = useState(false);
-  const [renameDocTarget, setRenameDocTarget] = useState<{ id: string; title: string } | null>(null);
+  const [pendingTreeCreate, setPendingTreeCreate] = useState<PendingTreeCreate | null>(null);
+  const [pendingTreeRename, setPendingTreeRename] = useState<PendingTreeRename | null>(null);
   const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
   const [deleteWorkspaceDialogOpen, setDeleteWorkspaceDialogOpen] = useState(false);
   const [deleteWorkspaceTarget, setDeleteWorkspaceTarget] = useState<{ id: string; name: string } | null>(null);
@@ -158,7 +161,6 @@ export function Sidebar({
   const [pendingEncryptedImport, setPendingEncryptedImport] = useState<string | null>(null);
   const { sortedWorkspaces, getFoldersInWorkspace } = useWorkspaceTree();
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
-  const [workspaceSwitcherMenuOpen, setWorkspaceSwitcherMenuOpen] = useState(false);
   const [workspaceSwitcherDragTarget, setWorkspaceSwitcherDragTarget] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [uploadModalConfig, setUploadModalConfig] = useState<{
@@ -183,13 +185,11 @@ export function Sidebar({
   const importInputRef = useRef<HTMLInputElement>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [disableWorkspacesDialogOpen, setDisableWorkspacesDialogOpen] = useState(false);
 
   const sidebarBlocksDeployReload =
-    workspaceDialogOpen ||
-    folderDialogOpen ||
-    renameWorkspaceOpen ||
-    renameFolderOpen ||
-    renameDocOpen ||
+    pendingTreeCreate !== null ||
+    pendingTreeRename !== null ||
     deleteAllDialogOpen ||
     deleteWorkspaceDialogOpen ||
     deleteFolderDialogOpen ||
@@ -200,6 +200,7 @@ export function Sidebar({
     importUnlockDialogOpen ||
     commandPaletteOpen ||
     settingsModalOpen ||
+    disableWorkspacesDialogOpen ||
     uploadModalOpen ||
     createModalOpen;
 
@@ -207,15 +208,26 @@ export function Sidebar({
 
   const WORKSPACE_KEY = "md-viewer-current-workspace";
 
-  const displayedWorkspaces = selectedWorkspaceId
-    ? sortedWorkspaces.filter((w) => w.id === selectedWorkspaceId)
-    : sortedWorkspaces;
+  const effectiveWorkspaceId = workspacesEnabled ? selectedWorkspaceId : "default";
+  const defaultWorkspace =
+    sortedWorkspaces.find((w) => w.id === "default") ?? sortedWorkspaces[0];
 
-  const searchDocuments = selectedWorkspaceId
-    ? documents.filter((d) => d.workspaceId === selectedWorkspaceId)
-    : documents;
+  const displayedWorkspaces = workspacesEnabled
+    ? selectedWorkspaceId
+      ? sortedWorkspaces.filter((w) => w.id === selectedWorkspaceId)
+      : sortedWorkspaces
+    : defaultWorkspace
+      ? [defaultWorkspace]
+      : sortedWorkspaces.filter((w) => w.id === "default");
+
+  const searchDocuments = workspacesEnabled
+    ? selectedWorkspaceId
+      ? documents.filter((d) => d.workspaceId === selectedWorkspaceId)
+      : documents
+    : documents.filter((d) => d.workspaceId === "default");
 
   useEffect(() => {
+    if (!workspacesEnabled) return;
     if (sortedWorkspaces.length === 0) return;
     if (typeof window === "undefined") return;
     setSelectedWorkspaceId((prev) => {
@@ -225,7 +237,7 @@ export function Sidebar({
       if (stored && sortedWorkspaces.some((w) => w.id === stored)) return stored;
       return null;
     });
-  }, [sortedWorkspaces]);
+  }, [sortedWorkspaces, workspacesEnabled]);
 
   const getFoldersSync = (workspaceId: string, parentFolderId: string | null) => {
     const folders = getFoldersInWorkspace(workspaceId);
@@ -334,9 +346,13 @@ export function Sidebar({
     }
   };
 
-  const handleAddWorkspace = () => setWorkspaceDialogOpen(true);
+  const handleAddWorkspace = useCallback(() => {
+    setPendingTreeRename(null);
+    setPendingTreeCreate({ type: "workspace", inlineTarget: "switcher-dropdown" });
+  }, []);
 
   const getDefaultWorkspaceId = useCallback(() => {
+    if (!workspacesEnabled) return "default";
     return (
       selectedWorkspaceId ??
       sortedWorkspaces.find((w) => w.id === "default")?.id ??
@@ -344,32 +360,224 @@ export function Sidebar({
       sortedWorkspaces[0]?.id ??
       "default"
     );
-  }, [selectedWorkspaceId, sortedWorkspaces]);
+  }, [workspacesEnabled, selectedWorkspaceId, sortedWorkspaces]);
 
-  const handleQuickCreateFromAllView = useCallback(() => {
-    openCreateModal(getDefaultWorkspaceId(), null);
-  }, [getDefaultWorkspaceId, openCreateModal]);
+  const handleWorkspacesEnabledChange = useCallback(
+    async (enabled: boolean) => {
+      if (enabled) {
+        onWorkspacesEnabledChange(true);
+        return;
+      }
 
-  const handleQuickUploadFromAllView = useCallback(() => {
-    openUploadModal(getDefaultWorkspaceId(), null);
-  }, [getDefaultWorkspaceId, openUploadModal]);
+      setSettingsModalOpen(false);
 
-  const handleWorkspaceSubmit = async (name: string) => {
-    await addWorkspace(name);
+      const nonDefault = sortedWorkspaces.filter((w) => w.id !== "default");
+      if (nonDefault.length === 0) {
+        onWorkspacesEnabledChange(false);
+        setSelectedWorkspaceId("default");
+        if (typeof window !== "undefined") {
+          localStorage.setItem(WORKSPACE_KEY, "default");
+        }
+        return;
+      }
+
+      setDisableWorkspacesDialogOpen(true);
+    },
+    [onWorkspacesEnabledChange, sortedWorkspaces]
+  );
+
+  const handleDisableWorkspacesConfirm = async () => {
+    await consolidateWorkspacesIntoDefault();
+    setSelectedWorkspaceId("default");
+    if (typeof window !== "undefined") {
+      localStorage.setItem(WORKSPACE_KEY, "default");
+    }
+    onWorkspacesEnabledChange(false);
+    setDisableWorkspacesDialogOpen(false);
     await onRefresh();
   };
 
-  const handleAddFolder = (workspaceId: string, parentFolderId: string | null) => {
-    setFolderDialogTarget({ workspaceId, parentFolderId });
-    setFolderDialogOpen(true);
-  };
+  const getSidebarTreeContext = useCallback((): {
+    workspaceId: string;
+    folderId: string | null;
+  } => {
+    if (currentId) {
+      const doc = documents.find((d) => d.id === currentId);
+      if (doc) {
+        return {
+          workspaceId: workspacesEnabled ? doc.workspaceId : "default",
+          folderId: doc.folderId,
+        };
+      }
+    }
 
-  const handleFolderSubmit = async (name: string) => {
-    if (!folderDialogTarget) return;
-    await addFolder(folderDialogTarget.workspaceId, name, folderDialogTarget.parentFolderId);
-    setFolderDialogTarget(null);
-    await onRefresh();
-  };
+    return {
+      workspaceId: getDefaultWorkspaceId(),
+      folderId: null,
+    };
+  }, [currentId, documents, getDefaultWorkspaceId, workspacesEnabled]);
+
+  const handleAddFile = useCallback((workspaceId: string, folderId: string | null) => {
+    setPendingTreeRename(null);
+    setPendingTreeCreate({ type: "file", workspaceId, parentFolderId: folderId });
+  }, []);
+
+  const handleActionBarCreateFile = useCallback(() => {
+    const { workspaceId, folderId } = getSidebarTreeContext();
+    handleAddFile(workspaceId, folderId);
+  }, [getSidebarTreeContext, handleAddFile]);
+
+  const handleActionBarUploadFile = useCallback(() => {
+    const { workspaceId, folderId } = getSidebarTreeContext();
+    openUploadModal(workspaceId, folderId, { hideLocationSelectors: true });
+  }, [getSidebarTreeContext, openUploadModal]);
+
+  const handleAddFolder = useCallback(
+    (workspaceId: string, parentFolderId: string | null) => {
+      setPendingTreeRename(null);
+      setPendingTreeCreate({ type: "folder", workspaceId, parentFolderId });
+    },
+    []
+  );
+
+  const handleActionBarCreateFolder = useCallback(() => {
+    const { workspaceId, folderId } = getSidebarTreeContext();
+    handleAddFolder(workspaceId, folderId);
+  }, [getSidebarTreeContext, handleAddFolder]);
+
+  const handlePendingTreeCreateCancel = useCallback(() => {
+    setPendingTreeCreate(null);
+  }, []);
+
+  const handlePendingTreeRenameCancel = useCallback(() => {
+    setPendingTreeRename(null);
+  }, []);
+
+  useEffect(() => {
+    const pendingTreeEdit = pendingTreeCreate ?? pendingTreeRename;
+    if (!pendingTreeEdit) return;
+
+    const openedAt = performance.now();
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if (pendingTreeCreate) {
+        handlePendingTreeCreateCancel();
+      } else {
+        handlePendingTreeRenameCancel();
+      }
+    };
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (performance.now() - openedAt < 200) return;
+      const target = e.target;
+      if (target instanceof Element) {
+        if (target.closest(INLINE_TREE_EDIT_SELECTOR)) return;
+        const dropdownInlineEditActive =
+          pendingTreeCreate?.type === "workspace" ||
+          (pendingTreeRename?.type === "workspace" &&
+            pendingTreeRename.inlineTarget === "switcher-dropdown");
+        if (
+          dropdownInlineEditActive &&
+          target.closest(WORKSPACE_SWITCHER_DROPDOWN_SELECTOR)
+        ) {
+          return;
+        }
+      }
+      if (pendingTreeCreate) {
+        handlePendingTreeCreateCancel();
+      } else {
+        handlePendingTreeRenameCancel();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown, true);
+    window.addEventListener("pointerdown", onPointerDown, true);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown, true);
+      window.removeEventListener("pointerdown", onPointerDown, true);
+    };
+  }, [
+    pendingTreeCreate,
+    pendingTreeRename,
+    handlePendingTreeCreateCancel,
+    handlePendingTreeRenameCancel,
+  ]);
+
+  const handlePendingTreeCreateSubmit = useCallback(
+    async (name: string) => {
+      if (!pendingTreeCreate) return;
+      try {
+        if (pendingTreeCreate.type === "workspace") {
+          await addWorkspace(name);
+        } else if (pendingTreeCreate.type === "folder") {
+          await addFolder(
+            pendingTreeCreate.workspaceId,
+            name,
+            pendingTreeCreate.parentFolderId
+          );
+        } else {
+          const title = name.replace(/\.md$/i, "").trim() || "Untitled";
+          const doc = await addDocument(
+            {
+              title,
+              content: "",
+              workspaceId: pendingTreeCreate.workspaceId,
+              folderId: pendingTreeCreate.parentFolderId,
+            },
+            {
+              workspaceId: pendingTreeCreate.workspaceId,
+              folderId: pendingTreeCreate.parentFolderId,
+            }
+          );
+          onSelectDocument(doc);
+        }
+        setPendingTreeCreate(null);
+        await onRefresh();
+      } catch (err) {
+        if (err instanceof DuplicateNameError) {
+          toast.error(err.message);
+        } else if (pendingTreeCreate.type === "workspace") {
+          toast.error("Failed to create workspace.");
+        } else if (pendingTreeCreate.type === "folder") {
+          toast.error("Failed to create folder.");
+        } else {
+          toast.error("Failed to create file.");
+        }
+      }
+    },
+    [pendingTreeCreate, onRefresh, onSelectDocument]
+  );
+
+  const handlePendingTreeRenameSubmit = useCallback(
+    async (name: string) => {
+      if (!pendingTreeRename) return;
+      try {
+        if (pendingTreeRename.type === "workspace") {
+          await updateWorkspace(pendingTreeRename.id, name);
+        } else if (pendingTreeRename.type === "folder") {
+          await updateFolder(pendingTreeRename.id, name);
+        } else {
+          await updateDocument(pendingTreeRename.id, { title: name });
+        }
+        setPendingTreeRename(null);
+        await onRefresh();
+      } catch (err) {
+        if (err instanceof DuplicateNameError) {
+          toast.error(err.message);
+        } else if (pendingTreeRename.type === "workspace") {
+          toast.error("Failed to rename workspace.");
+        } else if (pendingTreeRename.type === "folder") {
+          toast.error("Failed to rename folder.");
+        } else {
+          toast.error("Failed to rename document.");
+        }
+      }
+    },
+    [pendingTreeRename, onRefresh]
+  );
 
   const handleMoveDocument = async (
     docId: string,
@@ -399,33 +607,18 @@ export function Sidebar({
     }
   };
 
-  const handleAddFile = async (workspaceId: string, folderId: string | null) => {
-    try {
-      const doc = await addDocument(
-        { title: "Untitled", content: "", workspaceId, folderId },
-        { workspaceId, folderId }
-      );
-      await onRefresh();
-      onSelectDocument(doc);
-    } catch (err) {
-      if (err instanceof DuplicateNameError) {
-        toast.error(err.message);
-      } else {
-        toast.error("Failed to create file.");
-      }
-    }
-  };
-
-  const handleRenameWorkspace = (id: string, name: string) => {
-    setRenameWorkspaceTarget({ id, name });
-    setRenameWorkspaceOpen(true);
-  };
-
-  const handleRenameWorkspaceSubmit = async (name: string) => {
-    if (!renameWorkspaceTarget) return;
-    await updateWorkspace(renameWorkspaceTarget.id, name);
-    setRenameWorkspaceTarget(null);
-    await onRefresh();
+  const handleRenameWorkspace = (
+    id: string,
+    name: string,
+    inlineTarget: "tree" | "switcher-dropdown" = "tree"
+  ) => {
+    setPendingTreeCreate(null);
+    setPendingTreeRename({
+      type: "workspace",
+      id,
+      initialName: name,
+      inlineTarget,
+    });
   };
 
   const handleDeleteWorkspaceRequest = (id: string, name: string) => {
@@ -444,7 +637,7 @@ export function Sidebar({
   const handleDeleteAllClick = () => setDeleteAllDialogOpen(true);
 
   const handleDeleteAllConfirm = async () => {
-    if (selectedWorkspaceId) {
+    if (workspacesEnabled && selectedWorkspaceId) {
       await deleteWorkspace(selectedWorkspaceId);
       setSelectedWorkspaceId(null);
       if (typeof window !== "undefined") {
@@ -462,8 +655,12 @@ export function Sidebar({
   };
 
   const queueExportDownload = useCallback(
-    (data: AllWorkspacesExport | WorkspaceExport, filename: string) => {
-      if (exportMode === "encrypted") {
+    (
+      data: AllWorkspacesExport | WorkspaceExport,
+      filename: string,
+      mode: ExportMode = exportMode
+    ) => {
+      if (mode === "encrypted") {
         setPendingExport({ data, filename });
         setExportPassphraseDialogOpen(true);
         return;
@@ -479,6 +676,10 @@ export function Sidebar({
 
   const handleExportClick = (mode: ExportMode = "plain") => {
     setExportMode(mode);
+    if (!workspacesEnabled) {
+      void handleExportWorkspace("default", mode);
+      return;
+    }
     if (selectedWorkspaceId) {
       setExportConfirmDialogOpen(true);
     } else {
@@ -494,11 +695,11 @@ export function Sidebar({
     }
   };
 
-  const handleExportWorkspace = async (workspaceId: string) => {
+  const handleExportWorkspace = async (workspaceId: string, mode?: ExportMode) => {
     const data = await exportWorkspaceData(workspaceId);
     if (!data) return;
     const filename = `${data.workspace.name.replace(/[^\w\s-]/g, "").replace(/\s+/g, "-")}-export.json`;
-    queueExportDownload(data, filename);
+    queueExportDownload(data, filename, mode);
   };
 
   const handleExportSelected = async () => {
@@ -619,15 +820,20 @@ export function Sidebar({
   };
 
   const handleRenameFolder = (id: string, name: string) => {
-    setRenameFolderTarget({ id, name });
-    setRenameFolderOpen(true);
-  };
-
-  const handleRenameFolderSubmit = async (name: string) => {
-    if (!renameFolderTarget) return;
-    await updateFolder(renameFolderTarget.id, name);
-    setRenameFolderTarget(null);
-    await onRefresh();
+    setPendingTreeCreate(null);
+    for (const ws of sortedWorkspaces) {
+      const folder = getFoldersInWorkspace(ws.id).find((f) => f.id === id);
+      if (folder) {
+        setPendingTreeRename({
+          type: "folder",
+          id,
+          workspaceId: ws.id,
+          parentFolderId: folder.parentFolderId,
+          initialName: name,
+        });
+        return;
+      }
+    }
   };
 
   const handleDeleteFolderRequest = (id: string, name: string) => {
@@ -657,26 +863,16 @@ export function Sidebar({
   };
 
   const handleRenameDocument = (id: string, title: string) => {
-    setRenameDocTarget({ id, title });
-    setRenameDocOpen(true);
-  };
-
-  const handleRenameDocumentSubmit = async (title: string) => {
-    if (!renameDocTarget) return;
-    const newTitle = title.trim();
-    if (!newTitle) return;
-    try {
-      await updateDocument(renameDocTarget.id, { title: newTitle });
-    } catch (err) {
-      if (err instanceof DuplicateNameError) {
-        toast.error(err.message);
-      } else {
-        toast.error("Failed to rename document.");
-      }
-      return;
-    }
-    setRenameDocTarget(null);
-    await onRefresh();
+    setPendingTreeCreate(null);
+    const doc = documents.find((d) => d.id === id);
+    if (!doc) return;
+    setPendingTreeRename({
+      type: "file",
+      id,
+      workspaceId: doc.workspaceId,
+      folderId: doc.folderId,
+      initialName: title,
+    });
   };
 
   const selectedWorkspaceName = selectedWorkspaceId
@@ -685,7 +881,7 @@ export function Sidebar({
 
   return (
     <>
-      <ShadcnSidebar collapsible="offcanvas" className="print:hidden border-r-2 border-sidebar-border">
+      <ShadcnSidebar collapsible="offcanvas" variant="inset" className="print:hidden">
       <input
         ref={importInputRef}
         type="file"
@@ -699,41 +895,66 @@ export function Sidebar({
           <SidebarGroup>
             <SidebarGroupLabel className="sr-only">Search</SidebarGroupLabel>
             <SidebarGroupContent>
-              <div className="min-w-0 overflow-visible">
-                <Search
-                  documents={searchDocuments}
-                  query={documentSearchQuery}
-                  onQueryChange={onDocumentSearchQueryChange}
-                  onSelect={onSearchSelectDocument}
-                  matchNavigation={searchMatchNavigation}
-                />
+              <div className="flex min-w-0 items-center gap-2">
+                <div className="min-w-0 flex-1 overflow-visible">
+                  <Search
+                    documents={searchDocuments}
+                    query={documentSearchQuery}
+                    onQueryChange={onDocumentSearchQueryChange}
+                    onSelect={onSearchSelectDocument}
+                    matchNavigation={searchMatchNavigation}
+                  />
+                </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <SidebarTrigger className="size-9 shrink-0 bg-background" />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" align="end">
+                    Collapse sidebar
+                  </TooltipContent>
+                </Tooltip>
               </div>
             </SidebarGroupContent>
           </SidebarGroup>
         </div>
 
-        <div className="mb-2 shrink-0 flex flex-col pt-2">
-          <SidebarGroup>
-            <SidebarGroupLabel className="sr-only">Workspace</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <WorkspaceSwitcher
-                workspaces={sortedWorkspaces}
-                selectedId={selectedWorkspaceId}
-                dragTargetActive={workspaceSwitcherDragTarget}
-                onSelect={handleWorkspaceSelect}
-                onAddWorkspace={handleAddWorkspace}
-                onQuickCreateMarkdown={handleQuickCreateFromAllView}
-                onQuickUploadFile={handleQuickUploadFromAllView}
-                onWorkspaceMenuOpenChange={setWorkspaceSwitcherMenuOpen}
-                onAddFolder={handleAddFolder}
-                onUploadFile={handleUploadFile}
-                onCreateFile={(ws, folderId) =>
-                  openCreateModal(ws, folderId, { hideLocationSelectors: true })
-                }
-                onRenameWorkspace={handleRenameWorkspace}
-              />
-            </SidebarGroupContent>
-          </SidebarGroup>
+        <div className="mb-2 shrink-0 flex flex-col gap-1.5 pt-2">
+          {workspacesEnabled ? (
+            <SidebarGroup>
+              <SidebarGroupLabel className="sr-only">Workspace</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <WorkspaceSwitcher
+                  workspaces={sortedWorkspaces}
+                  selectedId={selectedWorkspaceId}
+                  dragTargetActive={workspaceSwitcherDragTarget}
+                  onSelect={handleWorkspaceSelect}
+                  onAddWorkspace={handleAddWorkspace}
+                  onCreateFile={handleActionBarCreateFile}
+                  onUploadFile={handleActionBarUploadFile}
+                  onCreateFolder={handleActionBarCreateFolder}
+                  onRenameWorkspace={handleRenameWorkspace}
+                  pendingTreeCreate={pendingTreeCreate}
+                  onPendingTreeCreateSubmit={handlePendingTreeCreateSubmit}
+                  onPendingTreeCreateCancel={handlePendingTreeCreateCancel}
+                  pendingTreeRename={pendingTreeRename}
+                  onPendingTreeRenameSubmit={handlePendingTreeRenameSubmit}
+                  onPendingTreeRenameCancel={handlePendingTreeRenameCancel}
+                />
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ) : (
+            <SidebarGroup>
+              <SidebarGroupLabel className="sr-only">Files</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <WorkspaceActionBar
+                  label={defaultWorkspace?.name ?? "Default"}
+                  onCreateFile={handleActionBarCreateFile}
+                  onUploadFile={handleActionBarUploadFile}
+                  onCreateFolder={handleActionBarCreateFolder}
+                />
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
         </div>
 
         <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
@@ -746,15 +967,13 @@ export function Sidebar({
               flatDocuments={documents}
               getFoldersFlat={getFoldersFlat}
               currentId={currentId}
-              selectedWorkspaceId={selectedWorkspaceId}
-              workspaceSwitcherMenuOpen={workspaceSwitcherMenuOpen}
+              selectedWorkspaceId={effectiveWorkspaceId}
+              workspacesEnabled={workspacesEnabled}
               onSelectDocument={onSelectDocument}
               onDeleteDocument={handleDeleteDocumentRequest}
               onAddWorkspace={handleAddWorkspace}
               onAddFolder={handleAddFolder}
-              onAddFile={(ws, folderId) =>
-                openCreateModal(ws, folderId, { hideLocationSelectors: true })
-              }
+              onAddFile={handleAddFile}
               onUploadFile={handleUploadFile}
               onMoveDocument={handleMoveDocument}
               onMoveFolder={handleMoveFolder}
@@ -764,6 +983,12 @@ export function Sidebar({
               onDeleteFolder={handleDeleteFolderRequest}
               onRenameDocument={handleRenameDocument}
               onWorkspaceDragTargetChange={setWorkspaceSwitcherDragTarget}
+              pendingTreeCreate={pendingTreeCreate}
+              onPendingTreeCreateSubmit={handlePendingTreeCreateSubmit}
+              onPendingTreeCreateCancel={handlePendingTreeCreateCancel}
+              pendingTreeRename={pendingTreeRename}
+              onPendingTreeRenameSubmit={handlePendingTreeRenameSubmit}
+              onPendingTreeRenameCancel={handlePendingTreeRenameCancel}
             />
             </SidebarGroupContent>
           </SidebarGroup>
@@ -789,62 +1014,6 @@ export function Sidebar({
         </div>
       </SidebarContent>
     </ShadcnSidebar>
-
-      <CreateNameDialog
-        open={workspaceDialogOpen}
-        onOpenChange={setWorkspaceDialogOpen}
-        title="New workspace"
-        placeholder="Workspace name"
-        defaultValue="New Workspace"
-        onSubmit={handleWorkspaceSubmit}
-      />
-      <CreateNameDialog
-        open={folderDialogOpen}
-        onOpenChange={(open) => {
-          setFolderDialogOpen(open);
-          if (!open) setFolderDialogTarget(null);
-        }}
-        title="New folder"
-        placeholder="Folder name"
-        defaultValue="New Folder"
-        onSubmit={handleFolderSubmit}
-      />
-      <CreateNameDialog
-        open={renameWorkspaceOpen}
-        onOpenChange={(open) => {
-          setRenameWorkspaceOpen(open);
-          if (!open) setRenameWorkspaceTarget(null);
-        }}
-        title="Rename workspace"
-        placeholder="Workspace name"
-        defaultValue={renameWorkspaceTarget?.name ?? ""}
-        submitLabel="Rename"
-        onSubmit={handleRenameWorkspaceSubmit}
-      />
-      <CreateNameDialog
-        open={renameFolderOpen}
-        onOpenChange={(open) => {
-          setRenameFolderOpen(open);
-          if (!open) setRenameFolderTarget(null);
-        }}
-        title="Rename folder"
-        placeholder="Folder name"
-        defaultValue={renameFolderTarget?.name ?? ""}
-        submitLabel="Rename"
-        onSubmit={handleRenameFolderSubmit}
-      />
-      <CreateNameDialog
-        open={renameDocOpen}
-        onOpenChange={(open) => {
-          setRenameDocOpen(open);
-          if (!open) setRenameDocTarget(null);
-        }}
-        title="Rename document"
-        placeholder="Document title"
-        defaultValue={renameDocTarget?.title ?? ""}
-        submitLabel="Rename"
-        onSubmit={handleRenameDocumentSubmit}
-      />
 
       <AlertDialog open={exportConfirmDialogOpen} onOpenChange={setExportConfirmDialogOpen}>
         <AlertDialogContent>
@@ -879,12 +1048,12 @@ export function Sidebar({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {selectedWorkspaceId
+              {workspacesEnabled && selectedWorkspaceId
                 ? <>Delete &quot;{selectedWorkspaceName}&quot; and all its contents?</>
                 : "Delete all workspaces, folders, and documents?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {selectedWorkspaceId ? (
+              {workspacesEnabled && selectedWorkspaceId ? (
                 <>
                   This will permanently delete the workspace &quot;{selectedWorkspaceName}&quot; and
                   everything inside it (folders and documents). This action cannot be undone.
@@ -905,7 +1074,7 @@ export function Sidebar({
                 void handleDeleteAllConfirm();
               }}
             >
-              {selectedWorkspaceId ? "Delete Workspace" : "Delete Everything"}
+              {workspacesEnabled && selectedWorkspaceId ? "Delete Workspace" : "Delete Everything"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1062,6 +1231,8 @@ export function Sidebar({
         onOpenChange={setSettingsModalOpen}
         documentStackEnabled={documentStackEnabled}
         onDocumentStackEnabledChange={onDocumentStackEnabledChange}
+        workspacesEnabled={workspacesEnabled}
+        onWorkspacesEnabledChange={handleWorkspacesEnabledChange}
         onImport={() => {
           setSettingsModalOpen(false);
           window.setTimeout(() => importInputRef.current?.click(), 0);
@@ -1074,8 +1245,35 @@ export function Sidebar({
           setSettingsModalOpen(false);
           handleDeleteAllClick();
         }}
-        deleteLabel={selectedWorkspaceId ? "Delete Workspace" : "Delete Everything"}
+        deleteLabel={
+          workspacesEnabled && selectedWorkspaceId ? "Delete Workspace" : "Delete Everything"
+        }
       />
+
+      <AlertDialog
+        open={disableWorkspacesDialogOpen}
+        onOpenChange={setDisableWorkspacesDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Disable workspaces?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Other workspaces will become folders under Default.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e: React.MouseEvent) => {
+                e.preventDefault();
+                void handleDisableWorkspacesConfirm();
+              }}
+            >
+              Disable
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <SetPassphraseDialog
         open={exportPassphraseDialogOpen}
@@ -1113,6 +1311,7 @@ export function Sidebar({
         initialWorkspaceId={uploadModalConfig.workspaceId}
         initialFolderId={uploadModalConfig.folderId}
         hideLocationSelectors={uploadModalConfig.hideLocationSelectors}
+        workspacesEnabled={workspacesEnabled}
         onUpload={handleUploadSubmit}
       />
 
@@ -1122,6 +1321,7 @@ export function Sidebar({
         initialWorkspaceId={createModalConfig.workspaceId}
         initialFolderId={createModalConfig.folderId}
         hideLocationSelectors={createModalConfig.hideLocationSelectors}
+        workspacesEnabled={workspacesEnabled}
         onCreate={onAddDocument}
       />
 
@@ -1129,20 +1329,16 @@ export function Sidebar({
         open={commandPaletteOpen}
         onOpenChange={setCommandPaletteOpen}
         handlers={{
-          onCreateDocument: () =>
-            handleAddFile(
-              selectedWorkspaceId ?? sortedWorkspaces[0]?.id ?? "default",
-              null
-            ),
-          onCreateFolder: () =>
-            handleAddFolder(
-              selectedWorkspaceId ?? sortedWorkspaces[0]?.id ?? "default",
-              null
-            ),
+          onCreateDocument: handleActionBarCreateFile,
+          onCreateFolder: handleActionBarCreateFolder,
           onSearchDocuments: () => setOpen(true),
-          onSwitchWorkspace: () => setOpen(true),
-          onExportWorkspace: () => handleExportClick("plain"),
-          onImportWorkspace: handleImportWorkspace,
+          ...(workspacesEnabled
+            ? {
+                onSwitchWorkspace: () => setOpen(true),
+                onExportWorkspace: () => handleExportClick("plain"),
+                onImportWorkspace: handleImportWorkspace,
+              }
+            : {}),
         }}
       />
     </>
