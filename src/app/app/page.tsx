@@ -32,7 +32,7 @@ import { scrollToSearchMatch } from "@/lib/search-highlight";
 import { EmptyState } from "@/components/EmptyState";
 import { Sidebar } from "@/components/Sidebar";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
-import { LineNumberedTextarea } from "@/components/LineNumberedTextarea";
+import { MarkdownEditor } from "@/components/MarkdownEditor";
 import { TableOfContents } from "@/components/TableOfContents";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -167,9 +167,11 @@ function SidebarExpandTrigger() {
 /** Wider reading column when the left sidebar or right TOC (or both) is collapsed. */
 function DocumentColumn({
   rightTocOpen,
+  className,
   children,
 }: {
   rightTocOpen: boolean;
+  className?: string;
   children: React.ReactNode;
 }) {
   const { open, isMobile } = useSidebar();
@@ -190,7 +192,8 @@ function DocumentColumn({
       className={cn(
         // Inset for box-shadow (--shadow: 2px 2px); overflow-x-clip would otherwise crop right-aligned buttons.
         "relative mx-auto w-full min-w-0 max-w-full overflow-x-clip pb-1 pr-1 transition-[max-width] duration-200 ease-linear",
-        maxClass
+        maxClass,
+        className
       )}
     >
       {children}
@@ -253,6 +256,8 @@ function AppContent() {
   const [draftContent, setDraftContent] = useState("");
   const scrollTopBeforeEditRef = useRef(0);
   const shouldRestoreScrollRef = useRef(false);
+  const openEditOnDocIdRef = useRef<string | null>(null);
+  const prevDocIdForEditRef = useRef<string | null>(null);
   const [rightTocOpen, setRightTocOpen] = useState(true);
   const [exportConfirmOpen, setExportConfirmOpen] = useState(false);
   const [documentStackEnabled, setDocumentStackEnabled] = useState(true);
@@ -404,12 +409,13 @@ function AppContent() {
       setCurrentDoc(documents[0] ?? null);
       return;
     }
-    // Skip URL→state sync when user just selected/added a doc; trust onSelectDocument/handleAddDocument.
-    // Defer clearing so React Strict Mode's double effect run doesn't override.
+    // Skip URL→state sync until router.replace catches up after select/create.
     if (justSelectedDocIdRef.current) {
-      queueMicrotask(() => {
+      const pendingId = justSelectedDocIdRef.current;
+      const urlDocId = searchParams.get("doc");
+      if (urlDocId === pendingId) {
         justSelectedDocIdRef.current = null;
-      });
+      }
       return;
     }
     const docIdFromUrl = searchParams.get("doc");
@@ -424,10 +430,32 @@ function AppContent() {
     }
   }, [documents, searchParams]);
 
-  useEffect(() => {
-    setEditMode(false);
-    shouldRestoreScrollRef.current = false;
-  }, [currentDoc?.id]);
+  useLayoutEffect(() => {
+    const docId = currentDoc?.id ?? null;
+
+    if (docId !== prevDocIdForEditRef.current) {
+      prevDocIdForEditRef.current = docId;
+
+      if (!docId) {
+        setEditMode(false);
+        shouldRestoreScrollRef.current = false;
+        return;
+      }
+
+      if (openEditOnDocIdRef.current === docId) {
+        openEditOnDocIdRef.current = null;
+        shouldRestoreScrollRef.current = false;
+        scrollTopBeforeEditRef.current = 0;
+        if (contentScrollRef.current) contentScrollRef.current.scrollTop = 0;
+        setDraftContent(currentDoc?.content ?? "");
+        setEditMode(true);
+        return;
+      }
+
+      setEditMode(false);
+      shouldRestoreScrollRef.current = false;
+    }
+  }, [currentDoc?.id, currentDoc?.content]);
 
   useLayoutEffect(() => {
     if (editMode) return;
@@ -476,6 +504,13 @@ function AppContent() {
           decision.passphrase ?? null
         );
         setDocuments(updated);
+        if (!content.trim()) {
+          openEditOnDocIdRef.current = doc.id;
+          scrollTopBeforeEditRef.current = 0;
+          if (contentScrollRef.current) contentScrollRef.current.scrollTop = 0;
+          setDraftContent(content);
+          setEditMode(true);
+        }
         setCurrentDoc({ ...doc, content });
         if (documentStackEnabled) {
           setDocStackIds((prev) => [...prev.filter((i) => i !== doc.id), doc.id]);
@@ -519,6 +554,7 @@ function AppContent() {
     if (!currentDoc || encryption.isLocked) return;
     const vp = contentScrollRef.current;
     scrollTopBeforeEditRef.current = vp?.scrollTop ?? 0;
+    if (vp) vp.scrollTop = 0;
     setDraftContent(displayContent);
     setEditMode(true);
   }, [currentDoc, displayContent, encryption.isLocked]);
@@ -932,6 +968,8 @@ function AppContent() {
     );
   }
 
+  const showRightToc = rightTocOpen && !editMode;
+
   return (
     <WorkspaceTreeProvider documents={documents}>
     <SidebarProvider className="h-svh min-h-0">
@@ -989,18 +1027,30 @@ function AppContent() {
             className={cn(
               // Native overflow (not Radix ScrollArea): Radix wraps content in display:table + minWidth:100%,
               // which can grow wider than the grid column and clip right-aligned doc actions beside the TOC.
-              "relative z-[1] min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden font-base outline-none native-scrollbar",
+              "relative z-[1] min-h-0 min-w-0 flex-1 font-base outline-none native-scrollbar",
+              editMode && currentDoc
+                ? "flex flex-col overflow-hidden"
+                : "overflow-y-auto overflow-x-hidden",
               currentDoc &&
                 "lg:col-span-1 lg:col-start-1 lg:row-start-1 lg:h-full lg:max-h-full lg:min-h-0",
               mainPanelDocDragOver &&
                 "bg-[var(--tree-drag-target-bg)] ring-2 ring-inset ring-[var(--tree-drag-target-border)]"
             )}
           >
-            <div className="box-border max-w-full min-w-0 py-8 pl-8 pr-8 print:px-0 lg:pl-8 lg:pr-12">
+            <div
+              className={cn(
+                "box-border max-w-full min-w-0 py-8 pl-8 pr-8 print:px-0 lg:pl-8 lg:pr-12",
+                editMode && currentDoc && "flex min-h-0 flex-1 flex-col"
+              )}
+            >
           {currentDoc ? (
             <>
-              <DocumentColumn rightTocOpen={rightTocOpen}>
-                <div className="mb-6 flex min-w-0 w-full max-w-full flex-wrap items-center justify-start gap-2 print:mb-4 sm:justify-end sm:gap-3 md:gap-5">
+              <DocumentColumn
+                rightTocOpen={showRightToc}
+                className={editMode ? "flex min-h-0 flex-1 flex-col" : undefined}
+              >
+                <div className={cn(editMode && "flex min-h-0 flex-1 flex-col")}>
+                <div className="mb-6 flex min-w-0 w-full max-w-full shrink-0 flex-wrap items-center justify-start gap-2 print:mb-4 sm:justify-end sm:gap-3 md:gap-5">
                       {!editMode && !encryption.isLocked && (
                         <DocumentSecurityMenu
                           className="mr-auto sm:mr-0 sm:order-first"
@@ -1076,14 +1126,12 @@ function AppContent() {
                       )}
                 </div>
                 {editMode ? (
-                  <LineNumberedTextarea
+                  <MarkdownEditor
                     autoFocus
                     value={draftContent}
-                    onChange={(e) => setDraftContent(e.target.value)}
-                    placeholder="Markdown content..."
-                    spellCheck={false}
-                    className="min-h-[16rem] flex-1 leading-relaxed"
-                    textareaClassName="leading-relaxed"
+                    onChange={setDraftContent}
+                    placeholder="Type markdown here…"
+                    className="min-h-0 flex-1"
                   />
                 ) : encryption.isLocked ? (
                   <EncryptedDocumentPlaceholder
@@ -1104,6 +1152,7 @@ function AppContent() {
                     onContentChange={handlePreviewContentChange}
                   />
                 )}
+                </div>
               </DocumentColumn>
             </>
           ) : (
@@ -1116,13 +1165,13 @@ function AppContent() {
             <div
               className={cn(
                 "hidden min-h-0 min-w-0 shrink-0 print:hidden lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:flex lg:h-full lg:min-h-0 lg:flex-col",
-                rightTocOpen ? "p-2 pl-0" : "w-0 p-0"
+                showRightToc ? "p-2 pl-0" : "w-0 p-0"
               )}
             >
-              {rightTocOpen && (
+              {showRightToc && (
                 <aside
                   id="document-outline-panel"
-                  aria-hidden={!rightTocOpen}
+                  aria-hidden={!showRightToc}
                   className={cn(
                     appCapsuleClassName,
                     "flex min-h-0 w-[17rem] flex-1 flex-col px-3 pt-2 pb-4"
@@ -1138,7 +1187,7 @@ function AppContent() {
             </div>
           )}
 
-          {currentDoc && (
+          {currentDoc && !editMode && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button

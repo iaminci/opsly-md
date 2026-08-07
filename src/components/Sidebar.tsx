@@ -21,7 +21,6 @@ import { useWorkspaceTree } from "@/context/WorkspaceTreeContext";
 import {
   addWorkspace,
   addFolder,
-  addDocument,
   moveDocument,
   moveFolder,
   updateWorkspace,
@@ -72,7 +71,7 @@ import { CommandPalette } from "./CommandPalette";
 import { SettingsModal } from "./SettingsModal";
 import { UploadFileModal } from "./UploadFileModal";
 import { CreateMarkdownModal } from "./CreateMarkdownModal";
-import { workspaceTabBaseClassName } from "./WorkspaceSwitcher";
+import { workspaceToolbarTextActionClassName } from "./WorkspaceSwitcher";
 import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
 import {
   decryptWorkspaceExport,
@@ -520,19 +519,12 @@ export function Sidebar({
           );
         } else {
           const title = name.replace(/\.md$/i, "").trim() || "Untitled";
-          const doc = await addDocument(
-            {
-              title,
-              content: "",
-              workspaceId: pendingTreeCreate.workspaceId,
-              folderId: pendingTreeCreate.parentFolderId,
-            },
-            {
-              workspaceId: pendingTreeCreate.workspaceId,
-              folderId: pendingTreeCreate.parentFolderId,
-            }
+          await onAddDocument(
+            title,
+            "",
+            pendingTreeCreate.workspaceId,
+            pendingTreeCreate.parentFolderId
           );
-          onSelectDocument(doc);
         }
         setPendingTreeCreate(null);
         await onRefresh();
@@ -548,7 +540,7 @@ export function Sidebar({
         }
       }
     },
-    [pendingTreeCreate, onRefresh, onSelectDocument]
+    [pendingTreeCreate, onRefresh, onAddDocument]
   );
 
   const handlePendingTreeRenameSubmit = useCallback(
@@ -995,21 +987,17 @@ export function Sidebar({
         </div>
 
         <div className="shrink-0 px-2 py-2">
-          <Button
-            variant="neutral"
-            size="sm"
+          <button
+            type="button"
             className={cn(
-              workspaceTabBaseClassName,
-              "w-full min-w-0 shrink-0 gap-2",
-              "!bg-background !text-foreground",
-              "hover:!bg-primary hover:!text-black",
-              "active:!translate-x-boxShadowX active:!translate-y-boxShadowY active:!shadow-none",
+              workspaceToolbarTextActionClassName,
+              "w-full min-w-0 shrink-0 gap-2"
             )}
             onClick={() => setSettingsModalOpen(true)}
           >
             <Settings className="size-4 shrink-0" />
             Settings
-          </Button>
+          </button>
         </div>
         </div>
       </SidebarContent>
