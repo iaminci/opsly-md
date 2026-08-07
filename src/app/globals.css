@@ -288,7 +288,6 @@ html[data-window-inactive].dark *::-moz-selection {
 .toc-scroll-area [data-slot="scroll-area-scrollbar"]:hover > div {
   background-color: color-mix(in srgb, var(--border) 72%, transparent);
 }
-
 [data-slot="input"],
 [data-sidebar="input"],
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]),
