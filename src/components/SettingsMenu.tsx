@@ -31,10 +31,6 @@ interface SettingsMenuProps {
   deleteLabel: string;
 }
 
-function MenuDivider() {
-  return <div className="h-px bg-border/70" />;
-}
-
 function SettingsSection({
   title,
   children,
@@ -60,27 +56,6 @@ function SettingsSection({
       </h3>
       <div className={cn("mt-3", contentClassName)}>{children}</div>
     </section>
-  );
-}
-
-function MenuItem({
-  icon: Icon,
-  label,
-  onClick,
-}: {
-  icon: typeof Settings;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className="flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium text-foreground transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-      onClick={onClick}
-    >
-      <Icon className="size-4 shrink-0 text-muted-foreground" />
-      {label}
-    </button>
   );
 }
 
@@ -180,19 +155,19 @@ export function SettingsMenu({
         className="w-[min(21rem,calc(100vw-2rem))] rounded-lg border-2 border-border bg-popover p-0 font-base shadow-shadow"
       >
         <div className="native-scrollbar max-h-[min(70vh,28rem)] overflow-y-auto">
-          <div className="flex flex-col gap-0.5 px-2 py-2">
-            <MenuItem
-              icon={MessageSquare}
-              label="Give Feedback"
-              onClick={() => closeAnd(openFeedbackForm)}
-            />
-          </div>
-
-          <MenuDivider />
-
           <div className="flex flex-col gap-5 px-4 py-4">
             <SettingsSection title="General">
               <div className="flex flex-col gap-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className={settingsActionButtonClassName}
+                  onClick={() => closeAnd(openFeedbackForm)}
+                >
+                  <MessageSquare className="size-4 shrink-0" />
+                  Give Feedback
+                </Button>
                 <div className="flex items-center justify-between gap-3 py-0.5">
                   <span className="text-sm font-medium text-foreground">Theme</span>
                   <ThemeSettingsControl />
