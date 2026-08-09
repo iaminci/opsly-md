@@ -48,6 +48,21 @@ function ensureEncatchInit(theme: "light" | "dark") {
   }
 }
 
+export function openFeedbackForm() {
+  const stored = localStorage.getItem("md-viewer-theme");
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const theme: "light" | "dark" =
+    stored === "dark"
+      ? "dark"
+      : stored === "light"
+        ? "light"
+        : prefersDark
+          ? "dark"
+          : "light";
+  syncEncatch(theme);
+  _encatch.showForm(FEEDBACK_FORM_ID);
+}
+
 export function Feedback() {
   const { theme } = useTheme();
 
@@ -63,10 +78,7 @@ export function Feedback() {
           size="icon-sm"
           aria-label="Bugs/Feedback"
           className="bg-background"
-          onClick={() => {
-            syncEncatch(theme);
-            _encatch.showForm(FEEDBACK_FORM_ID);
-          }}
+          onClick={openFeedbackForm}
         >
           <MessageSquare className="size-4" />
         </Button>

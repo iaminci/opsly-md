@@ -63,7 +63,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Settings } from "lucide-react";
+import { SettingsMenu } from "./SettingsMenu";
 import { toast } from "sonner";
 import {
   Tooltip,
@@ -71,7 +71,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { CommandPalette } from "./CommandPalette";
-import { SettingsModal } from "./SettingsModal";
 import { UploadFileModal } from "./UploadFileModal";
 import { CreateMarkdownModal } from "./CreateMarkdownModal";
 import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
@@ -201,7 +200,7 @@ export function Sidebar({
   });
   const importInputRef = useRef<HTMLInputElement>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
   const [disableWorkspacesDialogOpen, setDisableWorkspacesDialogOpen] = useState(false);
   const [multiSelectedDocumentIds, setMultiSelectedDocumentIds] = useState<Set<string>>(
     () => new Set()
@@ -228,7 +227,7 @@ export function Sidebar({
     exportPassphraseDialogOpen ||
     importUnlockDialogOpen ||
     commandPaletteOpen ||
-    settingsModalOpen ||
+    settingsMenuOpen ||
     disableWorkspacesDialogOpen ||
     uploadModalOpen ||
     createModalOpen ||
@@ -649,7 +648,7 @@ export function Sidebar({
         return;
       }
 
-      setSettingsModalOpen(false);
+      setSettingsMenuOpen(false);
 
       const nonDefault = sortedWorkspaces.filter((w) => w.id !== "default");
       if (nonDefault.length === 0) {
@@ -1301,14 +1300,28 @@ export function Sidebar({
         </div>
 
         <div className="shrink-0 border-t-2 border-border py-2">
-          <button
-            type="button"
-            className="flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-foreground transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-            onClick={() => setSettingsModalOpen(true)}
-          >
-            <Settings className="size-4 shrink-0 text-primary" />
-            Settings
-          </button>
+          <SettingsMenu
+            onOpenChange={setSettingsMenuOpen}
+            documentStackEnabled={documentStackEnabled}
+            onDocumentStackEnabledChange={onDocumentStackEnabledChange}
+            workspacesEnabled={workspacesEnabled}
+            onWorkspacesEnabledChange={handleWorkspacesEnabledChange}
+            onImport={() => {
+              setSettingsMenuOpen(false);
+              window.setTimeout(() => importInputRef.current?.click(), 0);
+            }}
+            onExport={(mode) => {
+              setSettingsMenuOpen(false);
+              handleExportClick(mode);
+            }}
+            onDeleteAll={() => {
+              setSettingsMenuOpen(false);
+              handleDeleteAllClick();
+            }}
+            deleteLabel={
+              workspacesEnabled && selectedWorkspaceId ? "Delete Workspace" : "Delete Everything"
+            }
+          />
         </div>
         </div>
       </SidebarContent>
@@ -1549,30 +1562,6 @@ export function Sidebar({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <SettingsModal
-        open={settingsModalOpen}
-        onOpenChange={setSettingsModalOpen}
-        documentStackEnabled={documentStackEnabled}
-        onDocumentStackEnabledChange={onDocumentStackEnabledChange}
-        workspacesEnabled={workspacesEnabled}
-        onWorkspacesEnabledChange={handleWorkspacesEnabledChange}
-        onImport={() => {
-          setSettingsModalOpen(false);
-          window.setTimeout(() => importInputRef.current?.click(), 0);
-        }}
-        onExport={(mode) => {
-          setSettingsModalOpen(false);
-          handleExportClick(mode);
-        }}
-        onDeleteAll={() => {
-          setSettingsModalOpen(false);
-          handleDeleteAllClick();
-        }}
-        deleteLabel={
-          workspacesEnabled && selectedWorkspaceId ? "Delete Workspace" : "Delete Everything"
-        }
-      />
 
       <AlertDialog
         open={disableWorkspacesDialogOpen}
