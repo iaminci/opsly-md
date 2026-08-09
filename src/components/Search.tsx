@@ -19,11 +19,9 @@ import {
   getQueryMatchSegments,
   type SearchSnippetPreview,
 } from "@/lib/search-highlight";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   workspaceControlChromeClassName,
-  workspaceIconActionClassName,
 } from "@/components/WorkspaceSwitcher";
 import { cn } from "@/lib/utils";
 
@@ -247,7 +245,11 @@ export function Search({
   }, [onQueryChange]);
 
   const showClear = query.length > 0;
+  const showSearchIcon = !showClear;
   const showMatchNav = !!matchNavigation && matchNavigation.total > 0 && query.trim().length > 0;
+
+  const matchNavButtonClass =
+    "inline-flex size-5 shrink-0 items-center justify-center rounded-sm text-primary transition-colors hover:bg-sidebar-accent hover:text-primary-hover";
 
   const handleSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (!showMatchNav || !matchNavigation) return;
@@ -297,10 +299,18 @@ export function Search({
 
   return (
     <div className="relative overflow-visible">
-      <div ref={anchorRef}>
-        <div className="relative">
-        <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 z-10 size-4 -translate-y-1/2 text-primary" />
-        <Input
+      <div
+        ref={anchorRef}
+        className={cn(
+          workspaceControlChromeClassName,
+          "flex h-9 min-w-0 items-center gap-1.5 overflow-hidden pr-1 focus-within:ring-2 focus-within:ring-ring/40",
+          showSearchIcon ? "pl-2.5" : "pl-2"
+        )}
+      >
+        {showSearchIcon && (
+          <SearchIcon className="size-4 shrink-0 text-primary" aria-hidden />
+        )}
+        <input
           type="text"
           placeholder="Search"
           value={query}
@@ -308,50 +318,52 @@ export function Search({
           onFocus={() => query && setIsOpen(true)}
           onBlur={() => setTimeout(() => setIsOpen(false), 150)}
           onKeyDown={handleSearchKeyDown}
-          className={cn(
-            workspaceControlChromeClassName,
-            "!h-9 text-sm font-medium pl-8",
-            showClear ? "pr-9" : "pr-2.5"
-          )}
+          className="min-w-0 flex-1 border-0 bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-primary"
           autoComplete="off"
         />
-        {showClear && (
-          <button
-            type="button"
-            aria-label="Clear search"
-            className="absolute right-2 top-1/2 z-10 flex size-7 -translate-y-1/2 items-center justify-center rounded-[4px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => clear()}
-          >
-            <X className="size-4 shrink-0" strokeWidth={2.5} />
-          </button>
-        )}
-      </div>
-      {showMatchNav && matchNavigation && (
-        <div className="mt-1.5 flex items-center justify-between gap-2">
-          <span className="min-w-0 truncate text-xs tabular-nums text-foreground">
-            {matchNavigation.activeIndex + 1} / {matchNavigation.total}
-          </span>
-          <div className="flex shrink-0 items-center gap-1">
-            <button
-              type="button"
-              className={cn(workspaceIconActionClassName, "!size-7 !text-primary")}
-              aria-label="Previous match"
-              onClick={matchNavigation.onPrevious}
-            >
-              <ChevronUp className="size-4" />
-            </button>
-            <button
-              type="button"
-              className={cn(workspaceIconActionClassName, "!size-7 !text-primary")}
-              aria-label="Next match"
-              onClick={matchNavigation.onNext}
-            >
-              <ChevronDown className="size-4" />
-            </button>
+        {(showMatchNav || showClear) && (
+          <div className="flex shrink-0 items-center gap-px pl-0.5">
+            {showMatchNav && matchNavigation && (
+              <>
+                <span className="shrink-0 px-0.5 text-[10px] font-medium tabular-nums leading-none text-muted-foreground">
+                  {matchNavigation.activeIndex + 1}/{matchNavigation.total}
+                </span>
+                <button
+                  type="button"
+                  className={matchNavButtonClass}
+                  aria-label="Previous match"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={matchNavigation.onPrevious}
+                >
+                  <ChevronUp className="size-3" />
+                </button>
+                <button
+                  type="button"
+                  className={matchNavButtonClass}
+                  aria-label="Next match"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={matchNavigation.onNext}
+                >
+                  <ChevronDown className="size-3" />
+                </button>
+              </>
+            )}
+            {showMatchNav && showClear && (
+              <span aria-hidden className="mx-px h-3.5 w-px shrink-0 bg-border" />
+            )}
+            {showClear && (
+              <button
+                type="button"
+                aria-label="Clear search"
+                className="inline-flex size-5 shrink-0 items-center justify-center rounded-sm text-primary transition-colors hover:bg-sidebar-accent hover:text-primary-hover"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => clear()}
+              >
+                <X className="size-3 shrink-0" strokeWidth={2.5} />
+              </button>
+            )}
           </div>
-        </div>
-      )}
+        )}
       </div>
       {resultsPanel}
     </div>

@@ -3,7 +3,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { buildHeadingManifest, type HeadingManifestEntry } from "@/lib/heading-manifest";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 function isSectionHeading(level: number): boolean {
   return level === 2;
@@ -175,10 +174,9 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
 
   return (
     <nav className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
-      <ScrollArea
+      <div
         ref={tocScrollRef}
-        className="toc-scroll-area min-h-0 min-w-0 w-full flex-1"
-        viewportClassName="pr-3 [overflow-wrap:anywhere]"
+        className="native-scrollbar-transparent-track min-h-0 min-w-0 w-full flex-1 overflow-y-auto overflow-x-hidden pr-3 [overflow-wrap:anywhere]"
       >
         <ul className="w-full min-w-0 px-1 pb-2">
           {headings.map(({ id, text, level }, index) => {
@@ -215,7 +213,7 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
             );
           })}
         </ul>
-      </ScrollArea>
+      </div>
     </nav>
   );
 }

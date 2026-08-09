@@ -6,6 +6,7 @@ import type { Folder } from "@/types/workspace";
 import { INLINE_TREE_EDIT_SELECTOR } from "./InlineTreeCreateRow";
 import { WORKSPACE_SWITCHER_DROPDOWN_SELECTOR } from "./WorkspaceSwitcher";
 import { WorkspaceTree, type PendingTreeCreate, type PendingTreeRename } from "./WorkspaceTree";
+import { TreeMultiSelectBar } from "./TreeMultiSelectBar";
 import { Search, type SearchMatchNavigation } from "./Search";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +29,7 @@ import {
   updateDocument,
   deleteWorkspace,
   deleteFolder,
+  deleteDocument,
   deleteAllData,
   exportWorkspaceData,
   exportAllWorkspacesData,
@@ -35,6 +37,7 @@ import {
   importWorkspaceData,
   importAllWorkspacesData,
   consolidateWorkspacesIntoDefault,
+  ensureConsolidatedWhenWorkspacesDisabled,
   DuplicateNameError,
   type WorkspaceExport,
   type AllWorkspacesExport,
@@ -79,6 +82,20 @@ import {
 } from "@/lib/workspace-export-crypto";
 import { SetPassphraseDialog } from "@/features/document-encryption/components/SetPassphraseDialog";
 import { UnlockDocumentDialog } from "@/features/document-encryption/components/UnlockDocumentDialog";
+import {
+  buildVisibleTreeOrder,
+  countSelectedItems,
+  expandFoldersInSelection,
+  getFolderDescendants,
+  getRangeSelection,
+  isModifierToggleClick,
+  isRangeSelectClick,
+  keysToSelectionSets,
+  planBulkDelete,
+  toggleFolderInSelection,
+  treeSelectKey,
+  type TreeSelectKey,
+} from "@/lib/tree-selection";
 
 type ExportMode = "plain" | "encrypted";
 
@@ -140,6 +157,7 @@ export function Sidebar({
   searchMatchNavigation,
 }: SidebarProps) {
   const { setOpen } = useSidebar();
+  const expandSearchBar = documentSearchQuery.trim().length > 0;
   const [pendingTreeCreate, setPendingTreeCreate] = useState<PendingTreeCreate | null>(null);
   const [pendingTreeRename, setPendingTreeRename] = useState<PendingTreeRename | null>(null);
   const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
@@ -157,7 +175,8 @@ export function Sidebar({
   const [pendingExport, setPendingExport] = useState<PendingExport | null>(null);
   const [importUnlockDialogOpen, setImportUnlockDialogOpen] = useState(false);
   const [pendingEncryptedImport, setPendingEncryptedImport] = useState<string | null>(null);
-  const { sortedWorkspaces, getFoldersInWorkspace } = useWorkspaceTree();
+  const { sortedWorkspaces, getFoldersInWorkspace, reloadWorkspacesAndFolders, foldersRevision } =
+    useWorkspaceTree();
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
   const [workspaceSwitcherDragTarget, setWorkspaceSwitcherDragTarget] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
@@ -184,6 +203,18 @@ export function Sidebar({
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [disableWorkspacesDialogOpen, setDisableWorkspacesDialogOpen] = useState(false);
+  const [multiSelectedDocumentIds, setMultiSelectedDocumentIds] = useState<Set<string>>(
+    () => new Set()
+  );
+  const [multiSelectedFolderIds, setMultiSelectedFolderIds] = useState<Set<string>>(
+    () => new Set()
+  );
+  const [selectionAnchor, setSelectionAnchor] = useState<TreeSelectKey | null>(null);
+  const [treeExpansionSnapshot, setTreeExpansionSnapshot] = useState<{
+    workspaceIds: string[];
+    folderIds: string[];
+  }>({ workspaceIds: [], folderIds: [] });
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   const sidebarBlocksDeployReload =
     pendingTreeCreate !== null ||
@@ -200,7 +231,8 @@ export function Sidebar({
     settingsModalOpen ||
     disableWorkspacesDialogOpen ||
     uploadModalOpen ||
-    createModalOpen;
+    createModalOpen ||
+    bulkDeleteDialogOpen;
 
   useDeploymentReloadBlock(sidebarBlocksDeployReload);
 
@@ -260,6 +292,254 @@ export function Sidebar({
     (workspaceId: string): Folder[] => getFoldersInWorkspace(workspaceId),
     [getFoldersInWorkspace]
   );
+
+  const refreshFoldersAndDocuments = useCallback(async () => {
+    await Promise.all([reloadWorkspacesAndFolders(), onRefresh()]);
+  }, [reloadWorkspacesAndFolders, onRefresh]);
+
+  const displayedFolders = useMemo(() => {
+    const list: Folder[] = [];
+    for (const workspace of displayedWorkspaces) {
+      list.push(...getFoldersFlat(workspace.id));
+    }
+    return list;
+  }, [displayedWorkspaces, getFoldersFlat]);
+
+  const clearMultiSelection = useCallback(() => {
+    setMultiSelectedDocumentIds(new Set());
+    setMultiSelectedFolderIds(new Set());
+  }, []);
+
+  const clearSelectionAndAnchor = useCallback(() => {
+    clearMultiSelection();
+    setSelectionAnchor(null);
+  }, [clearMultiSelection]);
+
+  const hasMultiSelection =
+    multiSelectedDocumentIds.size > 0 || multiSelectedFolderIds.size > 0;
+
+  const selectedCount = useMemo(
+    () =>
+      countSelectedItems(
+        multiSelectedFolderIds,
+        multiSelectedDocumentIds,
+        documents,
+        displayedFolders
+      ),
+    [multiSelectedFolderIds, multiSelectedDocumentIds, documents, displayedFolders]
+  );
+
+  const getVisibleTreeOrder = useCallback(() => {
+    return buildVisibleTreeOrder(
+      displayedWorkspaces.map((workspace) => workspace.id),
+      treeExpansionSnapshot.workspaceIds,
+      treeExpansionSnapshot.folderIds,
+      getFoldersSync,
+      getDocumentsSync,
+      { singleWorkspaceView: Boolean(effectiveWorkspaceId) }
+    );
+  }, [
+    displayedWorkspaces,
+    treeExpansionSnapshot,
+    getFoldersSync,
+    getDocumentsSync,
+    effectiveWorkspaceId,
+  ]);
+
+  const applySelectionSets = useCallback(
+    (folderIds: Set<string>, documentIds: Set<string>) => {
+      setMultiSelectedFolderIds(folderIds);
+      setMultiSelectedDocumentIds(documentIds);
+    },
+    []
+  );
+
+  const handleDocumentTreeClick = useCallback(
+    (doc: Document, event: React.MouseEvent) => {
+      const targetKey = treeSelectKey("document", doc.id);
+
+      if (isRangeSelectClick(event)) {
+        if (!selectionAnchor) {
+          applySelectionSets(new Set(), new Set([doc.id]));
+          setSelectionAnchor(targetKey);
+          onSelectDocument(doc);
+          return;
+        }
+        const order = getVisibleTreeOrder();
+        const range = getRangeSelection(order, selectionAnchor, targetKey);
+        const base = keysToSelectionSets(range);
+        const { folderIds, documentIds } = expandFoldersInSelection(
+          base.folderIds,
+          base.documentIds,
+          documents,
+          getFoldersFlat,
+          displayedFolders
+        );
+        applySelectionSets(folderIds, documentIds);
+        onSelectDocument(doc);
+        return;
+      }
+
+      if (isModifierToggleClick(event)) {
+        setMultiSelectedDocumentIds((prev) => {
+          const next = new Set(prev);
+          if (next.has(doc.id)) next.delete(doc.id);
+          else next.add(doc.id);
+          return next;
+        });
+        setSelectionAnchor(targetKey);
+        return;
+      }
+
+      clearMultiSelection();
+      onSelectDocument(doc);
+    },
+    [
+      selectionAnchor,
+      getVisibleTreeOrder,
+      applySelectionSets,
+      onSelectDocument,
+      clearMultiSelection,
+    ]
+  );
+
+  const handleFolderTreeClick = useCallback(
+    (folder: Folder, workspaceId: string, event: React.MouseEvent) => {
+      const targetKey = treeSelectKey("folder", folder.id);
+
+      if (isRangeSelectClick(event)) {
+        if (!selectionAnchor) {
+          const { folderIds, documentIds } = toggleFolderInSelection(
+            folder,
+            new Set(),
+            new Set(),
+            documents,
+            getFoldersFlat
+          );
+          applySelectionSets(folderIds, documentIds);
+          setSelectionAnchor(targetKey);
+          return;
+        }
+        const order = getVisibleTreeOrder();
+        const range = getRangeSelection(order, selectionAnchor, targetKey);
+        const base = keysToSelectionSets(range);
+        const { folderIds, documentIds } = expandFoldersInSelection(
+          base.folderIds,
+          base.documentIds,
+          documents,
+          getFoldersFlat,
+          displayedFolders
+        );
+        applySelectionSets(folderIds, documentIds);
+        return;
+      }
+
+      if (isModifierToggleClick(event)) {
+        setMultiSelectedFolderIds((prevFolders) => {
+          setMultiSelectedDocumentIds((prevDocs) => {
+            const { folderIds, documentIds } = toggleFolderInSelection(
+              folder,
+              prevFolders,
+              prevDocs,
+              documents,
+              getFoldersFlat
+            );
+            setMultiSelectedFolderIds(folderIds);
+            return documentIds;
+          });
+          return prevFolders;
+        });
+        setSelectionAnchor(targetKey);
+      }
+    },
+    [
+      selectionAnchor,
+      getVisibleTreeOrder,
+      applySelectionSets,
+      documents,
+      getFoldersFlat,
+      displayedFolders,
+    ]
+  );
+
+  const handleBulkDeleteConfirm = useCallback(async () => {
+    const { folderIds, documentIds } = planBulkDelete(
+      multiSelectedFolderIds,
+      multiSelectedDocumentIds,
+      documents,
+      getFoldersFlat
+    );
+
+    for (const folderId of folderIds) {
+      await deleteFolder(folderId);
+    }
+    for (const docId of documentIds) {
+      if (currentId === docId) {
+        await onDeleteDocument(docId);
+      } else {
+        await deleteDocument(docId);
+      }
+    }
+
+    setBulkDeleteDialogOpen(false);
+    clearSelectionAndAnchor();
+    await refreshFoldersAndDocuments();
+  }, [
+    multiSelectedFolderIds,
+    multiSelectedDocumentIds,
+    documents,
+    getFoldersFlat,
+    currentId,
+    onDeleteDocument,
+    clearSelectionAndAnchor,
+    refreshFoldersAndDocuments,
+  ]);
+
+  const treeMultiSelect = useMemo(
+    () => ({
+      selectedDocumentIds: multiSelectedDocumentIds,
+      selectedFolderIds: multiSelectedFolderIds,
+      onDocumentClick: handleDocumentTreeClick,
+      onFolderClick: handleFolderTreeClick,
+      onClearSelection: clearSelectionAndAnchor,
+      onFolderNormalClick: (folder: Folder) => {
+        clearMultiSelection();
+        setSelectionAnchor(treeSelectKey("folder", folder.id));
+      },
+    }),
+    [
+      multiSelectedDocumentIds,
+      multiSelectedFolderIds,
+      handleDocumentTreeClick,
+      handleFolderTreeClick,
+      clearSelectionAndAnchor,
+      clearMultiSelection,
+    ]
+  );
+
+  const handleTreeSelectDocument = useCallback(
+    (doc: Document) => {
+      clearMultiSelection();
+      setSelectionAnchor(treeSelectKey("document", doc.id));
+      onSelectDocument(doc);
+    },
+    [clearMultiSelection, onSelectDocument]
+  );
+
+  useEffect(() => {
+    clearSelectionAndAnchor();
+  }, [effectiveWorkspaceId, clearSelectionAndAnchor]);
+
+  useEffect(() => {
+    if (!hasMultiSelection) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        clearSelectionAndAnchor();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [hasMultiSelection, clearSelectionAndAnchor]);
 
   const openUploadModal = useCallback((
     workspaceId: string,
@@ -378,12 +658,13 @@ export function Sidebar({
         if (typeof window !== "undefined") {
           localStorage.setItem(WORKSPACE_KEY, "default");
         }
+        await refreshFoldersAndDocuments();
         return;
       }
 
       setDisableWorkspacesDialogOpen(true);
     },
-    [onWorkspacesEnabledChange, sortedWorkspaces]
+    [onWorkspacesEnabledChange, sortedWorkspaces, refreshFoldersAndDocuments]
   );
 
   const handleDisableWorkspacesConfirm = async () => {
@@ -394,7 +675,7 @@ export function Sidebar({
     }
     onWorkspacesEnabledChange(false);
     setDisableWorkspacesDialogOpen(false);
-    await onRefresh();
+    await refreshFoldersAndDocuments();
   };
 
   const getSidebarTreeContext = useCallback((): {
@@ -528,7 +809,11 @@ export function Sidebar({
           );
         }
         setPendingTreeCreate(null);
-        await onRefresh();
+        if (pendingTreeCreate.type === "folder" || pendingTreeCreate.type === "workspace") {
+          await refreshFoldersAndDocuments();
+        } else {
+          await onRefresh();
+        }
       } catch (err) {
         if (err instanceof DuplicateNameError) {
           toast.error(err.message);
@@ -541,7 +826,7 @@ export function Sidebar({
         }
       }
     },
-    [pendingTreeCreate, onRefresh, onAddDocument]
+    [pendingTreeCreate, onRefresh, onAddDocument, refreshFoldersAndDocuments]
   );
 
   const handlePendingTreeRenameSubmit = useCallback(
@@ -556,7 +841,14 @@ export function Sidebar({
           await updateDocument(pendingTreeRename.id, { title: name });
         }
         setPendingTreeRename(null);
-        await onRefresh();
+        if (
+          pendingTreeRename.type === "folder" ||
+          pendingTreeRename.type === "workspace"
+        ) {
+          await refreshFoldersAndDocuments();
+        } else {
+          await onRefresh();
+        }
       } catch (err) {
         if (err instanceof DuplicateNameError) {
           toast.error(err.message);
@@ -569,7 +861,7 @@ export function Sidebar({
         }
       }
     },
-    [pendingTreeRename, onRefresh]
+    [pendingTreeRename, onRefresh, refreshFoldersAndDocuments]
   );
 
   const handleMoveDocument = async (
@@ -589,7 +881,7 @@ export function Sidebar({
     try {
       const result = await moveFolder(folderId, workspaceId, parentFolderId);
       if (result) {
-        await onRefresh();
+        await refreshFoldersAndDocuments();
       }
     } catch (err) {
       if (err instanceof DuplicateNameError) {
@@ -621,10 +913,17 @@ export function Sidebar({
 
   const handleDeleteWorkspaceConfirm = async () => {
     if (!deleteWorkspaceTarget) return;
-    await deleteWorkspace(deleteWorkspaceTarget.id);
+    const deletedId = deleteWorkspaceTarget.id;
+    await deleteWorkspace(deletedId);
     setDeleteWorkspaceTarget(null);
     setDeleteWorkspaceDialogOpen(false);
-    await onRefresh();
+    if (deletedId === selectedWorkspaceId) {
+      setSelectedWorkspaceId(null);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(WORKSPACE_KEY, "");
+      }
+    }
+    await refreshFoldersAndDocuments();
   };
 
   const handleDeleteAllClick = () => setDeleteAllDialogOpen(true);
@@ -644,7 +943,7 @@ export function Sidebar({
       }
     }
     setDeleteAllDialogOpen(false);
-    await onRefresh();
+    await refreshFoldersAndDocuments();
   };
 
   const queueExportDownload = useCallback(
@@ -775,7 +1074,7 @@ export function Sidebar({
         throw new Error("Invalid workspace export file");
       }
       await processImportedExportData(data as AllWorkspacesExport | WorkspaceExport);
-      await onRefresh();
+      await refreshFoldersAndDocuments();
     } catch {
       toast.error("Failed to import workspace. The file may be invalid or corrupted.");
     }
@@ -786,7 +1085,7 @@ export function Sidebar({
     if (!pendingEncryptedImport) return;
     const data = await decryptWorkspaceExport(pendingEncryptedImport, passphrase);
     await processImportedExportData(data);
-    await onRefresh();
+    await refreshFoldersAndDocuments();
     setImportUnlockDialogOpen(false);
     setPendingEncryptedImport(null);
   };
@@ -839,7 +1138,7 @@ export function Sidebar({
     await deleteFolder(deleteFolderTarget.id);
     setDeleteFolderTarget(null);
     setDeleteFolderDialogOpen(false);
-    await onRefresh();
+    await refreshFoldersAndDocuments();
   };
 
   const handleDeleteDocumentRequest = (id: string, title: string) => {
@@ -884,7 +1183,7 @@ export function Sidebar({
       />
       <SidebarContent className="flex min-h-0 flex-col overflow-hidden px-3">
         <div className="flex min-h-0 flex-1 flex-col">
-        <div className="shrink-0 border-b border-border/60 pb-3 pt-3">
+        <div className="shrink-0 border-b-2 border-border pb-3 pt-3">
           <SidebarGroup className="p-0">
             <SidebarGroupLabel className="sr-only">Search</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -898,22 +1197,24 @@ export function Sidebar({
                     matchNavigation={searchMatchNavigation}
                   />
                 </div>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <SidebarTrigger />
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" align="end">
-                    Collapse sidebar
-                  </TooltipContent>
-                </Tooltip>
+                {!expandSearchBar && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <SidebarTrigger />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" align="end">
+                      Collapse sidebar
+                    </TooltipContent>
+                  </Tooltip>
+                )}
               </div>
             </SidebarGroupContent>
           </SidebarGroup>
         </div>
 
-        <div className="mb-0 shrink-0 border-b border-border/60 pb-3 pt-3">
+        <div className="mb-0 shrink-0 border-b-2 border-border pb-3 pt-3">
           {workspacesEnabled ? (
-            <SidebarGroup>
+            <SidebarGroup className="p-0">
               <SidebarGroupLabel className="sr-only">Workspace</SidebarGroupLabel>
               <SidebarGroupContent>
                 <WorkspaceSwitcher
@@ -936,7 +1237,7 @@ export function Sidebar({
               </SidebarGroupContent>
             </SidebarGroup>
           ) : (
-            <SidebarGroup>
+            <SidebarGroup className="p-0">
               <SidebarGroupLabel className="sr-only">Files</SidebarGroupLabel>
               <SidebarGroupContent>
                 <WorkspaceActionBar
@@ -950,10 +1251,20 @@ export function Sidebar({
           )}
         </div>
 
+        {hasMultiSelection ? (
+          <TreeMultiSelectBar
+            className="border-b-2 border-border"
+            selectedCount={selectedCount}
+            onDelete={() => setBulkDeleteDialogOpen(true)}
+            onClear={clearSelectionAndAnchor}
+          />
+        ) : null}
+
         <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden py-2">
           <SidebarGroup className="flex-1 border-b-0 p-0">
             <SidebarGroupContent>
               <WorkspaceTree
+              key={foldersRevision}
               workspaces={displayedWorkspaces}
               folders={getFoldersSync}
               documents={getDocumentsSync}
@@ -962,7 +1273,7 @@ export function Sidebar({
               currentId={currentId}
               selectedWorkspaceId={effectiveWorkspaceId}
               workspacesEnabled={workspacesEnabled}
-              onSelectDocument={onSelectDocument}
+              onSelectDocument={handleTreeSelectDocument}
               onDeleteDocument={handleDeleteDocumentRequest}
               onAddWorkspace={handleAddWorkspace}
               onAddFolder={handleAddFolder}
@@ -982,12 +1293,14 @@ export function Sidebar({
               pendingTreeRename={pendingTreeRename}
               onPendingTreeRenameSubmit={handlePendingTreeRenameSubmit}
               onPendingTreeRenameCancel={handlePendingTreeRenameCancel}
+              treeMultiSelect={treeMultiSelect}
+              onTreeExpansionSnapshot={setTreeExpansionSnapshot}
             />
             </SidebarGroupContent>
           </SidebarGroup>
         </div>
 
-        <div className="shrink-0 border-t border-border/60 py-2">
+        <div className="shrink-0 border-t-2 border-border py-2">
           <button
             type="button"
             className="flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-foreground transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
@@ -1150,6 +1463,31 @@ export function Sidebar({
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 void handleDeleteDocumentConfirm();
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete {selectedCount} {selectedCount === 1 ? "item" : "items"}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the selected files and folders (including everything
+              inside selected folders). This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e: React.MouseEvent) => {
+                e.preventDefault();
+                void handleBulkDeleteConfirm();
               }}
             >
               Delete

@@ -24,7 +24,7 @@ function AccordionItem({
       data-variant={variant}
       className={cn(
         "border-none shadow-none",
-        variant === "nested" && "border-l border-sidebar-border pl-1",
+        variant === "nested" && "pl-0",
         className
       )}
       {...props}
@@ -77,7 +77,7 @@ function AccordionContent({
   return (
     <AccordionPrimitive.Content
       data-slot="accordion-content"
-      className="overflow-hidden bg-transparent text-sm font-normal transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
+      className="overflow-hidden bg-transparent text-sm font-normal transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down [&[data-state=open]]:overflow-visible"
       {...props}
     >
       <div className={cn("p-0", className)}>{children}</div>

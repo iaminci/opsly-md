@@ -26,6 +26,8 @@ import {
   addDocument,
   updateDocument,
   deleteDocument,
+  getWorkspacesEnabled,
+  setWorkspacesEnabled as persistWorkspacesEnabled,
   DuplicateNameError,
 } from "@/lib/storage";
 import { scrollToSearchMatch } from "@/lib/search-highlight";
@@ -79,7 +81,6 @@ import {
 const CURRENT_DOC_KEY = "md-viewer-current-doc";
 const RIGHT_TOC_OPEN_KEY = "md-viewer-right-toc-open";
 const DOC_STACK_ENABLED_KEY = "md-viewer-doc-stack-enabled";
-const WORKSPACES_ENABLED_KEY = "md-viewer-workspaces-enabled";
 const EDIT_AUTOSAVE_INTERVAL_SEC = 10;
 
 /**
@@ -221,7 +222,7 @@ function DocumentRightSidebar({
             Info
           </TabsTrigger>
         </TabsList>
-        <div className="-mx-3 mt-2 border-b-2 border-border" aria-hidden />
+        <div className="mt-2 border-b-2 border-border" aria-hidden />
       </div>
       <TabsContent value="on-this-page" className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden">
         <TableOfContents
@@ -232,7 +233,7 @@ function DocumentRightSidebar({
       </TabsContent>
       <TabsContent
         value="info"
-        className="mt-0 flex min-h-0 flex-1 flex-col overflow-auto pr-4"
+        className="native-scrollbar-transparent-track mt-0 flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden pr-4"
       >
         <DocumentInfo doc={doc} content={content} />
       </TabsContent>
@@ -265,6 +266,7 @@ function AppContent() {
   const [exportConfirmOpen, setExportConfirmOpen] = useState(false);
   const [documentStackEnabled, setDocumentStackEnabled] = useState(true);
   const [workspacesEnabled, setWorkspacesEnabled] = useState(false);
+  const workspacesSettingLoadedRef = useRef(false);
   const [docStackIds, setDocStackIds] = useState<string[]>([]);
   const contentScrollRef = useRef<HTMLDivElement>(null);
   const markdownArticleRef = useRef<HTMLElement>(null);
@@ -327,20 +329,14 @@ function AppContent() {
     if (v === "0") setDocumentStackEnabled(false);
   }, []);
 
-  useLayoutEffect(() => {
-    if (typeof window === "undefined") return;
-    const v = localStorage.getItem(WORKSPACES_ENABLED_KEY);
-    if (v === "1") setWorkspacesEnabled(true);
-  }, []);
-
   useEffect(() => {
     if (typeof window === "undefined") return;
     localStorage.setItem(DOC_STACK_ENABLED_KEY, documentStackEnabled ? "1" : "0");
   }, [documentStackEnabled]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    localStorage.setItem(WORKSPACES_ENABLED_KEY, workspacesEnabled ? "1" : "0");
+    if (typeof window === "undefined" || !workspacesSettingLoadedRef.current) return;
+    void persistWorkspacesEnabled(workspacesEnabled);
   }, [workspacesEnabled]);
 
   useEffect(() => {
@@ -385,7 +381,17 @@ function AppContent() {
   }, [encryption.session]);
 
   useEffect(() => {
-    refresh().finally(() => setLoading(false));
+    async function init() {
+      try {
+        const workspacesOn = await getWorkspacesEnabled();
+        await refresh();
+        setWorkspacesEnabled(workspacesOn);
+        workspacesSettingLoadedRef.current = true;
+      } finally {
+        setLoading(false);
+      }
+    }
+    void init();
   }, [refresh]);
 
   /** Seed stack when a doc is shown from URL/storage but stack is still empty. */
@@ -975,7 +981,7 @@ function AppContent() {
   const showRightToc = rightTocOpen && !editMode;
 
   return (
-    <WorkspaceTreeProvider documents={documents}>
+    <WorkspaceTreeProvider documents={documents} workspacesEnabled={workspacesEnabled}>
     <SidebarProvider className="h-svh min-h-0">
       <Sidebar
         documents={documents}

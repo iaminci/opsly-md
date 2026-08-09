@@ -59,6 +59,10 @@ const SCHEMA = `
     name TEXT NOT NULL,
     createdAt INTEGER NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS app_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
 `;
 
 let dbPromise: Promise<import("sql.js").Database> | null = null;

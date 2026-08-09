@@ -30,7 +30,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-/** Native scrollbar aligned with TOC / `ScrollArea` thumb (Radix scroll area breaks inside menus). */
+/** Native scrollbar (Radix scroll area breaks inside menus). */
 const workspaceSwitcherScrollbarClassName = cn(
   "overflow-y-auto overflow-x-hidden native-scrollbar-transparent-track"
 );
@@ -290,7 +290,7 @@ export function WorkspaceSwitcher({
               <span className="min-w-0 flex-1 truncate font-heading font-semibold">
                 {label}
               </span>
-              <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+              <ChevronDown className="size-4 shrink-0 text-primary" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
