@@ -110,13 +110,17 @@ export type LineNumberedTextareaProps = Omit<
   className?: string;
   /** Extra classes merged into the textarea (e.g. `leading-relaxed`). */
   textareaClassName?: string;
+  /** Drop outer border/radius when nested inside {@link MarkdownEditor}. */
+  embedded?: boolean;
+  /** Show line-number gutter (off for GitHub-style embedded editor). */
+  showLineNumbers?: boolean;
 };
 
 export const LineNumberedTextarea = React.forwardRef<
   HTMLTextAreaElement,
   LineNumberedTextareaProps
 >(function LineNumberedTextarea(
-  { className, textareaClassName, value, onScroll, onKeyDown, onChange, ...props },
+  { className, textareaClassName, embedded = false, showLineNumbers = true, value, onScroll, onKeyDown, onChange, ...props },
   ref,
 ) {
   const gutterRef = React.useRef<HTMLDivElement>(null);
@@ -157,7 +161,7 @@ export const LineNumberedTextarea = React.forwardRef<
 
   React.useLayoutEffect(() => {
     const el = textareaRef.current;
-    if (!el) return;
+    if (!el || !showLineNumbers) return;
 
     const sync = () => {
       try {
@@ -182,7 +186,7 @@ export const LineNumberedTextarea = React.forwardRef<
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [text, logicalLineCount, textareaClassName, className]);
+  }, [text, logicalLineCount, textareaClassName, className, showLineNumbers]);
 
   const gutterCh = Math.max(2, String(logicalLineCount).length) + 1;
 
@@ -224,26 +228,31 @@ export const LineNumberedTextarea = React.forwardRef<
   return (
     <div
       className={cn(
-        "flex min-h-0 w-full min-w-0 leading-normal overflow-hidden rounded-base border-2 border-border bg-secondary-background",
+        "flex h-full min-h-0 w-full min-w-0 leading-normal overflow-hidden",
+        embedded
+          ? "rounded-none border-0 bg-background"
+          : "rounded-base border-2 border-border bg-secondary-background",
         className,
       )}
     >
-      <div
-        ref={gutterRef}
-        className="shrink-0 overflow-hidden border-r border-border py-2 pl-2 pr-2.5 text-muted-foreground select-none tabular-nums"
-        style={{ width: `${gutterCh}ch` }}
-        aria-hidden
-      >
-        <pre
-          className="m-0 text-right whitespace-pre"
-          style={{
-            margin: 0,
-            ...gutterTypography,
-          }}
+      {showLineNumbers ? (
+        <div
+          ref={gutterRef}
+          className="h-full shrink-0 overflow-hidden border-r border-border py-2 pl-2 pr-2.5 text-muted-foreground select-none tabular-nums"
+          style={{ width: `${gutterCh}ch` }}
+          aria-hidden
         >
-          {gutterBody}
-        </pre>
-      </div>
+          <pre
+            className="m-0 text-right whitespace-pre"
+            style={{
+              margin: 0,
+              ...gutterTypography,
+            }}
+          >
+            {gutterBody}
+          </pre>
+        </div>
+      ) : null}
       <Textarea
         ref={mergedRef}
         value={value}
@@ -251,7 +260,8 @@ export const LineNumberedTextarea = React.forwardRef<
         onKeyDown={handleKeyDown}
         onChange={onChange}
         className={cn(
-          "min-h-0 min-w-0 flex-1 resize-y rounded-none border-0 bg-transparent px-2 py-2 pr-3 shadow-none",
+          "h-full min-h-0 min-w-0 flex-1 resize-none rounded-none border-0 bg-transparent shadow-none",
+          showLineNumbers ? "px-2 py-2 pr-3" : "px-3 py-3",
           "focus-visible:ring-0 focus-visible:ring-offset-0",
           textareaChromeClasses,
           textareaClassName,

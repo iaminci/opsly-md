@@ -83,7 +83,7 @@ mark.search-highlight-active {
 :root {
   --background: #fafaf7;
   --secondary-background: #ffffff;
-  --sidebar: #fafafa;
+  --sidebar: var(--secondary-background);
   --card: #ffffff;
   --popover: #ffffff;
   --input: #fcfcfd;
@@ -129,7 +129,7 @@ mark.search-highlight-active {
 .dark {
   --background: #24283b;
   --secondary-background: #24283b;
-  --sidebar: #1d2333;
+  --sidebar: var(--secondary-background);
   --card: #272f45;
   --popover: #2d3750;
   --input: #32384d;
@@ -163,6 +163,195 @@ mark.search-highlight-active {
   --search-highlight-bg: color-mix(in srgb, var(--primary) 32%, transparent);
   --search-highlight-active-bg: color-mix(in srgb, var(--primary) 58%, transparent);
   --tree-drag-target-bg: color-mix(in srgb, var(--primary) 28%, var(--sidebar));
+  --tree-drag-target-fg: var(--primary);
+  --tree-drag-target-border: color-mix(in srgb, var(--primary) 55%, var(--border));
+}
+
+/*
+ * Experimental palettes — do not modify :root / .dark above.
+ * Light/dark toggle still applies; these only swap the color pack.
+ * Use data-palette (not classes) so Tailwind/LightningCSS won't strip JS-only theme rules.
+ * `html[data-palette].dark` / `html[data-palette] .dark` beat ThemeProvider wrapper `.dark`.
+ */
+
+/* Monochrome — black / white / gray only */
+html[data-palette="monochrome"],
+html.palette-monochrome {
+  --background: #f4f4f4;
+  --secondary-background: #ffffff;
+  --sidebar: #fafafa;
+  --card: #ffffff;
+  --popover: #ffffff;
+  --input: #ffffff;
+  --muted: #e5e5e5;
+  --foreground: #111111;
+  --main-foreground: #ffffff;
+  --main: #111111;
+  --border: #111111;
+  --ring: #111111;
+  --shadow: 4px 4px 0px 0px #111111;
+  --reverted: 4px 4px 0px 0px #000000;
+  --muted-foreground: #666666;
+  --card-foreground: #111111;
+  --popover-foreground: #111111;
+  --primary: #111111;
+  --primary-hover: #000000;
+  --primary-foreground: #ffffff;
+  --secondary: #e5e5e5;
+  --secondary-hover: #d4d4d4;
+  --secondary-foreground: #111111;
+  --accent: #eeeeee;
+  --accent-foreground: #111111;
+  --destructive: #111111;
+  --destructive-foreground: #ffffff;
+  --sidebar-foreground: #111111;
+  --sidebar-accent: #e8e8e8;
+  --sidebar-accent-foreground: #111111;
+  --sidebar-border: #111111;
+  --sidebar-ring: #111111;
+  --sidebar-guide: rgb(17 17 17 / 0.3);
+  --prose-blockquote-caution-icon: #666666;
+  --selection-bg: color-mix(in srgb, var(--primary) 12%, transparent);
+  --selection-bg-soft: color-mix(in srgb, var(--primary) 8%, transparent);
+  --selection-border: var(--primary);
+  --search-highlight-bg: color-mix(in srgb, var(--primary) 22%, transparent);
+  --search-highlight-active-bg: color-mix(in srgb, var(--primary) 40%, transparent);
+  --tree-drag-target-bg: color-mix(in srgb, var(--primary) 10%, var(--sidebar));
+  --tree-drag-target-fg: var(--primary);
+  --tree-drag-target-border: color-mix(in srgb, var(--primary) 45%, var(--border));
+}
+
+html[data-palette="monochrome"].dark,
+html[data-palette="monochrome"] .dark,
+html.palette-monochrome.dark,
+html.palette-monochrome .dark {
+  --background: #0a0a0a;
+  --secondary-background: #141414;
+  --sidebar: #141414;
+  --card: #1a1a1a;
+  --popover: #1a1a1a;
+  --input: #1f1f1f;
+  --muted: #262626;
+  --foreground: #f5f5f5;
+  --muted-foreground: #a3a3a3;
+  --main: #f5f5f5;
+  --primary: #f5f5f5;
+  --primary-hover: #ffffff;
+  --primary-foreground: #0a0a0a;
+  --secondary: #2a2a2a;
+  --secondary-hover: #3a3a3a;
+  --secondary-foreground: #f5f5f5;
+  --accent: #222222;
+  --accent-foreground: #f5f5f5;
+  --border: #000000;
+  --sidebar-border: #000000;
+  --ring: #f5f5f5;
+  --sidebar-ring: #f5f5f5;
+  --shadow: 2px 2px 0px 0px #f5f5f5;
+  --reverted: 4px 4px 0px 0px #000000;
+  --card-foreground: #f5f5f5;
+  --popover-foreground: #f5f5f5;
+  --sidebar-foreground: #f5f5f5;
+  --sidebar-accent: rgb(245 245 245 / 0.12);
+  --sidebar-accent-foreground: #f5f5f5;
+  --destructive: #f5f5f5;
+  --destructive-foreground: #0a0a0a;
+  --sidebar-guide: rgb(245 245 245 / 0.22);
+  --prose-blockquote-caution-icon: #a3a3a3;
+  --search-highlight-bg: color-mix(in srgb, var(--primary) 28%, transparent);
+  --search-highlight-active-bg: color-mix(in srgb, var(--primary) 50%, transparent);
+  --tree-drag-target-bg: color-mix(in srgb, var(--primary) 18%, var(--sidebar));
+  --tree-drag-target-fg: var(--primary);
+  --tree-drag-target-border: color-mix(in srgb, var(--primary) 55%, var(--border));
+}
+
+/* Monokai Pro — classic spectrum accents on warm charcoal / soft paper */
+html[data-palette="monokai"],
+html.palette-monokai {
+  --background: #faf4f2;
+  --secondary-background: #ffffff;
+  --sidebar: #f3ece9;
+  --card: #ffffff;
+  --popover: #ffffff;
+  --input: #ffffff;
+  --muted: #ebe3df;
+  --foreground: #29242a;
+  --main-foreground: #ffffff;
+  --main: #269d69;
+  --border: #29242a;
+  --ring: #269d69;
+  --shadow: 4px 4px 0px 0px #269d69;
+  --reverted: 4px 4px 0px 0px #29242a;
+  --muted-foreground: #706b6e;
+  --card-foreground: #29242a;
+  --popover-foreground: #29242a;
+  --primary: #269d69;
+  --primary-hover: #1e8257;
+  --primary-foreground: #ffffff;
+  --secondary: #ffe8a3;
+  --secondary-hover: #ffd866;
+  --secondary-foreground: #29242a;
+  --accent: #f3ece9;
+  --accent-foreground: #29242a;
+  --destructive: #e14775;
+  --destructive-foreground: #ffffff;
+  --sidebar-foreground: #29242a;
+  --sidebar-accent: #dcefe4;
+  --sidebar-accent-foreground: #1e8257;
+  --sidebar-border: #29242a;
+  --sidebar-ring: #269d69;
+  --sidebar-guide: rgb(41 36 42 / 0.3);
+  --prose-blockquote-caution-icon: #cc7a0a;
+  --selection-bg: color-mix(in srgb, var(--primary) 14%, transparent);
+  --selection-bg-soft: color-mix(in srgb, var(--primary) 8%, transparent);
+  --selection-border: var(--primary);
+  --search-highlight-bg: color-mix(in srgb, var(--primary) 28%, transparent);
+  --search-highlight-active-bg: color-mix(in srgb, var(--primary) 50%, transparent);
+  --tree-drag-target-bg: color-mix(in srgb, var(--primary) 14%, var(--sidebar));
+  --tree-drag-target-fg: var(--primary);
+  --tree-drag-target-border: color-mix(in srgb, var(--primary) 45%, var(--border));
+}
+
+html[data-palette="monokai"].dark,
+html[data-palette="monokai"] .dark,
+html.palette-monokai.dark,
+html.palette-monokai .dark {
+  --background: #2d2a2e;
+  --secondary-background: #221f22;
+  --sidebar: #221f22;
+  --card: #403e41;
+  --popover: #403e41;
+  --input: #403e41;
+  --muted: #403e41;
+  --foreground: #fcfcfa;
+  --muted-foreground: #939293;
+  --main: #a9dc76;
+  --primary: #a9dc76;
+  --primary-hover: #8fc85a;
+  --primary-foreground: #19181a;
+  --secondary: #ffd866;
+  --secondary-hover: #f4c94a;
+  --secondary-foreground: #19181a;
+  --accent: #403e41;
+  --accent-foreground: #fcfcfa;
+  --border: #19181a;
+  --sidebar-border: #19181a;
+  --ring: #a9dc76;
+  --sidebar-ring: #a9dc76;
+  --shadow: 2px 2px 0px 0px #a9dc76;
+  --reverted: 4px 4px 0px 0px #19181a;
+  --card-foreground: #fcfcfa;
+  --popover-foreground: #fcfcfa;
+  --sidebar-foreground: #fcfcfa;
+  --sidebar-accent: rgb(169 220 118 / 0.14);
+  --sidebar-accent-foreground: #a9dc76;
+  --destructive: #ff6188;
+  --destructive-foreground: #ffffff;
+  --sidebar-guide: rgb(193 192 192 / 0.25);
+  --prose-blockquote-caution-icon: #ffd866;
+  --search-highlight-bg: color-mix(in srgb, var(--primary) 32%, transparent);
+  --search-highlight-active-bg: color-mix(in srgb, var(--primary) 55%, transparent);
+  --tree-drag-target-bg: color-mix(in srgb, var(--primary) 22%, var(--sidebar));
   --tree-drag-target-fg: var(--primary);
   --tree-drag-target-border: color-mix(in srgb, var(--primary) 55%, var(--border));
 }
@@ -274,21 +463,6 @@ html[data-window-inactive].dark *::-moz-selection {
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 14%, transparent);
 }
 
-.toc-scroll-area [data-slot="scroll-area-scrollbar"] {
-  width: 6px;
-  padding: 1px;
-}
-
-.toc-scroll-area [data-slot="scroll-area-scrollbar"] > div {
-  border-radius: 9999px;
-  background-color: color-mix(in srgb, var(--border) 24%, transparent);
-  transition: background-color 120ms ease;
-}
-
-.toc-scroll-area [data-slot="scroll-area-scrollbar"]:hover > div {
-  background-color: color-mix(in srgb, var(--border) 72%, transparent);
-}
-
 [data-slot="input"],
 [data-sidebar="input"],
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]),
@@ -354,4 +528,37 @@ iframe[id^="encatch-iframe-"] {
 
 #encatch-iframe-container iframe {
   border-radius: 10px !important;
+}
+
+/* Sidebar tree branch lines (vertical spine is border-l-2 on drop areas) */
+.tree-drop-with-branches {
+  --tree-guide-inset: 0.25rem; /* matches pl-1 on drop areas */
+}
+
+.tree-guide-entry {
+  --tree-guide-line: var(--sidebar-guide);
+  position: relative;
+  min-width: 0;
+}
+
+/* Horizontal branch (──) from spine to row icon */
+.tree-guide-entry::before {
+  content: "";
+  position: absolute;
+  left: calc(-1 * var(--tree-guide-inset));
+  top: 50%;
+  width: calc(var(--tree-guide-inset) + 0.25rem);
+  height: 2px;
+  background-color: var(--tree-guide-line);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.tree-guide-entry--active-path::before {
+  background-color: var(--primary);
+  opacity: 0.7;
+}
+
+.tree-drop-with-branches--drag-target .tree-guide-entry::before {
+  background-color: var(--tree-drag-target-border);
 }

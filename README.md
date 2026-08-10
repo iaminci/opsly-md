@@ -35,6 +35,12 @@ Your notes, documentation, and knowledge base stay on your device.
 * LaTeX (KaTeX)
 * Mermaid diagrams
 
+### Secure
+
+* Passphrase-protected document encryption
+* Unlock, export, and remove encryption from the document security menu
+* Opsly secure code fences for sensitive inline content
+
 ## Why Opsly MD?
 
 Most documentation tools require:

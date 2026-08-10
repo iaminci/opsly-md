@@ -9,39 +9,105 @@ import {
 } from "react";
 import { flushSync } from "react-dom";
 
-type Theme = "light" | "dark";
+export type ThemePreference = "light" | "dark" | "system";
+export type ResolvedTheme = "light" | "dark";
+/** Color pack; independent of light/dark. Default keeps existing tokens. */
+export type ThemePalette = "default" | "monochrome" | "monokai";
 
 export type ThemeToggleOrigin = { clientX: number; clientY: number };
 
+const THEME_STORAGE_KEY = "md-viewer-theme";
+const PALETTE_STORAGE_KEY = "md-viewer-palette";
+
 interface ThemeContextValue {
-  theme: Theme;
-  setTheme: (theme: Theme, origin?: ThemeToggleOrigin) => void;
+  theme: ResolvedTheme;
+  themePreference: ThemePreference;
+  setTheme: (theme: ThemePreference, origin?: ThemeToggleOrigin) => void;
+  palette: ThemePalette;
+  setPalette: (palette: ThemePalette) => void;
+}
+
+function getSystemTheme(): ResolvedTheme {
+  if (typeof window === "undefined") return "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function resolveTheme(preference: ThemePreference): ResolvedTheme {
+  return preference === "system" ? getSystemTheme() : preference;
+}
+
+function parsePalette(value: string | null): ThemePalette {
+  if (value === "monochrome" || value === "monokai") return value;
+  return "default";
+}
+
+function applyPaletteAttribute(palette: ThemePalette) {
+  const root = document.documentElement;
+  root.classList.remove("palette-monochrome", "palette-monokai");
+  if (palette === "default") {
+    root.removeAttribute("data-palette");
+  } else {
+    root.setAttribute("data-palette", palette);
+    root.classList.add(`palette-${palette}`);
+  }
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("light");
+  const [themePreference, setThemePreference] = useState<ThemePreference>("system");
+  const [theme, setThemeState] = useState<ResolvedTheme>("light");
+  const [palette, setPaletteState] = useState<ThemePalette>("default");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const stored = localStorage.getItem("md-viewer-theme") as Theme | null;
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const initial = stored ?? (prefersDark ? "dark" : "light");
-    setThemeState(initial);
-    document.documentElement.classList.toggle("dark", initial === "dark");
+    const stored = localStorage.getItem(THEME_STORAGE_KEY) as ThemePreference | null;
+    const initialPreference: ThemePreference =
+      stored === "light" || stored === "dark" || stored === "system"
+        ? stored
+        : "system";
+    const initialResolved = resolveTheme(initialPreference);
+    const initialPalette = parsePalette(localStorage.getItem(PALETTE_STORAGE_KEY));
+    setThemePreference(initialPreference);
+    setThemeState(initialResolved);
+    setPaletteState(initialPalette);
+    document.documentElement.classList.toggle("dark", initialResolved === "dark");
+    applyPaletteAttribute(initialPalette);
   }, []);
 
-  const setTheme = useCallback((newTheme: Theme, origin?: ThemeToggleOrigin) => {
-    const syncDocument = (theme: Theme) => {
-      localStorage.setItem("md-viewer-theme", theme);
-      document.documentElement.classList.toggle("dark", theme === "dark");
+  useEffect(() => {
+    if (!mounted || themePreference !== "system") return;
+
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = () => {
+      const resolved = resolveTheme("system");
+      setThemeState(resolved);
+      document.documentElement.classList.toggle("dark", resolved === "dark");
+    };
+
+    media.addEventListener("change", handleChange);
+    return () => media.removeEventListener("change", handleChange);
+  }, [mounted, themePreference]);
+
+  const setPalette = useCallback((next: ThemePalette) => {
+    setPaletteState(next);
+    localStorage.setItem(PALETTE_STORAGE_KEY, next);
+    applyPaletteAttribute(next);
+  }, []);
+
+  const setTheme = useCallback((newPreference: ThemePreference, origin?: ThemeToggleOrigin) => {
+    const resolved = resolveTheme(newPreference);
+
+    const syncDocument = (resolvedTheme: ResolvedTheme, preference: ThemePreference) => {
+      localStorage.setItem(THEME_STORAGE_KEY, preference);
+      document.documentElement.classList.toggle("dark", resolvedTheme === "dark");
     };
 
     const apply = () => {
-      setThemeState(newTheme);
-      syncDocument(newTheme);
+      setThemePreference(newPreference);
+      setThemeState(resolved);
+      syncDocument(resolved, newPreference);
     };
 
     if (typeof document === "undefined") return;
@@ -70,9 +136,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     startVT(() => {
       flushSync(() => {
-        setThemeState(newTheme);
+        setThemePreference(newPreference);
+        setThemeState(resolved);
       });
-      syncDocument(newTheme);
+      syncDocument(resolved, newPreference);
     });
   }, []);
 
@@ -81,7 +148,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       <ThemeContext.Provider
         value={{
           theme: "light",
+          themePreference: "system",
           setTheme,
+          palette: "default",
+          setPalette,
         }}
       >
         {children}
@@ -90,7 +160,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, themePreference, setTheme, palette, setPalette }}>
       <div
         className={theme === "dark" ? "dark" : ""}
         suppressHydrationWarning

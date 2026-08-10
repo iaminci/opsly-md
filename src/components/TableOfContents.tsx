@@ -3,19 +3,15 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { buildHeadingManifest, type HeadingManifestEntry } from "@/lib/heading-manifest";
-import { ScrollArea } from "@/components/ui/scroll-area";
-
-const EMOJI_HEADING_PREFIX =
-  /^(\p{Extended_Pictographic}\uFE0F?\u200D?[\p{Extended_Pictographic}\uFE0F?]*)\s*/u;
 
 function isSectionHeading(level: number): boolean {
   return level === 2;
 }
 
-function headingIndentPx(level: number): number {
+function getItemOffset(level: number): number {
   if (level <= 2) return 0;
-  if (level === 3) return 11;
-  return 22;
+  if (level === 3) return 12;
+  return 24;
 }
 
 function findActiveSectionId(
@@ -31,37 +27,17 @@ function findActiveSectionId(
   return null;
 }
 
-function itemTopSpacing(
-  index: number,
-  level: number,
-  prevLevel: number | null
-): string {
-  if (index === 0) return "";
-  if (isSectionHeading(level)) return "mt-6";
-  if (level > 2 && prevLevel !== null && prevLevel > 2) return "mt-1";
-  return "mt-2";
-}
-
-function inactiveLevelStyles(level: number): string {
-  switch (level) {
-    case 2:
-      return "text-[14px] font-semibold text-foreground";
-    case 3:
-      return "text-[13px] font-medium text-sidebar-foreground";
-    default:
-      return level === 1
-        ? "text-[14px] font-semibold text-foreground"
-        : "text-[13px] font-normal text-muted-foreground";
-  }
-}
-
 interface TableOfContentsProps {
   content: string;
   scrollContainerRef?: React.RefObject<HTMLElement | null>;
 }
 
 /** Distance from the top of scrollable content to the top of `el` (scroll coordinates). */
-function headingTopInScrollSpace(el: Element, scrollEl: Element, root: HTMLElement | null): number {
+function headingTopInScrollSpace(
+  el: Element,
+  scrollEl: Element,
+  root: HTMLElement | null
+): number {
   const rect = el.getBoundingClientRect();
   if (!root) {
     return rect.top + window.scrollY;
@@ -128,8 +104,6 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
     [headings, activeId]
   );
 
-  // When switching documents / content, headings and scroll position relative to sections change;
-  // re-sync which section is "active" and clear the throttle guard immediately.
   useLayoutEffect(() => {
     lastSetIdRef.current = null;
     if (headings.length === 0) {
@@ -178,8 +152,6 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
     const node = activeItemRef.current;
     if (!viewport || !node) return;
 
-    // Only adjust the scroll viewport's scrollTop — avoid scrollIntoView(), which can
-    // scroll ancestor panes (tabs/sidebar) and move headings/tabs with it.
     const pad = 8;
     const viewRect = viewport.getBoundingClientRect();
     const nodeRect = node.getBoundingClientRect();
@@ -202,10 +174,9 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
 
   return (
     <nav className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
-      <ScrollArea
+      <div
         ref={tocScrollRef}
-        className="toc-scroll-area min-h-0 min-w-0 w-full flex-1"
-        viewportClassName="pr-3 [overflow-wrap:anywhere]"
+        className="native-scrollbar-transparent-track min-h-0 min-w-0 w-full flex-1 overflow-y-auto overflow-x-hidden pr-3 [overflow-wrap:anywhere]"
       >
         <ul className="w-full min-w-0 px-1 pb-2">
           {headings.map(({ id, text, level }, index) => {
@@ -213,34 +184,27 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
             const isSection = isSectionHeading(level);
             const isActiveSection =
               activeSectionId === id && !isActive && isSection;
-            const prevLevel = index > 0 ? headings[index - 1]!.level : null;
+            const isFirst = index === 0;
+            const isLast = index === headings.length - 1;
+            const isHighlighted = isActive || isActiveSection;
 
             return (
               <li
                 key={id}
-                style={{ paddingLeft: `${headingIndentPx(level)}px` }}
-                className={cn("min-w-0", itemTopSpacing(index, level, prevLevel))}
+                style={{ paddingLeft: getItemOffset(level) }}
+                className="min-w-0"
               >
-                {isSection && index > 0 ? (
-                  <div
-                    className="mb-2.5 border-t border-border/20"
-                    aria-hidden
-                  />
-                ) : null}
                 <a
                   ref={isActive ? activeItemRef : null}
                   href={`#${id}`}
                   onClick={(e) => handleClick(e, id)}
                   className={cn(
-                    "block w-full max-w-full min-w-0 border-2 leading-[1.35] [overflow-wrap:anywhere] transition-[background-color,transform] duration-[120ms] ease-out",
-                    isSection && !isActive && "mb-2.5",
-                    isActive
-                      ? "rounded-md border-transparent px-2 py-1 font-bold text-primary visited:!text-primary"
-                      : cn(
-                          "line-clamp-2 rounded-md border-transparent py-1 px-2 hover:translate-x-0.5 hover:rounded-md hover:bg-sidebar-accent/45",
-                          inactiveLevelStyles(level),
-                          isActiveSection && "text-primary"
-                        )
+                    "block scroll-m-4 py-1.5 text-sm leading-snug transition-colors [overflow-wrap:anywhere]",
+                    isFirst && "pt-0",
+                    isLast && "pb-0",
+                    isHighlighted
+                      ? "font-medium text-primary visited:!text-primary"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {text}
@@ -249,7 +213,7 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
             );
           })}
         </ul>
-      </ScrollArea>
+      </div>
     </nav>
   );
 }

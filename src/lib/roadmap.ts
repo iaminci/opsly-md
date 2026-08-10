@@ -157,15 +157,6 @@ export const ROADMAP_SECTIONS: RoadmapSectionData[] =
     items: roadmap[category],
   }));
 
-export const HOME_ROADMAP_PREVIEW_UP_NEXT_COUNT = 3;
-
-export function getHomeRoadmapPreview() {
-  return {
-    inProgress: roadmap.inProgress,
-    upNext: roadmap.planned.slice(0, HOME_ROADMAP_PREVIEW_UP_NEXT_COUNT),
-  };
-}
-
 export function getRoadmapMarkdown(): string {
   const checkboxSection = (
     heading: string,

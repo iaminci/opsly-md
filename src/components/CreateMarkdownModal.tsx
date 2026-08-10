@@ -15,8 +15,17 @@ import { FilePlus, X } from "lucide-react";
 import { InlineLocationSelectors } from "@/components/InlineLocationSelectors";
 import { LineNumberedTextarea } from "@/components/LineNumberedTextarea";
 import { useWorkspaceTree } from "@/context/WorkspaceTreeContext";
+import { cn } from "@/lib/utils";
 
 const DEFAULT_NEW_DOCUMENT_TITLE = "Untitled";
+
+const settingsActionButtonClassName =
+  "h-9 shrink-0 px-3.5 text-sm rounded-md border-2 border-border text-primary shadow-none hover:border-border hover:bg-primary hover:text-black hover:translate-x-0 hover:translate-y-0";
+
+const settingsCancelButtonClassName =
+  "h-9 shrink-0 px-3.5 text-sm rounded-md border-2 border-border bg-background text-foreground shadow-none hover:border-border hover:bg-sidebar-accent hover:text-foreground hover:translate-x-0 hover:translate-y-0";
+
+const fieldLabelClassName = "block text-sm font-medium text-foreground";
 
 function resolveNewDocumentTitle(titleInput: string): string {
   const explicit = titleInput.trim().replace(/\.md$/i, "").trim();
@@ -29,6 +38,7 @@ interface CreateMarkdownModalProps {
   initialWorkspaceId: string;
   initialFolderId: string | null;
   hideLocationSelectors?: boolean;
+  workspacesEnabled?: boolean;
   onCreate: (
     title: string,
     content: string,
@@ -43,6 +53,7 @@ export function CreateMarkdownModal({
   initialWorkspaceId,
   initialFolderId,
   hideLocationSelectors = false,
+  workspacesEnabled = true,
   onCreate,
 }: CreateMarkdownModalProps) {
   const { sortedWorkspaces, hasSyncedWorkspacesAtLeastOnce } = useWorkspaceTree();
@@ -54,12 +65,12 @@ export function CreateMarkdownModal({
 
   useEffect(() => {
     if (!open) return;
-    setSelectedWorkspaceId(initialWorkspaceId);
+    setSelectedWorkspaceId(workspacesEnabled ? initialWorkspaceId : "default");
     setSelectedFolderId(initialFolderId);
     setTitle(DEFAULT_NEW_DOCUMENT_TITLE);
     setMarkdown("");
     setCreating(false);
-  }, [open, initialWorkspaceId, initialFolderId]);
+  }, [open, initialWorkspaceId, initialFolderId, workspacesEnabled]);
 
   useEffect(() => {
     if (!open) return;
@@ -105,10 +116,16 @@ export function CreateMarkdownModal({
     }
   };
 
+  const canCreate =
+    hasSyncedWorkspacesAtLeastOnce &&
+    sortedWorkspaces.length > 0 &&
+    !!markdown.trim() &&
+    !!selectedWorkspaceId;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="flex h-[90dvh] max-h-[90dvh] flex-col gap-0 overflow-hidden px-0 !pb-0 pt-0 duration-150 sm:max-w-[min(72rem,calc(100vw-2rem))] data-[state=closed]:zoom-out-[0.98] data-[state=open]:zoom-in-[0.98]"
+        className="flex h-[90dvh] max-h-[90dvh] flex-col gap-0 overflow-hidden px-0 !pb-0 pt-0 duration-150 sm:max-w-[min(76rem,calc(100vw-2rem))] data-[state=closed]:zoom-out-[0.98] data-[state=open]:zoom-in-[0.98]"
         overlayClassName="bg-background/20 supports-backdrop-filter:bg-background/10"
         showCloseButton={false}
         onPointerDownOutside={preventCloseOnNestedDropdown}
@@ -123,9 +140,9 @@ export function CreateMarkdownModal({
           <DialogClose asChild>
             <Button
               type="button"
-              variant="neutral"
+              variant="ghost"
               size="icon-sm"
-              className="shrink-0 bg-background text-foreground hover:bg-sidebar-accent hover:text-foreground"
+              className="shrink-0 rounded-md border-2 border-border bg-background text-foreground shadow-none hover:border-border hover:bg-sidebar-accent hover:text-foreground hover:translate-x-0 hover:translate-y-0"
               aria-label="Close create dialog"
             >
               <X className="size-4" />
@@ -137,29 +154,28 @@ export function CreateMarkdownModal({
         </DialogHeader>
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-6 pt-7">
-            {!hasSyncedWorkspacesAtLeastOnce ? (
-              <p className="text-sm text-muted-foreground">Loading workspaces…</p>
-            ) : sortedWorkspaces.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No workspace available. Add one with “New Workspace” in the workspace menu.
-              </p>
-            ) : (
-              <>
-                {!hideLocationSelectors ? (
-                  <InlineLocationSelectors
-                    idPrefix="create-modal"
-                    selectedWorkspaceId={selectedWorkspaceId}
-                    setSelectedWorkspaceId={setSelectedWorkspaceId}
-                    selectedFolderId={selectedFolderId}
-                    setSelectedFolderId={setSelectedFolderId}
-                  />
-                ) : null}
-                <div className="flex shrink-0 flex-col gap-1">
-                  <label
-                    htmlFor="create-modal-title"
-                    className="block text-sm font-medium text-foreground"
-                  >
+          {!hasSyncedWorkspacesAtLeastOnce ? (
+            <p className="px-6 pt-7 text-sm text-muted-foreground">
+              Loading workspaces…
+            </p>
+          ) : sortedWorkspaces.length === 0 ? (
+            <p className="px-6 pt-7 text-sm text-muted-foreground">
+              No workspace available. Add one with “New Workspace” in the workspace menu.
+            </p>
+          ) : (
+            <>
+              <div
+                className={cn(
+                  "grid shrink-0 gap-2 px-6 pt-5",
+                  hideLocationSelectors
+                    ? "grid-cols-1"
+                    : workspacesEnabled
+                      ? "grid-cols-1 sm:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,1fr)] sm:items-end"
+                      : "grid-cols-1 sm:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] sm:items-end"
+                )}
+              >
+                <div className="flex min-w-0 flex-col gap-1">
+                  <label htmlFor="create-modal-title" className={fieldLabelClassName}>
                     Filename
                   </label>
                   <Input
@@ -167,55 +183,69 @@ export function CreateMarkdownModal({
                     autoFocus
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Enter title..."
-                    className="font-mono text-sm"
+                    placeholder="Untitled"
+                    className="h-9 font-mono text-sm shadow-none"
                     autoComplete="off"
                   />
                 </div>
-                <div className="flex min-h-0 flex-1 flex-col gap-1">
-                  <label
-                    htmlFor="create-modal-body"
-                    className="block text-sm font-medium text-foreground"
-                  >
+
+                {!hideLocationSelectors ? (
+                  <InlineLocationSelectors
+                    idPrefix="create-modal"
+                    variant="settings"
+                    compact
+                    layout="split"
+                    hideWorkspaceSelector={!workspacesEnabled}
+                    selectedWorkspaceId={selectedWorkspaceId}
+                    setSelectedWorkspaceId={setSelectedWorkspaceId}
+                    selectedFolderId={selectedFolderId}
+                    setSelectedFolderId={setSelectedFolderId}
+                  />
+                ) : null}
+              </div>
+
+              <div className="flex min-h-0 flex-1 flex-col px-6 pb-4 pt-3">
+                <div className="flex min-h-0 flex-1 flex-col gap-1.5">
+                  <label htmlFor="create-modal-body" className={fieldLabelClassName}>
                     Markdown
                   </label>
                   <LineNumberedTextarea
                     id="create-modal-body"
                     value={markdown}
                     onChange={(e) => setMarkdown(e.target.value)}
-                    placeholder="Enter markdown here..."
+                    placeholder="Write markdown here…"
                     spellCheck={false}
-                    className="field-sizing-fixed min-h-[12rem] w-full max-w-full flex-1"
-                    textareaClassName="resize-none"
+                    className={cn(
+                      "field-sizing-fixed min-h-0 w-full max-w-full flex-1",
+                      "shadow-none"
+                    )}
+                    textareaClassName="min-h-[12rem] resize-none leading-relaxed"
                   />
                 </div>
-              </>
-            )}
-          </div>
-          {hasSyncedWorkspacesAtLeastOnce && sortedWorkspaces.length > 0 ? (
-            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 px-6 pb-6 pt-4 sm:gap-3">
-              <Button
-                type="button"
-                variant="neutral"
-                size="sm"
-                className="shrink-0 bg-background"
-                onClick={() => onOpenChange(false)}
-                disabled={creating}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                variant="neutral"
-                size="sm"
-                className="shrink-0 bg-background hover:bg-main hover:text-black"
-                onClick={() => void handleSubmit()}
-                disabled={!markdown.trim() || !selectedWorkspaceId || creating}
-              >
-                {creating ? "Creating…" : "Add"}
-              </Button>
-            </div>
-          ) : null}
+              </div>
+
+              <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 px-6 pb-6 pt-4 sm:gap-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className={settingsCancelButtonClassName}
+                  onClick={() => onOpenChange(false)}
+                  disabled={creating}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className={settingsActionButtonClassName}
+                  onClick={() => void handleSubmit()}
+                  disabled={!canCreate || creating}
+                >
+                  {creating ? "Creating…" : "Add"}
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>

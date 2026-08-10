@@ -90,10 +90,20 @@ export default function RootLayout({
               try {
                 var stored = localStorage.getItem('md-viewer-theme');
                 var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                if (stored === 'dark' || (!stored && prefersDark)) {
+                var resolvedDark = stored === 'dark' || (stored === 'system' && prefersDark) || (!stored && prefersDark);
+                if (resolvedDark) {
                   document.documentElement.classList.add('dark');
                 } else {
                   document.documentElement.classList.remove('dark');
+                }
+                var root = document.documentElement;
+                root.classList.remove('palette-monochrome', 'palette-monokai');
+                var palette = localStorage.getItem('md-viewer-palette');
+                if (palette === 'monochrome' || palette === 'monokai') {
+                  root.setAttribute('data-palette', palette);
+                  root.classList.add('palette-' + palette);
+                } else {
+                  root.removeAttribute('data-palette');
                 }
               } catch (e) {}
             `,

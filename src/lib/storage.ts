@@ -101,18 +101,15 @@ export async function addDocument(
   const folderId = options?.folderId ?? doc.folderId ?? null;
 
   const docsInLocation = await getDocumentsInFolder(workspaceId, folderId);
-  const titleTrimmed = doc.title.trim();
-  const titleLower = titleTrimmed.toLowerCase();
-  const isDuplicate = docsInLocation.some(
-    (d) => (d.title ?? "").toLowerCase() === titleLower
+  const titleTrimmed = doc.title.trim() || doc.title;
+  const uniqueTitle = makeTitleUnique(
+    titleTrimmed,
+    docsInLocation.map((d) => d.title ?? "")
   );
-  if (isDuplicate) {
-    throw new DuplicateNameError(`A file named "${titleTrimmed || doc.title}" with the same title already exists in this location.`);
-  }
 
   const newDoc: Document = {
     ...doc,
-    title: titleTrimmed || doc.title,
+    title: uniqueTitle,
     id: crypto.randomUUID(),
     createdAt: Date.now(),
     workspaceId,
@@ -190,13 +187,13 @@ export async function getWorkspaces(): Promise<Workspace[]> {
 
 export async function addWorkspace(name: string): Promise<Workspace> {
   const existing = await getWorkspaces();
-  const nameLower = name.trim().toLowerCase();
-  if (existing.some((w) => w.name.toLowerCase() === nameLower)) {
-    throw new DuplicateNameError(`A workspace named "${name.trim()}" already exists.`);
-  }
+  const uniqueName = makeTitleUnique(
+    name.trim(),
+    existing.map((w) => w.name)
+  );
   const ws: Workspace = {
     id: crypto.randomUUID(),
-    name: name.trim(),
+    name: uniqueName,
     createdAt: Date.now(),
   };
   const db = await getSqliteDb();
@@ -226,6 +223,52 @@ export async function deleteWorkspace(id: string): Promise<void> {
   db.run("DELETE FROM folders WHERE workspaceId = ?", [id]);
   db.run("DELETE FROM documents WHERE workspaceId = ?", [id]);
   await saveSqliteDb(db);
+}
+
+export async function getNonDefaultWorkspaces(): Promise<Workspace[]> {
+  const workspaces = await getWorkspaces();
+  return workspaces.filter((w) => w.id !== "default");
+}
+
+async function uniqueRootFolderNameInDefault(baseName: string): Promise<string> {
+  const existing = await getFolders("default", null);
+  return makeTitleUnique(
+    baseName.trim(),
+    existing.map((f) => f.name)
+  );
+}
+
+/** Move non-default workspace contents into named folders under default, then delete those workspaces. */
+export async function consolidateWorkspacesIntoDefault(): Promise<void> {
+  const nonDefault = await getNonDefaultWorkspaces();
+  for (const ws of nonDefault) {
+    const allFolders = await getAllFolders(ws.id);
+    const allDocs = await getDocuments(ws.id);
+    const hasContent = allFolders.length > 0 || allDocs.length > 0;
+
+    if (hasContent) {
+      const folderName = await uniqueRootFolderNameInDefault(ws.name);
+      const workspaceFolder = await addFolder("default", folderName, null);
+
+      const rootFolders = await getFolders(ws.id, null);
+      const rootDocs = await getDocumentsInFolder(ws.id, null);
+      for (const folder of rootFolders) {
+        await moveFolder(folder.id, "default", workspaceFolder.id);
+      }
+      for (const doc of rootDocs) {
+        await moveDocument(doc.id, "default", workspaceFolder.id);
+      }
+    }
+
+    await deleteWorkspace(ws.id);
+  }
+}
+
+/** If workspaces are disabled, ensure non-default workspace data lives under Default. */
+export async function ensureConsolidatedWhenWorkspacesDisabled(): Promise<void> {
+  const nonDefault = await getNonDefaultWorkspaces();
+  if (nonDefault.length === 0) return;
+  await consolidateWorkspacesIntoDefault();
 }
 
 export async function deleteAllData(): Promise<void> {
@@ -296,15 +339,15 @@ export async function addFolder(
   parentFolderId: string | null = null
 ): Promise<Folder> {
   const siblings = await getFolders(workspaceId, parentFolderId);
-  const nameLower = name.trim().toLowerCase();
-  if (siblings.some((f) => f.name.toLowerCase() === nameLower)) {
-    throw new DuplicateNameError(`A folder named "${name.trim()}" already exists in this location.`);
-  }
+  const uniqueName = makeTitleUnique(
+    name.trim(),
+    siblings.map((f) => f.name)
+  );
   const folder: Folder = {
     id: crypto.randomUUID(),
     workspaceId,
     parentFolderId,
-    name: name.trim(),
+    name: uniqueName,
     createdAt: Date.now(),
   };
   const db = await getSqliteDb();
@@ -612,4 +655,63 @@ export async function importAllWorkspacesData(
     if (result) imported.push(result.workspace);
   }
   return imported;
+}
+
+const WORKSPACES_ENABLED_SETTING_KEY = "workspacesEnabled";
+const LEGACY_WORKSPACES_ENABLED_KEY = "md-viewer-workspaces-enabled";
+
+export async function getAppSetting(key: string): Promise<string | null> {
+  if (typeof window === "undefined") return null;
+  try {
+    const db = await getSqliteDb();
+    const rows = await sqlQuery<{ value: string }>(
+      db,
+      "SELECT value FROM app_settings WHERE key = ?",
+      [key]
+    );
+    return rows[0]?.value ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function setAppSetting(key: string, value: string): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    const db = await getSqliteDb();
+    db.run("INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)", [key, value]);
+    await saveSqliteDb(db);
+  } catch {
+    // Storage full or disabled
+  }
+}
+
+export async function getWorkspacesEnabled(): Promise<boolean> {
+  const stored = await getAppSetting(WORKSPACES_ENABLED_SETTING_KEY);
+  if (stored !== null) return stored === "1";
+
+  if (typeof window === "undefined") return false;
+  try {
+    const legacy = localStorage.getItem(LEGACY_WORKSPACES_ENABLED_KEY);
+    if (legacy === "1" || legacy === "0") {
+      await setAppSetting(WORKSPACES_ENABLED_SETTING_KEY, legacy);
+      localStorage.removeItem(LEGACY_WORKSPACES_ENABLED_KEY);
+      return legacy === "1";
+    }
+  } catch {
+    // ignore migration errors
+  }
+
+  return false;
+}
+
+export async function setWorkspacesEnabled(enabled: boolean): Promise<void> {
+  await setAppSetting(WORKSPACES_ENABLED_SETTING_KEY, enabled ? "1" : "0");
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.removeItem(LEGACY_WORKSPACES_ENABLED_KEY);
+    } catch {
+      // ignore
+    }
+  }
 }

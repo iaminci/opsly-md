@@ -20,9 +20,10 @@ export function InteractiveFormInput({
   className,
   onChange,
   onClick,
-  node: _node,
+  node,
   ...props
 }: InteractiveFormInputProps & { node?: unknown }) {
+  void node;
   const isToggleable =
     interactive &&
     onFormControlToggle &&

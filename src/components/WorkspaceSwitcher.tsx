@@ -1,6 +1,7 @@
 "use client";
 
 import type { Workspace } from "@/types/workspace";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,27 +10,27 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   ChevronDown,
-  FileBraces,
   FilePlus,
-  FolderIcon,
-  MoreHorizontal,
+  FolderPlus,
   Pencil,
   Plus,
+  Upload,
 } from "lucide-react";
 import {
   SidebarMenu,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
+import { InlineTreeCreateRow } from "@/components/InlineTreeCreateRow";
+import type { PendingTreeCreate, PendingTreeRename } from "@/components/WorkspaceTree";
 import { TREE_DRAG_TARGET_PILL } from "@/components/WorkspaceTree";
-import { Button } from "./ui/button";
+import { cn } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-/** Native scrollbar aligned with TOC / `ScrollArea` thumb (Radix scroll area breaks inside menus). */
+/** Native scrollbar (Radix scroll area breaks inside menus). */
 const workspaceSwitcherScrollbarClassName = cn(
   "overflow-y-auto overflow-x-hidden native-scrollbar-transparent-track"
 );
@@ -40,9 +41,23 @@ const workspaceSwitcherDropdownMaxHeightClassName =
 export const workspaceTabBaseClassName =
   "!h-9 !min-h-9 !rounded-[5px] !border-2 !border-border !font-heading !font-bold !shadow-shadow !outline-0 transition-[transform,box-shadow] hover:!translate-x-boxShadowX hover:!translate-y-boxShadowY hover:!shadow-none hover:!outline-0 focus-visible:!outline-0 focus-visible:!shadow-shadow";
 
-const workspaceTabAllClassName = cn(
-  workspaceTabBaseClassName,
-  "!bg-background !text-foreground hover:!bg-background hover:!text-foreground"
+export const workspaceControlChromeClassName =
+  "rounded-md border-2 border-border bg-background shadow-none transition-colors hover:border-border hover:bg-sidebar-accent hover:translate-x-0 hover:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
+
+export const workspaceDropdownTriggerClassName = cn(
+  "flex h-9 min-h-9 w-full min-w-0 items-center gap-2 px-3 text-left text-sm font-medium text-foreground",
+  workspaceControlChromeClassName
+);
+
+export const workspaceIconActionClassName = cn(
+  "inline-flex size-9 shrink-0 cursor-pointer items-center justify-center p-0 text-primary hover:text-primary-hover",
+  workspaceControlChromeClassName
+);
+
+/** Flat toolbar label buttons (Edit, Download, Cancel, Save). */
+export const workspaceToolbarTextActionClassName = cn(
+  workspaceControlChromeClassName,
+  "inline-flex h-9 shrink-0 cursor-pointer items-center justify-center px-3.5 text-sm font-medium text-primary"
 );
 
 /** (+) “New workspace” and single-workspace ⋯ — same chrome as tabs, neutral surface. */
@@ -57,29 +72,35 @@ export const workspacePairTabClassName = cn(
   "!bg-background !text-foreground focus-visible:!bg-primary"
 );
 
-/** List panel under the workspace switcher trigger (and inline Create Markdown). */
+/** Workspace switcher dropdown panel (inline create/rename lives here). */
+export const WORKSPACE_SWITCHER_DROPDOWN_SELECTOR =
+  '[data-workspace-switcher-dropdown="true"]';
+
+/** List panel under the workspace switcher trigger — width set from the action row. */
 export const workspaceSwitcherDropdownContentClassName =
-  "w-[var(--radix-popper-anchor-width)] min-w-0 max-w-[var(--radix-popper-anchor-width)] rounded-[5px] border-2 border-sidebar-border bg-popover p-0 font-heading text-popover-foreground shadow-md";
+  "w-full min-w-0 max-w-none rounded-md border-2 border-border bg-popover p-0 font-heading text-popover-foreground shadow-none";
 
 interface WorkspaceSwitcherProps {
   workspaces: Workspace[];
   selectedId: string | null;
   onSelect: (workspaceId: string | null) => void;
   onAddWorkspace?: () => void;
-  /**
-   * In “All Workspaces” view, the (+) chip menu: Create File / Upload File.
-   * “New Workspace” remains in the workspace dropdown.
-   */
-  onQuickCreateMarkdown?: () => void;
-  onQuickUploadFile?: () => void;
-  /** When a workspace is selected, actions for that workspace (⋯ menu). */
-  onWorkspaceMenuOpenChange?: (open: boolean) => void;
-  onAddFolder?: (workspaceId: string, parentFolderId: string | null) => void;
-  onUploadFile?: (workspaceId: string, folderId: string | null) => void;
-  onCreateFile?: (workspaceId: string, folderId: string | null) => void;
-  onRenameWorkspace?: (id: string, name: string) => void;
+  onCreateFile: () => void;
+  onUploadFile: () => void;
+  onCreateFolder?: () => void;
+  onRenameWorkspace?: (
+    id: string,
+    name: string,
+    inlineTarget?: "tree" | "switcher-dropdown"
+  ) => void;
   /** True while the selected workspace root is the drag drop target (single-workspace view). */
   dragTargetActive?: boolean;
+  pendingTreeCreate?: PendingTreeCreate | null;
+  onPendingTreeCreateSubmit?: (name: string) => void | Promise<void>;
+  onPendingTreeCreateCancel?: () => void;
+  pendingTreeRename?: PendingTreeRename | null;
+  onPendingTreeRenameSubmit?: (name: string) => void | Promise<void>;
+  onPendingTreeRenameCancel?: () => void;
 }
 
 export function WorkspaceSwitcher({
@@ -87,93 +108,202 @@ export function WorkspaceSwitcher({
   selectedId,
   onSelect,
   onAddWorkspace,
-  onQuickCreateMarkdown,
-  onQuickUploadFile,
-  onWorkspaceMenuOpenChange,
-  onAddFolder,
-  onUploadFile,
   onCreateFile,
+  onUploadFile,
+  onCreateFolder,
   onRenameWorkspace,
   dragTargetActive = false,
+  pendingTreeCreate = null,
+  onPendingTreeCreateSubmit,
+  onPendingTreeCreateCancel,
+  pendingTreeRename = null,
+  onPendingTreeRenameSubmit,
+  onPendingTreeRenameCancel,
 }: WorkspaceSwitcherProps) {
+  const skipCloseAutoFocusRef = useRef(false);
+  const menuRowRef = useRef<HTMLUListElement>(null);
+  const [switcherMenuOpen, setSwitcherMenuOpen] = useState(false);
+  const [switcherDropdownWidth, setSwitcherDropdownWidth] = useState<number>();
+
+  const updateSwitcherDropdownWidth = useCallback(() => {
+    const row = menuRowRef.current;
+    if (!row) return;
+    const items = row.querySelectorAll('[data-sidebar="menu-item"]');
+    const actionItemCount = onCreateFolder ? 4 : 3;
+    let width = 0;
+    for (let i = 0; i < actionItemCount && i < items.length; i++) {
+      if (i > 0) width += 6;
+      width += (items[i] as HTMLElement).getBoundingClientRect().width;
+    }
+    if (width > 0) setSwitcherDropdownWidth(width);
+  }, []);
+
+  const runInlineCreateAction = useCallback((action: () => void) => {
+    skipCloseAutoFocusRef.current = true;
+    action();
+  }, []);
+  const handleDropdownCloseAutoFocus = useCallback((e: Event) => {
+    if (!skipCloseAutoFocusRef.current) return;
+    e.preventDefault();
+    skipCloseAutoFocusRef.current = false;
+  }, []);
+
   const selected = selectedId
     ? workspaces.find((w) => w.id === selectedId)
     : null;
   const label = selected ? selected.name : "All Workspaces";
-  const isAllWorkspaces = selectedId === null;
-  const workspaceActionsAvailable =
-    Boolean(selected) &&
-    onAddFolder &&
-    onUploadFile &&
-    onCreateFile &&
-    onRenameWorkspace;
+  const showPendingWorkspaceCreate =
+    pendingTreeCreate?.type === "workspace" &&
+    pendingTreeCreate.inlineTarget === "switcher-dropdown";
+  const hasDropdownInlineEdit =
+    showPendingWorkspaceCreate ||
+    (pendingTreeRename?.type === "workspace" &&
+      pendingTreeRename.inlineTarget === "switcher-dropdown");
+  const showCreateFolderButton = Boolean(onCreateFolder);
+
+  useEffect(() => {
+    if (hasDropdownInlineEdit) setSwitcherMenuOpen(true);
+  }, [hasDropdownInlineEdit]);
+
+  useEffect(() => {
+    updateSwitcherDropdownWidth();
+    const row = menuRowRef.current;
+    if (!row) return;
+    const observer = new ResizeObserver(updateSwitcherDropdownWidth);
+    observer.observe(row);
+    return () => observer.disconnect();
+  }, [updateSwitcherDropdownWidth, onCreateFolder]);
+
+  const handleWorkspaceRename = useCallback(
+    (workspaceId: string, workspaceName: string) => {
+      runInlineCreateAction(() =>
+        onRenameWorkspace?.(workspaceId, workspaceName, "switcher-dropdown")
+      );
+    },
+    [onRenameWorkspace, runInlineCreateAction]
+  );
+
+  const handleNewWorkspace = useCallback(() => {
+    runInlineCreateAction(() => onAddWorkspace?.());
+  }, [onAddWorkspace, runInlineCreateAction]);
 
   const workspaceSwitcherListBody = (
     <>
       <DropdownMenuItem
         onClick={() => onSelect(null)}
         className={cn(
-          !selectedId &&
-            "bg-sidebar-accent font-semibold text-primary"
+          "w-full",
+          !selectedId && "bg-sidebar-accent font-semibold text-primary"
         )}
       >
-        <span className="truncate">All Workspaces</span>
+        <span className="min-w-0 flex-1 whitespace-nowrap">All Workspaces</span>
       </DropdownMenuItem>
-      {workspaces.map((ws) => (
+      {workspaces.map((ws) => {
+        const isRenamingInDropdown =
+          pendingTreeRename?.type === "workspace" &&
+          pendingTreeRename.inlineTarget === "switcher-dropdown" &&
+          pendingTreeRename.id === ws.id;
+
+        if (
+          isRenamingInDropdown &&
+          onPendingTreeRenameSubmit &&
+          onPendingTreeRenameCancel
+        ) {
+          return (
+            <div
+              key={ws.id}
+              className="px-1 py-0.5"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <InlineTreeCreateRow
+                type="folder"
+                showIcon={false}
+                rename
+                initialValue={pendingTreeRename.initialName}
+                onSubmit={onPendingTreeRenameSubmit}
+                onCancel={onPendingTreeRenameCancel}
+              />
+            </div>
+          );
+        }
+
+        return (
         <DropdownMenuItem
           key={ws.id}
           onClick={() => onSelect(ws.id)}
           className={cn(
+            "group/workspace-row w-full [&[data-highlighted]_button]:opacity-100",
             selectedId === ws.id &&
               "bg-sidebar-accent font-semibold text-primary"
           )}
         >
-          <span className="truncate">{ws.name}</span>
+          <span className="min-w-0 flex-1 truncate whitespace-nowrap">
+            {ws.name}
+          </span>
+          {onRenameWorkspace ? (
+            <button
+              type="button"
+              aria-label={`Rename ${ws.name}`}
+              className={cn(
+                "pointer-events-auto ml-1 inline-flex size-7 shrink-0 items-center justify-center rounded-sm border-0 bg-transparent p-0 text-muted-foreground opacity-0 transition-opacity",
+                "hover:bg-sidebar-accent hover:text-primary",
+                "group-hover/workspace-row:opacity-100 group-focus-within/workspace-row:opacity-100"
+              )}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleWorkspaceRename(ws.id, ws.name);
+              }}
+            >
+              <Pencil className="size-3.5 shrink-0" />
+            </button>
+          ) : null}
         </DropdownMenuItem>
-      ))}
+        );
+      })}
     </>
   );
 
   return (
-    <SidebarMenu
-      className={cn("flex-row", isAllWorkspaces ? "gap-2" : "gap-2.5")}
-    >
+    <SidebarMenu ref={menuRowRef} className="flex-row items-center gap-1.5">
       <SidebarMenuItem className="min-w-0 flex-1">
-        <DropdownMenu>
+        <DropdownMenu
+          open={switcherMenuOpen}
+          onOpenChange={(open) => {
+            if (!open && hasDropdownInlineEdit) return;
+            setSwitcherMenuOpen(open);
+          }}
+        >
           <DropdownMenuTrigger asChild>
-            {isAllWorkspaces ? (
-              <button
-                type="button"
-                className={cn(
-                  workspaceTabAllClassName,
-                  "flex w-full min-w-0 items-center gap-2 px-3 text-left"
-                )}
-              >
-                <span className="min-w-0 flex-1 truncate">{label}</span>
-                <ChevronDown className="ml-auto size-4 shrink-0" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                className={cn(
-                  workspacePairTabClassName,
-                  "flex w-full min-w-0 items-center gap-2 px-3 text-left",
-                  dragTargetActive &&
-                    cn(
-                      "!border-2 !border-[var(--tree-drag-target-border)] !shadow-none hover:!translate-x-0 hover:!translate-y-0",
-                      TREE_DRAG_TARGET_PILL
-                    )
-                )}
-              >
-                <span className="min-w-0 flex-1 truncate">{label}</span>
-                <ChevronDown className="size-4 shrink-0" />
-              </button>
-            )}
+            <button
+              type="button"
+              className={cn(
+                workspaceDropdownTriggerClassName,
+                dragTargetActive &&
+                  cn(
+                    "!border-[var(--tree-drag-target-border)] !bg-[var(--tree-drag-target-bg)] !text-[var(--tree-drag-target-fg)] hover:!bg-[var(--tree-drag-target-bg)]",
+                    TREE_DRAG_TARGET_PILL
+                  )
+              )}
+            >
+              <span className="min-w-0 flex-1 truncate font-heading font-semibold">
+                {label}
+              </span>
+              <ChevronDown className="size-4 shrink-0 text-primary" />
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            align="end"
+            align="start"
             sideOffset={4}
+            style={
+              switcherDropdownWidth
+                ? { width: switcherDropdownWidth }
+                : undefined
+            }
             className={workspaceSwitcherDropdownContentClassName}
+            onCloseAutoFocus={handleDropdownCloseAutoFocus}
+            data-workspace-switcher-dropdown="true"
           >
             {onAddWorkspace ? (
               <div
@@ -191,13 +321,31 @@ export function WorkspaceSwitcher({
                   <div className="p-1">{workspaceSwitcherListBody}</div>
                 </div>
                 <div className="shrink-0 border-t-2 border-border p-1">
-                  <DropdownMenuItem
-                    onClick={() => onAddWorkspace()}
-                    className="cursor-pointer"
-                  >
-                    <Plus className="size-4 shrink-0" />
-                    <span className="truncate">New Workspace</span>
-                  </DropdownMenuItem>
+                  {showPendingWorkspaceCreate &&
+                  onPendingTreeCreateSubmit &&
+                  onPendingTreeCreateCancel ? (
+                    <div
+                      className="px-0 py-0.5"
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      <InlineTreeCreateRow
+                        type="folder"
+                        showIcon={false}
+                        initialValue="New Workspace"
+                        onSubmit={onPendingTreeCreateSubmit}
+                        onCancel={onPendingTreeCreateCancel}
+                      />
+                    </div>
+                  ) : (
+                    <DropdownMenuItem
+                      onClick={handleNewWorkspace}
+                      className="cursor-pointer"
+                    >
+                      <Plus className="size-4 shrink-0" />
+                      <span className="whitespace-nowrap">New Workspace</span>
+                    </DropdownMenuItem>
+                  )}
                 </div>
               </div>
             ) : (
@@ -214,110 +362,53 @@ export function WorkspaceSwitcher({
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
-      {onQuickCreateMarkdown && onQuickUploadFile && selectedId === null ? (
+      {showCreateFolderButton ? (
         <SidebarMenuItem className="w-auto shrink-0">
-          <DropdownMenu
-            onOpenChange={(open) => {
-              onWorkspaceMenuOpenChange?.(open);
-            }}
-          >
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    aria-label="Create or upload file"
-                    className={cn(
-                      workspaceNeutralChipClassName,
-                      "inline-flex w-9 min-w-9 shrink-0 items-center justify-center px-0"
-                    )}
-                  >
-                    <Plus className="size-4 shrink-0 text-muted-foreground" />
-                  </Button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" align="end">
-                Create or upload file
-              </TooltipContent>
-            </Tooltip>
-            <DropdownMenuContent
-              align="end"
-              sideOffset={4}
-              className="min-w-0 w-max whitespace-nowrap rounded-[5px] border-2 border-sidebar-border bg-popover p-1 font-heading text-popover-foreground shadow-md"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <DropdownMenuItem onClick={onQuickCreateMarkdown}>
-                <FilePlus className="mr-2 size-4" />
-                Create File
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onQuickUploadFile}>
-                <FileBraces className="mr-2 size-4" />
-                Upload File
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className={workspaceIconActionClassName}
+                aria-label="Create folder"
+                onClick={onCreateFolder}
+              >
+                <FolderPlus className="size-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Create folder</TooltipContent>
+          </Tooltip>
         </SidebarMenuItem>
       ) : null}
-      {workspaceActionsAvailable && selected && selectedId ? (
-        <SidebarMenuItem className="w-auto shrink-0">
-          <DropdownMenu
-            onOpenChange={(open) => {
-              onWorkspaceMenuOpenChange?.(open);
-            }}
-          >
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    aria-label="Workspace actions"
-                    className={cn(
-                      workspaceNeutralChipClassName,
-                      "inline-flex w-9 min-w-9 shrink-0 items-center justify-center px-0"
-                    )}
-                  >
-                    <MoreHorizontal className="size-4 shrink-0 text-muted-foreground" />
-                  </Button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" align="end">
-                Workspace actions
-              </TooltipContent>
-            </Tooltip>
-            <DropdownMenuContent
-              align="end"
-              sideOffset={4}
-              className="min-w-0 w-max whitespace-nowrap rounded-[5px] border-2 border-sidebar-border bg-popover p-1 font-heading text-popover-foreground shadow-md"
-              onClick={(e) => e.stopPropagation()}
+      <SidebarMenuItem className="w-auto shrink-0">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className={workspaceIconActionClassName}
+              aria-label="Upload file"
+              onClick={onUploadFile}
             >
-              <DropdownMenuItem
-                onClick={() => onCreateFile(selectedId, null)}
-              >
-                <FilePlus className="mr-2 size-4" />
-                Create File
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onUploadFile(selectedId, null)}
-              >
-                <FileBraces className="mr-2 size-4" />
-                Upload File
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onAddFolder(selectedId, null)}
-              >
-                <FolderIcon className="mr-2 size-4" />
-                Create Folder
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onRenameWorkspace(selectedId, selected.name)}
-              >
-                <Pencil className="mr-2 size-4" />
-                Rename
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </SidebarMenuItem>
-      ) : null}
+              <Upload className="size-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Upload file</TooltipContent>
+        </Tooltip>
+      </SidebarMenuItem>
+      <SidebarMenuItem className="w-auto shrink-0">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className={workspaceIconActionClassName}
+              aria-label="Create file"
+              onClick={onCreateFile}
+            >
+              <FilePlus className="size-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Create file</TooltipContent>
+        </Tooltip>
+      </SidebarMenuItem>
     </SidebarMenu>
   );
 }

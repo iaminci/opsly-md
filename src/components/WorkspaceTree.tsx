@@ -25,6 +25,7 @@ import {
   FileBraces,
   FilePlus,
   Layers,
+  Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -39,6 +40,79 @@ import {
   isTreeDrag,
   setTreeDocumentDragData,
 } from "@/lib/workspace-tree-drag";
+import { InlineTreeCreateRow } from "@/components/InlineTreeCreateRow";
+
+export type PendingTreeCreate =
+  | {
+      type: "folder" | "file";
+      workspaceId: string;
+      parentFolderId: string | null;
+    }
+  | {
+      type: "workspace";
+      inlineTarget: "switcher-dropdown";
+    };
+
+export type PendingTreeRename =
+  | {
+      type: "file";
+      id: string;
+      workspaceId: string;
+      folderId: string | null;
+      initialName: string;
+    }
+  | {
+      type: "folder";
+      id: string;
+      workspaceId: string;
+      parentFolderId: string | null;
+      initialName: string;
+    }
+  | {
+      type: "workspace";
+      id: string;
+      initialName: string;
+      inlineTarget: "tree" | "switcher-dropdown";
+    };
+
+function matchesPendingTreeCreate(
+  pending: PendingTreeCreate | null | undefined,
+  workspaceId: string,
+  parentFolderId: string | null,
+  type: "folder" | "file"
+) {
+  return (
+    pending?.type === type &&
+    "workspaceId" in pending &&
+    pending.workspaceId === workspaceId &&
+    pending.parentFolderId === parentFolderId
+  );
+}
+
+function matchesPendingTreeRenameFile(
+  pending: PendingTreeRename | null | undefined,
+  documentId: string
+) {
+  return pending?.type === "file" && pending.id === documentId;
+}
+
+function matchesPendingTreeRenameFolder(
+  pending: PendingTreeRename | null | undefined,
+  folderId: string
+) {
+  return pending?.type === "folder" && pending.id === folderId;
+}
+
+function matchesPendingTreeRenameWorkspace(
+  pending: PendingTreeRename | null | undefined,
+  workspaceId: string
+) {
+  return (
+    pending?.type === "workspace" &&
+    pending.id === workspaceId &&
+    pending.inlineTarget === "tree"
+  );
+}
 
 /** Compact hit target for dropping into empty workspace / folder rows. */
 const EMPTY_TREE_DROP_ZONE_CLASS = "min-h-4 py-0";
@@ -58,15 +132,48 @@ export const TREE_DRAG_TARGET_SECTION = cn(
   "rounded-md border-2 border-[var(--tree-drag-target-border)] transition-colors duration-150"
 );
 
-/** Workspace name strip (tree rows) — borderless; name, chevron, and Layers use foreground when accent/path-highlighted. */
+/** Workspace name strip when the open document lives in this workspace. */
 const WORKSPACE_TAB_CORAL_PILL = cn(
-  "!flex !min-h-8 !min-w-0 !flex-1 !items-start !gap-2 !rounded-md !border-0 !bg-transparent !py-1 !pl-3 !pr-0 !text-left !font-heading !font-bold !text-primary !shadow-none !outline-none !ring-0 !transition-colors focus-visible:!ring-0 focus-visible:!ring-ring"
+  "!flex !min-h-8 !min-w-0 !flex-1 !items-start !gap-2 !rounded-md !border-0 !bg-transparent !py-1 !pl-[3px] !pr-0 !text-left !font-heading !font-bold !text-primary !shadow-none !outline-none !ring-0 !transition-colors focus-visible:!ring-0 focus-visible:!ring-ring"
 );
 
 /** Inactive workspace row — label uses muted (icons override when path-highlighted). */
 const WORKSPACE_TAB_MUTED_PILL = cn(
-  "!flex !min-h-8 !min-w-0 !flex-1 !items-start !gap-2 !rounded-md !border-0 !bg-transparent !py-1 !pl-3 !pr-0 !text-left !font-heading !font-normal !text-muted-foreground !shadow-none !outline-none !ring-0 !transition-colors hover:!text-primary-hover"
+  "!flex !min-h-8 !min-w-0 !flex-1 !items-start !gap-2 !rounded-md !border-0 !bg-transparent !py-1 !pl-[3px] !pr-0 !text-left !font-heading !font-normal !text-muted-foreground !shadow-none !outline-none !ring-0 !transition-colors hover:!text-primary-hover"
 );
+
+const TREE_ROW_SELECTED = "bg-sidebar-accent text-primary";
+
+/** Guide lines on the path from workspace to the open document. */
+const TREE_GUIDE_ACTIVE_PATH = "tree-guide-entry--active-path";
+
+function treeDropSpineClass() {
+  return "border-l-2 border-[color:var(--sidebar-guide)] pb-0.5 pt-0 tree-drop-with-branches";
+}
+
+function TreeGuideEntry({
+  children,
+  className,
+  guide = true,
+  activePath = false,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  guide?: boolean;
+  activePath?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        guide && "tree-guide-entry",
+        guide && activePath && TREE_GUIDE_ACTIVE_PATH,
+        className
+      )}
+    >
+      {children}
+    </div>
+  );
+}
 
 function useClearDragStateOnDragEnd(setDragOver: (v: boolean) => void) {
   useEffect(() => {
@@ -170,8 +277,7 @@ interface WorkspaceTreeProps {
   documents: (workspaceId: string, folderId: string | null) => Document[];
   currentId: string | null;
   selectedWorkspaceId: string | null;
-  /** True while the ⋯ workspace menu in the switcher is open (single-workspace view). */
-  workspaceSwitcherMenuOpen?: boolean;
+  workspacesEnabled?: boolean;
   onSelectDocument: (doc: Document) => void;
   onDeleteDocument: (id: string, title: string) => void;
   onAddWorkspace: () => void;
@@ -191,6 +297,26 @@ interface WorkspaceTreeProps {
   getFoldersFlat: (workspaceId: string) => Folder[];
   /** Single-workspace view: highlight the switcher chip when the workspace root is the drop target. */
   onWorkspaceDragTargetChange?: (active: boolean) => void;
+  pendingTreeCreate?: PendingTreeCreate | null;
+  onPendingTreeCreateSubmit?: (name: string) => void | Promise<void>;
+  onPendingTreeCreateCancel?: () => void;
+  pendingTreeRename?: PendingTreeRename | null;
+  onPendingTreeRenameSubmit?: (name: string) => void | Promise<void>;
+  onPendingTreeRenameCancel?: () => void;
+  treeMultiSelect?: TreeMultiSelectConfig | null;
+  onTreeExpansionSnapshot?: (snapshot: {
+    workspaceIds: string[];
+    folderIds: string[];
+  }) => void;
+}
+
+export interface TreeMultiSelectConfig {
+  selectedDocumentIds: Set<string>;
+  selectedFolderIds: Set<string>;
+  onDocumentClick: (doc: Document, event: React.MouseEvent) => void;
+  onFolderClick: (folder: Folder, workspaceId: string, event: React.MouseEvent) => void;
+  onClearSelection: () => void;
+  onFolderNormalClick: (folder: Folder) => void;
 }
 
 export function WorkspaceTree({
@@ -199,7 +325,7 @@ export function WorkspaceTree({
   documents,
   currentId,
   selectedWorkspaceId,
-  workspaceSwitcherMenuOpen = false,
+  workspacesEnabled = true,
   onSelectDocument,
   onDeleteDocument,
   onAddWorkspace,
@@ -216,46 +342,66 @@ export function WorkspaceTree({
   flatDocuments,
   getFoldersFlat,
   onWorkspaceDragTargetChange,
+  pendingTreeCreate = null,
+  onPendingTreeCreateSubmit,
+  onPendingTreeCreateCancel,
+  pendingTreeRename = null,
+  onPendingTreeRenameSubmit,
+  onPendingTreeRenameCancel,
+  treeMultiSelect = null,
+  onTreeExpansionSnapshot,
 }: WorkspaceTreeProps) {
   void onAddWorkspace;
+  const effectiveSelectedWorkspaceId = workspacesEnabled
+    ? selectedWorkspaceId
+    : workspaces[0]?.id ?? "default";
   const workspaceIds = useMemo(
     () => workspaces.map((w) => w.id),
     [workspaces]
   );
+  const workspaceIdsKey = workspaceIds.join("\0");
 
-  const [expandedWorkspaces, setExpandedWorkspaces] = useState<string[]>(() => {
-    if (typeof window === "undefined" || workspaceIds.length === 0) return workspaceIds;
-    try {
-      const stored = localStorage.getItem(EXPANDED_WORKSPACES_KEY);
-      if (!stored) return workspaceIds;
-      const parsed = JSON.parse(stored) as string[];
-      const restored = workspaceIds.filter((id) => parsed.includes(id));
-      return restored.length > 0 ? restored : workspaceIds;
-    } catch {
-      return workspaceIds;
-    }
-  });
-
-  const [expandedFolders, setExpandedFolders] = useState<string[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const stored = localStorage.getItem(EXPANDED_FOLDERS_KEY);
-      return stored ? (JSON.parse(stored) as string[]) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [expandedWorkspaces, setExpandedWorkspaces] = useState<string[]>([]);
+  const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
+  const [expansionHydrated, setExpansionHydrated] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    try {
+      const storedFolders = localStorage.getItem(EXPANDED_FOLDERS_KEY);
+      if (storedFolders) {
+        setExpandedFolders(JSON.parse(storedFolders) as string[]);
+      }
+      if (workspaceIds.length > 0) {
+        const storedWorkspaces = localStorage.getItem(EXPANDED_WORKSPACES_KEY);
+        if (storedWorkspaces) {
+          const parsed = JSON.parse(storedWorkspaces) as string[];
+          setExpandedWorkspaces(workspaceIds.filter((id) => parsed.includes(id)));
+        }
+      }
+    } catch {
+      // ignore invalid storage
+    }
+    setExpansionHydrated(true);
+  }, [workspaceIdsKey, workspaceIds]);
+
+  useEffect(() => {
+    if (!expansionHydrated || typeof window === "undefined") return;
     const toSave = expandedWorkspaces.filter((id) => workspaceIds.includes(id));
     localStorage.setItem(EXPANDED_WORKSPACES_KEY, JSON.stringify(toSave));
-  }, [expandedWorkspaces, workspaceIds]);
+  }, [expandedWorkspaces, workspaceIds, expansionHydrated]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!expansionHydrated || typeof window === "undefined") return;
     localStorage.setItem(EXPANDED_FOLDERS_KEY, JSON.stringify(expandedFolders));
-  }, [expandedFolders]);
+  }, [expandedFolders, expansionHydrated]);
+
+  useEffect(() => {
+    onTreeExpansionSnapshot?.({
+      workspaceIds: expandedWorkspaces,
+      folderIds: expandedFolders,
+    });
+  }, [expandedWorkspaces, expandedFolders, onTreeExpansionSnapshot]);
 
   const handleWorkspaceValueChange = useCallback(
     (value: string[]) => {
@@ -286,13 +432,52 @@ export function WorkspaceTree({
     );
   }, []);
 
-  /** When the selected document lives inside a folder, expand the workspace and folder path so it is visible. */
+  const handleMoveFolderWithExpand = useCallback(
+    (folderId: string, workspaceId: string, parentFolderId: string | null) => {
+      ensureWorkspaceExpanded(workspaceId);
+      if (parentFolderId) ensureFolderExpanded(parentFolderId);
+      onMoveFolder(folderId, workspaceId, parentFolderId);
+    },
+    [ensureWorkspaceExpanded, ensureFolderExpanded, onMoveFolder]
+  );
+
+  useEffect(() => {
+    if (!pendingTreeCreate || pendingTreeCreate.type === "workspace") return;
+    ensureWorkspaceExpanded(pendingTreeCreate.workspaceId);
+    if (pendingTreeCreate.parentFolderId) {
+      ensureFolderExpanded(pendingTreeCreate.parentFolderId);
+    }
+  }, [pendingTreeCreate, ensureWorkspaceExpanded, ensureFolderExpanded]);
+
+  useEffect(() => {
+    if (!pendingTreeRename) return;
+    if (pendingTreeRename.type === "file") {
+      ensureWorkspaceExpanded(pendingTreeRename.workspaceId);
+      if (pendingTreeRename.folderId) {
+        ensureFolderExpanded(pendingTreeRename.folderId);
+      }
+      return;
+    }
+    if (pendingTreeRename.type === "folder") {
+      ensureWorkspaceExpanded(pendingTreeRename.workspaceId);
+      if (pendingTreeRename.parentFolderId) {
+        ensureFolderExpanded(pendingTreeRename.parentFolderId);
+      }
+      return;
+    }
+    if (pendingTreeRename.inlineTarget === "tree") {
+      ensureWorkspaceExpanded(pendingTreeRename.id);
+    }
+  }, [pendingTreeRename, ensureWorkspaceExpanded, ensureFolderExpanded]);
+
+  /** Reveal the active document without collapsing anything the user already expanded. */
   useEffect(() => {
     if (!currentId) return;
     const doc = flatDocuments.find((d) => d.id === currentId);
     if (!doc) return;
     ensureWorkspaceExpanded(doc.workspaceId);
     if (!doc.folderId) return;
+
     const folderList = getFoldersFlat(doc.workspaceId);
     const idsToExpand: string[] = [];
     let fid: string | null = doc.folderId;
@@ -301,30 +486,25 @@ export function WorkspaceTree({
       const f = folderList.find((x) => x.id === fid);
       fid = f?.parentFolderId ?? null;
     }
+
     setExpandedFolders((prev) => {
       const next = new Set([...prev, ...idsToExpand]);
-      return Array.from(next);
+      return next.size === prev.length ? prev : Array.from(next);
     });
   }, [currentId, flatDocuments, getFoldersFlat, ensureWorkspaceExpanded]);
 
+  /** Auto-expand newly added workspaces only (do not expand every workspace on re-render). */
   useEffect(() => {
-    if (typeof window === "undefined" || workspaceIds.length === 0) return;
-    let parsed: string[] = [];
-    try {
-      const stored = localStorage.getItem(EXPANDED_WORKSPACES_KEY);
-      if (stored) parsed = JSON.parse(stored) as string[];
-    } catch {
-      /* ignore */
-    }
+    if (!expansionHydrated || workspaceIds.length === 0) return;
     setExpandedWorkspaces((prev) => {
-      const restored = workspaceIds.filter((id) => parsed.includes(id));
-      const newIds = workspaceIds.filter((id) => !parsed.includes(id));
-      if (restored.length > 0 || newIds.length > 0) {
-        return [...restored, ...newIds];
+      const validPrev = prev.filter((id) => workspaceIds.includes(id));
+      const added = workspaceIds.filter((id) => !validPrev.includes(id));
+      if (added.length === 0) {
+        return validPrev.length === prev.length ? prev : validPrev;
       }
-      return prev.length > 0 ? prev : workspaceIds;
+      return [...validPrev, ...added];
     });
-  }, [workspaceIds]);
+  }, [expansionHydrated, workspaceIdsKey, workspaceIds]);
 
   const workspaceValue = expandedWorkspaces.filter((id) => workspaceIds.includes(id));
 
@@ -360,9 +540,9 @@ export function WorkspaceTree({
     getFolders: folders,
     getDocuments: documents,
     currentId,
-    selectedWorkspaceId,
-    workspaceSwitcherMenuOpen,
-    suppressDocHighlights: treeActionMenuOpen || workspaceSwitcherMenuOpen,
+    selectedWorkspaceId: effectiveSelectedWorkspaceId,
+    workspacesEnabled,
+    suppressDocHighlights: treeActionMenuOpen,
     treeReorderDragActive,
     onTreeMenuOpenChange: setTreeActionMenuOpen,
     onSelectDocument,
@@ -371,7 +551,7 @@ export function WorkspaceTree({
     onAddFile,
     onUploadFile,
     onMoveDocument,
-    onMoveFolder,
+    onMoveFolder: handleMoveFolderWithExpand,
     onRenameWorkspace,
     onDeleteWorkspace,
     onRenameFolder,
@@ -380,6 +560,13 @@ export function WorkspaceTree({
     ensureWorkspaceExpanded,
     ensureFolderExpanded,
     onWorkspaceDragTargetChange,
+    pendingTreeCreate,
+    onPendingTreeCreateSubmit,
+    onPendingTreeCreateCancel,
+    pendingTreeRename,
+    onPendingTreeRenameSubmit,
+    onPendingTreeRenameCancel,
+    treeMultiSelect,
   });
 
   const treeSections = workspaces.map((ws, i) => (
@@ -390,7 +577,7 @@ export function WorkspaceTree({
     />
   ));
 
-  if (selectedWorkspaceId) {
+  if (effectiveSelectedWorkspaceId) {
     return (
       <div
         key={workspaceIds.join(",")}
@@ -407,7 +594,7 @@ export function WorkspaceTree({
       key={workspaceIds.join(",")}
       value={workspaceValue}
       onValueChange={handleWorkspaceValueChange}
-      className="flex w-full max-w-full flex-col gap-0"
+      className="flex w-full max-w-full flex-col gap-1"
     >
       {treeSections}
     </Accordion>
@@ -424,7 +611,7 @@ interface WorkspaceSectionProps {
   getDocuments: (workspaceId: string, folderId: string | null) => Document[];
   currentId: string | null;
   selectedWorkspaceId: string | null;
-  workspaceSwitcherMenuOpen: boolean;
+  workspacesEnabled: boolean;
   onSelectDocument: (doc: Document) => void;
   onDeleteDocument: (id: string, title: string) => void;
   onAddFolder: (workspaceId: string, parentFolderId: string | null) => void;
@@ -445,6 +632,13 @@ interface WorkspaceSectionProps {
   /** All-workspaces accordion: extra space below expanded sections (skipped for last item). */
   isLastWorkspace?: boolean;
   onWorkspaceDragTargetChange?: (active: boolean) => void;
+  pendingTreeCreate?: PendingTreeCreate | null;
+  onPendingTreeCreateSubmit?: (name: string) => void | Promise<void>;
+  onPendingTreeCreateCancel?: () => void;
+  pendingTreeRename?: PendingTreeRename | null;
+  onPendingTreeRenameSubmit?: (name: string) => void | Promise<void>;
+  onPendingTreeRenameCancel?: () => void;
+  treeMultiSelect?: TreeMultiSelectConfig | null;
 }
 
 function WorkspaceSection({
@@ -457,7 +651,7 @@ function WorkspaceSection({
   getDocuments,
   currentId,
   selectedWorkspaceId,
-  workspaceSwitcherMenuOpen,
+  workspacesEnabled,
   suppressDocHighlights,
   treeReorderDragActive,
   onTreeMenuOpenChange,
@@ -477,6 +671,13 @@ function WorkspaceSection({
   onRenameDocument,
   isLastWorkspace = false,
   onWorkspaceDragTargetChange,
+  pendingTreeCreate = null,
+  onPendingTreeCreateSubmit,
+  onPendingTreeCreateCancel,
+  pendingTreeRename = null,
+  onPendingTreeRenameSubmit,
+  onPendingTreeRenameCancel,
+  treeMultiSelect = null,
 }: WorkspaceSectionProps) {
   const [wsDragOver, setWsDragOver] = useState(false);
   const [wsContentDragOver, setWsContentDragOver] = useState(false);
@@ -485,23 +686,25 @@ function WorkspaceSection({
   useClearDragStateOnDragEnd(setWsDragOver);
   useClearDragStateOnDragEnd(setWsContentDragOver);
 
+  const showPendingWorkspaceRename = matchesPendingTreeRenameWorkspace(
+    pendingTreeRename,
+    workspace.id
+  );
+
   const folderIds = folders.map((f) => f.id);
   const workspaceDragTarget = wsDragOver || wsContentDragOver;
   const docActiveInWorkspace =
     !suppressDocHighlights &&
     containsActiveDoc(workspace.id, null, currentId, getDocuments, getFolders);
   const workspaceRowActive =
-    docActiveInWorkspace ||
-    workspaceMenuOpen ||
-    (workspaceSwitcherMenuOpen && selectedWorkspaceId === workspace.id);
+    docActiveInWorkspace || workspaceMenuOpen;
 
   /** Open document: highlight only workspace/folder icons on the path — not labels or the file row. */
   const openFileInTree = Boolean(currentId) && !suppressDocHighlights;
   const workspaceIconPrimaryOnly =
     openFileInTree &&
     docActiveInWorkspace &&
-    !workspaceMenuOpen &&
-    !(workspaceSwitcherMenuOpen && selectedWorkspaceId === workspace.id);
+    !workspaceMenuOpen;
   const workspaceFullRowAccent = workspaceRowActive && !workspaceIconPrimaryOnly;
   const workspaceShowPill = workspaceFullRowAccent || workspaceDragTarget;
 
@@ -536,6 +739,20 @@ function WorkspaceSection({
 
   const hasTreeItems = folders.length > 0 || documents.length > 0;
   const hideWorkspaceHeader = selectedWorkspaceId === workspace.id;
+  const showPendingFolder = matchesPendingTreeCreate(
+    pendingTreeCreate,
+    workspace.id,
+    null,
+    "folder"
+  );
+  const showPendingFile = matchesPendingTreeCreate(
+    pendingTreeCreate,
+    workspace.id,
+    null,
+    "file"
+  );
+  const hasVisibleTreeContent =
+    hasTreeItems || showPendingFolder || showPendingFile;
 
   useEffect(() => {
     if (!hideWorkspaceHeader) return;
@@ -559,19 +776,40 @@ function WorkspaceSection({
 
   const workspaceTreeInner = (
     <>
+      {showPendingFolder && onPendingTreeCreateSubmit && onPendingTreeCreateCancel ? (
+        <TreeGuideEntry>
+          <InlineTreeCreateRow
+            type="folder"
+            showChevron
+            onSubmit={onPendingTreeCreateSubmit}
+            onCancel={onPendingTreeCreateCancel}
+          />
+        </TreeGuideEntry>
+      ) : null}
+      {showPendingFile && onPendingTreeCreateSubmit && onPendingTreeCreateCancel ? (
+        <TreeGuideEntry>
+          <InlineTreeCreateRow
+            type="file"
+            initialValue="Untitled"
+            onSubmit={onPendingTreeCreateSubmit}
+            onCancel={onPendingTreeCreateCancel}
+          />
+        </TreeGuideEntry>
+      ) : null}
       {folders.length > 0 && (
         <Accordion
           type="multiple"
-          key={folderIds.join(",")}
+          key={`root:${folderIds.join(",")}`}
           value={folderIds.filter((id) => expandedFolders.includes(id))}
           onValueChange={(v) => onExpandedFoldersChange(null, folderIds, v)}
           className="flex w-full flex-col gap-0"
         >
           {folders.map((folder) => (
             <FolderItem
+              key={folder.id}
+              showTreeGuide
               expandedFolders={expandedFolders}
               onExpandedFoldersChange={onExpandedFoldersChange}
-              key={folder.id}
               folder={folder}
               workspaceId={workspace.id}
               getFolders={getFolders}
@@ -592,6 +830,13 @@ function WorkspaceSection({
               onRenameFolder={onRenameFolder}
               onDeleteFolder={onDeleteFolder}
               onRenameDocument={onRenameDocument}
+              pendingTreeCreate={pendingTreeCreate}
+              onPendingTreeCreateSubmit={onPendingTreeCreateSubmit}
+              onPendingTreeCreateCancel={onPendingTreeCreateCancel}
+              pendingTreeRename={pendingTreeRename}
+              onPendingTreeRenameSubmit={onPendingTreeRenameSubmit}
+              onPendingTreeRenameCancel={onPendingTreeRenameCancel}
+              treeMultiSelect={treeMultiSelect}
               clearAncestorDropHighlights={() => {
                 setWsContentDragOver(false);
                 setWsDragOver(false);
@@ -601,20 +846,27 @@ function WorkspaceSection({
         </Accordion>
       )}
       {documents.map((doc) => (
-        <FileItem
+        <TreeGuideEntry
           key={doc.id}
-          doc={doc}
-          isActive={currentId === doc.id}
-          suppressDocHighlights={suppressDocHighlights}
-          treeReorderDragActive={treeReorderDragActive}
-          treeGuideInset={!hideWorkspaceHeader}
-          onTreeMenuOpenChange={onTreeMenuOpenChange}
-          onSelect={() => onSelectDocument(doc)}
-          onDelete={() => onDeleteDocument(doc.id, doc.title)}
-          onRename={() => onRenameDocument(doc.id, doc.title)}
-        />
+          activePath={openFileInTree && currentId === doc.id}
+        >
+          <FileItem
+            doc={doc}
+            isActive={currentId === doc.id}
+            suppressDocHighlights={suppressDocHighlights}
+            treeReorderDragActive={treeReorderDragActive}
+            onTreeMenuOpenChange={onTreeMenuOpenChange}
+            onSelect={() => onSelectDocument(doc)}
+            onDelete={() => onDeleteDocument(doc.id, doc.title)}
+            onRename={() => onRenameDocument(doc.id, doc.title)}
+            pendingTreeRename={pendingTreeRename}
+            onPendingTreeRenameSubmit={onPendingTreeRenameSubmit}
+            onPendingTreeRenameCancel={onPendingTreeRenameCancel}
+            treeMultiSelect={treeMultiSelect}
+          />
+        </TreeGuideEntry>
       ))}
-      {hideWorkspaceHeader && !hasTreeItems && (
+      {hideWorkspaceHeader && !hasVisibleTreeContent && (
         <div className="flex min-h-[min(50vh,12rem)] w-full items-center justify-center px-3 py-6">
           <p className="text-center font-mono text-sm text-muted-foreground" aria-live="polite">
             Nothing to show
@@ -624,13 +876,19 @@ function WorkspaceSection({
     </>
   );
 
+  const showDropSpine =
+    hasTreeItems || showPendingFolder || showPendingFile;
+
   const dropAreaClassName = cn(
     "flex flex-col gap-0.5",
-    !hideWorkspaceHeader && "ml-2.5 pl-1",
-    hasTreeItems
-      ? "border-l-2 border-[color:var(--sidebar-guide)] pb-0.5 pt-0"
+    !hideWorkspaceHeader && "ml-2.5",
+    showDropSpine && "pl-1",
+    showDropSpine
+      ? treeDropSpineClass()
       : EMPTY_TREE_DROP_ZONE_CLASS,
-    workspaceDragTarget && hasTreeItems && "!border-l-[var(--tree-drag-target-border)]"
+    workspaceDragTarget &&
+      showDropSpine &&
+      "!border-l-[var(--tree-drag-target-border)] tree-drop-with-branches--drag-target"
   );
 
   if (hideWorkspaceHeader) {
@@ -671,7 +929,7 @@ function WorkspaceSection({
           triggerVariant="section"
           isActive={workspaceShowPill}
           hideTriggerChevron
-          className="group/ws hover:no-underline !border-0 !bg-transparent !p-0 !pl-1 !pr-0 !shadow-none hover:!bg-transparent"
+          className="group/ws hover:no-underline !border-0 !bg-transparent !p-0 !pl-0 !pr-0 !shadow-none hover:!bg-transparent"
           onDragOver={handleWsDragOver}
           onDragLeave={handleWsDragLeave}
           onDrop={handleWsDrop}
@@ -680,7 +938,7 @@ function WorkspaceSection({
             className={cn(
               workspaceDragTarget
                 ? cn(
-                    "!flex !min-h-8 !min-w-0 !flex-1 !items-start !gap-2 !py-1 !pl-3 !pr-0 !text-left !shadow-none !outline-none !ring-0",
+                    "!flex !min-h-8 !min-w-0 !flex-1 !items-start !gap-2 !py-1 !pl-[3px] !pr-0 !text-left !shadow-none !outline-none !ring-0",
                     TREE_DRAG_TARGET_PILL
                   )
                 : workspaceFullRowAccent
@@ -693,31 +951,46 @@ function WorkspaceSection({
                 "mt-0.5 size-4 shrink-0 transition-colors",
                 workspaceDragTarget
                   ? "text-[var(--tree-drag-target-fg)]"
-                  : workspaceShowPill || workspaceIconPrimaryOnly
-                    ? "text-foreground"
-                    : "text-muted-foreground",
+                  : workspaceIconPrimaryOnly
+                    ? "text-primary"
+                    : workspaceShowPill
+                      ? "text-foreground"
+                      : "text-muted-foreground",
                 "group-hover/ws:text-primary-hover"
               )}
             />
-            <span
-              className={cn(
-                "min-w-0 flex-1 text-left font-heading text-lg leading-snug transition-colors line-clamp-2 break-words",
-                workspaceDragTarget && "font-semibold text-[var(--tree-drag-target-fg)]",
-                workspaceIconPrimaryOnly &&
-                  !workspaceShowPill &&
-                  "!text-foreground",
-                "group-hover/ws:!text-primary-hover"
-              )}
-            >
-              {workspace.name}
-            </span>
+            {showPendingWorkspaceRename &&
+            onPendingTreeRenameSubmit &&
+            onPendingTreeRenameCancel ? (
+              <InlineTreeCreateRow
+                type="folder"
+                showIcon={false}
+                rename
+                initialValue={workspace.name}
+                onSubmit={onPendingTreeRenameSubmit}
+                onCancel={onPendingTreeRenameCancel}
+              />
+            ) : (
+              <span
+                className={cn(
+                  "min-w-0 flex-1 text-left font-heading text-lg leading-snug transition-colors line-clamp-2 break-words",
+                  workspaceDragTarget && "font-semibold text-[var(--tree-drag-target-fg)]",
+                  workspaceIconPrimaryOnly &&
+                    !workspaceShowPill &&
+                    "!text-foreground",
+                  "group-hover/ws:!text-primary-hover"
+                )}
+              >
+                {workspace.name}
+              </span>
+            )}
             <div className="group/action ml-1 flex h-5 shrink-0 items-center justify-end gap-1">
               <ChevronRight
                 aria-hidden
                 className={cn(
                   "pointer-events-none size-[1.125rem] shrink-0 transition-[transform,color] duration-200",
                   workspaceDragTarget || workspaceShowPill ? "text-inherit" : "text-muted-foreground",
-                  "group-hover/ws:text-primary-hover",
+                  "group-hover/ws:text-foreground",
                   "group-data-[state=open]/ws:rotate-90",
                 )}
               />
@@ -745,9 +1018,9 @@ function WorkspaceSection({
                         tabIndex={0}
                         aria-label="Workspace actions"
                         className={cn(
-                          "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary-hover focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
+                          "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
                           workspaceShowPill ? "text-foreground" : "text-muted-foreground",
-                          "group-hover/ws:text-primary-hover"
+                          "group-hover/ws:text-foreground"
                         )}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") e.preventDefault();
@@ -772,23 +1045,27 @@ function WorkspaceSection({
                     Create File
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onUploadFile(workspace.id, null)}>
-                    <FileBraces className="mr-2 size-4" />
+                    <Upload className="mr-2 size-4" />
                     Upload File
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onAddFolder(workspace.id, null)}>
                     <FolderIcon className="mr-2 size-4" />
                     Create Folder
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onRenameWorkspace(workspace.id, workspace.name)}>
-                    <Pencil className="mr-2 size-4" />
-                    Rename
-                  </DropdownMenuItem>
-                  {!selectedWorkspaceId && (
-                    <DropdownMenuItem variant="destructive" onClick={() => onDeleteWorkspace(workspace.id, workspace.name)}>
-                      <Trash2 className="mr-2 size-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  )}
+                  {workspacesEnabled ? (
+                    <>
+                      <DropdownMenuItem onClick={() => onRenameWorkspace(workspace.id, workspace.name)}>
+                        <Pencil className="mr-2 size-4" />
+                        Rename
+                      </DropdownMenuItem>
+                      {!selectedWorkspaceId && (
+                        <DropdownMenuItem variant="destructive" onClick={() => onDeleteWorkspace(workspace.id, workspace.name)}>
+                          <Trash2 className="mr-2 size-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      )}
+                    </>
+                  ) : null}
                 </DropdownMenuContent>
               </DropdownMenu>
               </div>
@@ -909,6 +1186,14 @@ interface FolderItemProps {
   ensureFolderExpanded: (folderId: string) => void;
   /** Clear workspace / parent folder drop highlights when this folder claims the target. */
   clearAncestorDropHighlights?: () => void;
+  pendingTreeCreate?: PendingTreeCreate | null;
+  onPendingTreeCreateSubmit?: (name: string) => void | Promise<void>;
+  onPendingTreeCreateCancel?: () => void;
+  pendingTreeRename?: PendingTreeRename | null;
+  onPendingTreeRenameSubmit?: (name: string) => void | Promise<void>;
+  onPendingTreeRenameCancel?: () => void;
+  treeMultiSelect?: TreeMultiSelectConfig | null;
+  showTreeGuide?: boolean;
 }
 
 function FolderItem({
@@ -935,10 +1220,34 @@ function FolderItem({
   onDeleteFolder,
   onRenameDocument,
   clearAncestorDropHighlights,
+  pendingTreeCreate = null,
+  onPendingTreeCreateSubmit,
+  onPendingTreeCreateCancel,
+  pendingTreeRename = null,
+  onPendingTreeRenameSubmit,
+  onPendingTreeRenameCancel,
+  treeMultiSelect = null,
+  showTreeGuide = false,
 }: FolderItemProps) {
   const subfolders = getFolders(workspaceId, folder.id);
   const docs = getDocuments(workspaceId, folder.id);
   const subfolderIds = subfolders.map((f) => f.id);
+  const showPendingFolderRename = matchesPendingTreeRenameFolder(
+    pendingTreeRename,
+    folder.id
+  );
+  const showPendingFolder = matchesPendingTreeCreate(
+    pendingTreeCreate,
+    workspaceId,
+    folder.id,
+    "folder"
+  );
+  const showPendingFile = matchesPendingTreeCreate(
+    pendingTreeCreate,
+    workspaceId,
+    folder.id,
+    "file"
+  );
 
   const [folderDragOver, setFolderDragOver] = useState(false);
   const [folderContentDragOver, setFolderContentDragOver] = useState(false);
@@ -969,6 +1278,20 @@ function FolderItem({
   const folderIconPrimaryOnly = openFileInTree && docActiveInFolder && !folderMenuOpen;
   const folderFullRowAccent = folderRowActive && !folderIconPrimaryOnly;
   const folderShowPill = folderFullRowAccent || folderDragTarget;
+  const folderMultiSelected = treeMultiSelect?.selectedFolderIds.has(folder.id) ?? false;
+  const folderRowHighlighted = folderShowPill || folderMultiSelected;
+
+  const handleFolderRowClick = (e: React.MouseEvent) => {
+    if (folderDidDragRef.current) return;
+    if (!treeMultiSelect) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      treeMultiSelect.onFolderClick(folder, workspaceId, e);
+      return;
+    }
+    treeMultiSelect.onFolderNormalClick(folder);
+  };
 
   const handleFolderDragOver = (e: React.DragEvent) => {
     if (!isTreeDrag(e)) {
@@ -1004,8 +1327,11 @@ function FolderItem({
   const hasNestedItems = subfolders.length > 0 || docs.length > 0;
 
   const folderActionsRef = useRef<HTMLDivElement>(null);
+  const folderDidDragRef = useRef(false);
 
   const handleFolderDragStart = (e: React.DragEvent) => {
+    folderDidDragRef.current = true;
+    e.stopPropagation();
     e.dataTransfer.setData(DRAG_TYPE_FOLDER, folder.id);
     e.dataTransfer.effectAllowed = "move";
     setTreeDragGhostImage(e, folder.name);
@@ -1018,6 +1344,9 @@ function FolderItem({
     restoreDragSource(e.currentTarget as HTMLElement);
     const box = folderActionsRef.current;
     if (box) box.style.display = "";
+    window.setTimeout(() => {
+      folderDidDragRef.current = false;
+    }, 0);
   };
 
   return (
@@ -1030,53 +1359,66 @@ function FolderItem({
         triggerVariant="tree"
         isActive={folderShowPill}
         hideTriggerChevron
-        className="group/folder min-h-8 hover:no-underline !border-0 !bg-transparent !p-0 !pl-1 !pr-0 !shadow-none hover:!bg-transparent"
+        className="group/folder min-h-8 hover:no-underline !border-0 !bg-transparent !p-0 !pl-0 !pr-0 !shadow-none hover:!bg-transparent"
         onDragOver={handleFolderDragOver}
         onDragLeave={handleFolderDragLeave}
         onDrop={handleFolderDrop}
       >
+        <TreeGuideEntry
+          guide={showTreeGuide}
+          activePath={openFileInTree && docActiveInFolder}
+          className={cn(
+            "flex min-h-8 min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded-md py-0.5 pl-1 pr-0 transition-colors duration-150",
+            folderDragTarget && TREE_DRAG_TARGET_PILL,
+            folderRowHighlighted && !folderDragTarget && TREE_ROW_SELECTED,
+            !folderRowHighlighted && "text-muted-foreground hover:text-foreground"
+          )}
+        >
         <div
           draggable
           onDragStart={handleFolderDragStart}
           onDragEnd={handleFolderDragEnd}
-          className={cn(
-            "flex min-h-8 min-w-0 flex-1 cursor-pointer items-start gap-1.5 rounded-[5px] py-0.5 pl-1 pr-0 transition-colors duration-150",
-            folderDragTarget && TREE_DRAG_TARGET_PILL,
-            folderShowPill ? "opacity-100" : "opacity-[0.85]",
-            folderFullRowAccent &&
-              !folderDragTarget &&
-              "text-foreground hover:text-foreground",
-            folderIconPrimaryOnly &&
-              !folderDragTarget &&
-              "text-foreground hover:text-foreground",
-            !folderShowPill && "text-muted-foreground hover:text-foreground"
-          )}
+          onClick={handleFolderRowClick}
+          className="flex min-h-8 min-w-0 flex-1 items-center gap-1.5"
         >
           <FolderIcon
             className={cn(
-              "mt-0.5 size-4 shrink-0 transition-colors group-hover/folder:!text-primary-hover",
+              "size-4 shrink-0 transition-colors group-hover/folder:text-foreground",
               folderDragTarget
                 ? "text-[var(--tree-drag-target-fg)]"
-                : folderRowActive
-                  ? "text-foreground"
+                : folderRowActive || folderMultiSelected
+                  ? "text-primary"
                   : "text-muted-foreground"
             )}
           />
-          <span
-            className={cn(
-              "min-w-0 flex-1 text-left font-heading text-base leading-snug transition-colors line-clamp-2 break-words",
-              folderDragTarget && "font-semibold text-[var(--tree-drag-target-fg)]",
-              folderRowActive && !folderDragTarget && "!text-foreground",
-              "group-hover/folder:!text-primary-hover"
-            )}
-          >
-            {folder.name}
-          </span>
+          {showPendingFolderRename &&
+          onPendingTreeRenameSubmit &&
+          onPendingTreeRenameCancel ? (
+            <InlineTreeCreateRow
+              type="folder"
+              showIcon={false}
+              rename
+              initialValue={folder.name}
+              onSubmit={onPendingTreeRenameSubmit}
+              onCancel={onPendingTreeRenameCancel}
+            />
+          ) : (
+            <span
+              className={cn(
+                "min-w-0 flex-1 text-left text-sm font-medium leading-snug transition-colors line-clamp-2 break-words",
+                folderDragTarget && "font-semibold text-[var(--tree-drag-target-fg)]",
+                (folderRowActive || folderMultiSelected) && !folderDragTarget && "font-semibold",
+                "group-hover/folder:text-foreground"
+              )}
+            >
+              {folder.name}
+            </span>
+          )}
           <div className="group/action ml-1 flex h-5 shrink-0 items-center justify-end gap-1">
             <ChevronRight
               aria-hidden
               className={cn(
-                "pointer-events-none size-[1.125rem] shrink-0 text-inherit transition-[transform,color] duration-200 group-hover/folder:text-primary-hover",
+                "pointer-events-none size-[1.125rem] shrink-0 text-inherit transition-[transform,color] duration-200 group-hover/folder:text-foreground",
                 "group-data-[state=open]/folder:rotate-90",
               )}
             />
@@ -1105,9 +1447,9 @@ function FolderItem({
                       tabIndex={0}
                       aria-label="Folder actions"
                       className={cn(
-                        "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary-hover focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
+                        "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
                         folderRowActive ? "text-foreground" : "text-muted-foreground",
-                        "group-hover/folder:text-primary-hover"
+                        "group-hover/folder:text-foreground"
                       )}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") e.preventDefault();
@@ -1132,7 +1474,7 @@ function FolderItem({
                   Create File
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onUploadFile(workspaceId, folder.id)}>
-                  <FileBraces className="mr-2 size-4 text-muted" />
+                  <Upload className="mr-2 size-4 text-muted" />
                   Upload File
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onAddFolder(workspaceId, folder.id)}>
@@ -1152,6 +1494,7 @@ function FolderItem({
             </div>
           </div>
         </div>
+        </TreeGuideEntry>
       </AccordionTrigger>
       <AccordionContent className="!p-0">
         <WorkspaceDropArea
@@ -1163,16 +1506,37 @@ function FolderItem({
           onDragTargetActiveChange={handleFolderContentDragTargetChange}
           className={cn(
             "ml-1 flex flex-col gap-0.5 pl-1",
-            hasNestedItems
-              ? "border-l-2 border-[color:var(--sidebar-guide)] pb-0.5 pt-0"
+            hasNestedItems || showPendingFolder || showPendingFile
+              ? treeDropSpineClass()
               : EMPTY_TREE_DROP_ZONE_CLASS,
-            folderDragTarget && "!border-l-[var(--tree-drag-target-border)]"
+            folderDragTarget &&
+              (hasNestedItems || showPendingFolder || showPendingFile) &&
+              "!border-l-[var(--tree-drag-target-border)] tree-drop-with-branches--drag-target"
           )}
         >
+          {showPendingFolder && onPendingTreeCreateSubmit && onPendingTreeCreateCancel ? (
+            <TreeGuideEntry>
+              <InlineTreeCreateRow
+                type="folder"
+                onSubmit={onPendingTreeCreateSubmit}
+                onCancel={onPendingTreeCreateCancel}
+              />
+            </TreeGuideEntry>
+          ) : null}
+          {showPendingFile && onPendingTreeCreateSubmit && onPendingTreeCreateCancel ? (
+            <TreeGuideEntry>
+              <InlineTreeCreateRow
+                type="file"
+                initialValue="Untitled"
+                onSubmit={onPendingTreeCreateSubmit}
+                onCancel={onPendingTreeCreateCancel}
+              />
+            </TreeGuideEntry>
+          ) : null}
           {subfolders.length > 0 && (
             <Accordion
               type="multiple"
-              key={subfolderIds.join(",")}
+              key={`${folder.id}:${subfolderIds.join(",")}`}
               value={subfolderIds.filter((id) => expandedFolders.includes(id))}
               onValueChange={(v) => onExpandedFoldersChange(folder.id, subfolderIds, v)}
               className="flex w-full flex-col gap-0.5"
@@ -1180,6 +1544,7 @@ function FolderItem({
               {subfolders.map((sub) => (
                 <FolderItem
                   key={sub.id}
+                  showTreeGuide
                   expandedFolders={expandedFolders}
                   onExpandedFoldersChange={onExpandedFoldersChange}
                   folder={sub}
@@ -1202,27 +1567,42 @@ function FolderItem({
                   onRenameFolder={onRenameFolder}
                   onDeleteFolder={onDeleteFolder}
                   onRenameDocument={onRenameDocument}
+                  pendingTreeCreate={pendingTreeCreate}
+                  onPendingTreeCreateSubmit={onPendingTreeCreateSubmit}
+                  onPendingTreeCreateCancel={onPendingTreeCreateCancel}
+                  pendingTreeRename={pendingTreeRename}
+                  onPendingTreeRenameSubmit={onPendingTreeRenameSubmit}
+                  onPendingTreeRenameCancel={onPendingTreeRenameCancel}
+                  treeMultiSelect={treeMultiSelect}
                   clearAncestorDropHighlights={() => {
                     setFolderContentDragOver(false);
                     setFolderDragOver(false);
                     clearAncestorDropHighlights?.();
                   }}
                 />
-                ))}
+              ))}
               </Accordion>
             )}
           {docs.map((doc) => (
-            <FileItem
+            <TreeGuideEntry
               key={doc.id}
-              doc={doc}
-              isActive={currentId === doc.id}
-              suppressDocHighlights={suppressDocHighlights}
-              treeReorderDragActive={treeReorderDragActive}
-              onTreeMenuOpenChange={onTreeMenuOpenChange}
-              onSelect={() => onSelectDocument(doc)}
-              onDelete={() => onDeleteDocument(doc.id, doc.title)}
-              onRename={() => onRenameDocument(doc.id, doc.title)}
-            />
+              activePath={openFileInTree && currentId === doc.id}
+            >
+              <FileItem
+                doc={doc}
+                isActive={currentId === doc.id}
+                suppressDocHighlights={suppressDocHighlights}
+                treeReorderDragActive={treeReorderDragActive}
+                onTreeMenuOpenChange={onTreeMenuOpenChange}
+                onSelect={() => onSelectDocument(doc)}
+                onDelete={() => onDeleteDocument(doc.id, doc.title)}
+                onRename={() => onRenameDocument(doc.id, doc.title)}
+                pendingTreeRename={pendingTreeRename}
+                onPendingTreeRenameSubmit={onPendingTreeRenameSubmit}
+                onPendingTreeRenameCancel={onPendingTreeRenameCancel}
+                treeMultiSelect={treeMultiSelect}
+              />
+            </TreeGuideEntry>
           ))}
         </WorkspaceDropArea>
       </AccordionContent>
@@ -1235,30 +1615,35 @@ function FileItem({
   isActive,
   suppressDocHighlights,
   treeReorderDragActive,
-  treeGuideInset = true,
   onTreeMenuOpenChange,
   onSelect,
   onDelete,
   onRename,
+  pendingTreeRename = null,
+  onPendingTreeRenameSubmit,
+  onPendingTreeRenameCancel,
+  treeMultiSelect = null,
 }: {
   doc: Document;
   isActive: boolean;
   suppressDocHighlights: boolean;
   treeReorderDragActive: boolean;
-  /** When the parent drop area has `pl-1`, offset the guide highlight to align with its left border. */
-  treeGuideInset?: boolean;
   onTreeMenuOpenChange: (open: boolean) => void;
   onSelect: () => void;
   onDelete: () => void;
   onRename: () => void;
+  pendingTreeRename?: PendingTreeRename | null;
+  onPendingTreeRenameSubmit?: (name: string) => void | Promise<void>;
+  onPendingTreeRenameCancel?: () => void;
+  treeMultiSelect?: TreeMultiSelectConfig | null;
 }) {
   const displayName = doc.title.trim() || "Untitled";
   const nameTruncated = false;
   const [fileMenuOpen, setFileMenuOpen] = useState(false);
-  const fileLooksSelected = isActive && !suppressDocHighlights;
-  const fileTintPrimary = fileLooksSelected || fileMenuOpen;
-  const showGuideHighlight =
-    fileLooksSelected && !(treeReorderDragActive && fileLooksSelected);
+  const isRenaming = matchesPendingTreeRenameFile(pendingTreeRename, doc.id);
+  const fileMultiSelected = treeMultiSelect?.selectedDocumentIds.has(doc.id) ?? false;
+  const fileLooksSelected =
+    (isActive && !suppressDocHighlights && !isRenaming) || fileMultiSelected;
 
   const fileActionsRef = useRef<HTMLDivElement>(null);
 
@@ -1277,32 +1662,48 @@ function FileItem({
     if (box) box.style.display = "";
   };
 
+  if (
+    isRenaming &&
+    onPendingTreeRenameSubmit &&
+    onPendingTreeRenameCancel
+  ) {
+    return (
+      <div className="flex items-center rounded-md py-0.5 pl-1 pr-1">
+        <InlineTreeCreateRow
+          type="file"
+          rename
+          initialValue={displayName}
+          onSubmit={onPendingTreeRenameSubmit}
+          onCancel={onPendingTreeRenameCancel}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       className={cn(
-        "group/file flex cursor-pointer items-center rounded-md py-0.5 pl-1 pr-0",
-        showGuideHighlight &&
-          "relative before:pointer-events-none before:absolute before:inset-y-0 before:z-[1] before:w-0.5 before:bg-primary",
-        showGuideHighlight &&
-          treeGuideInset &&
-          "before:-left-[calc(0.25rem+2px)]",
-        showGuideHighlight && !treeGuideInset && "before:-left-0.5"
+        "group/file flex min-h-8 cursor-pointer items-center rounded-md py-0.5 pl-1 pr-0 transition-colors hover:bg-sidebar-accent/50",
+        fileLooksSelected && TREE_ROW_SELECTED
       )}
       onClick={(e) => {
-        if (!(e.target as HTMLElement).closest("[data-slot='dropdown-menu-trigger']")) {
-          onSelect();
+        if ((e.target as HTMLElement).closest("[data-slot='dropdown-menu-trigger']")) {
+          return;
         }
+        if (treeMultiSelect && (e.metaKey || e.ctrlKey || e.shiftKey)) {
+          treeMultiSelect.onDocumentClick(doc, e);
+          return;
+        }
+        onSelect();
       }}
     >
       <div
         className={cn(
-          "flex min-h-6 min-w-0 flex-1 items-start gap-2 rounded-[5px] py-0 pl-1 pr-0 transition-colors group-hover/file:!text-primary-hover",
-          fileLooksSelected &&
-            !(treeReorderDragActive && fileLooksSelected) &&
-            "text-primary"
+          "flex min-h-8 min-w-0 flex-1 items-center gap-2 rounded-[5px] py-0 pl-1 pr-0 transition-colors",
+          fileLooksSelected && "font-medium"
         )}
       >
         <Tooltip delayDuration={1000}>
@@ -1310,9 +1711,7 @@ function FileItem({
             <button
               type="button"
               className={cn(
-                "flex min-h-6 min-w-0 flex-1 items-start justify-start gap-2 border-0 bg-transparent text-left text-base font-base transition-colors hover:bg-transparent group-hover/file:!text-primary-hover",
-                fileTintPrimary ? "opacity-100" : "opacity-[0.85]",
-                fileLooksSelected && "font-bold text-primary",
+                "flex min-h-8 min-w-0 flex-1 items-center justify-start gap-2 border-0 bg-transparent text-left text-sm transition-colors hover:bg-transparent",
                 !fileLooksSelected && !fileMenuOpen && "text-muted-foreground",
                 !fileLooksSelected && fileMenuOpen && "text-foreground",
                 nameTruncated && "min-w-0"
@@ -1320,14 +1719,14 @@ function FileItem({
             >
               <FileBraces
                 className={cn(
-                  "mt-0.5 size-4 shrink-0 transition-colors group-hover/file:!text-primary-hover",
-                  fileLooksSelected ? "text-primary" : "text-muted-foreground"
+                  "size-4 shrink-0 transition-colors",
+                  fileLooksSelected ? "text-primary" : "text-muted-foreground group-hover/file:text-foreground"
                 )}
               />
               <span
                 className={cn(
-                  "min-w-0 flex-1 leading-snug line-clamp-2 break-words group-hover/file:!text-primary-hover",
-                  treeReorderDragActive && fileLooksSelected && "font-bold text-primary"
+                  "min-w-0 flex-1 leading-snug line-clamp-2 break-words",
+                  fileLooksSelected && "text-primary"
                 )}
               >
                 {displayName}
@@ -1361,8 +1760,8 @@ function FileItem({
                     tabIndex={0}
                     aria-label="Document actions"
                     className={cn(
-                      "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-destructive/20 hover:text-primary-hover focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
-                      "text-muted-foreground group-hover/file:text-primary-hover"
+                      "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring",
+                      "text-muted-foreground group-hover/file:text-foreground"
                     )}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") e.preventDefault();

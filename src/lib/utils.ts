@@ -19,6 +19,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** Shared neo-brutalist panel shell for sidebar, editor, terminal, etc. */
+export const appCapsuleClassName =
+  "rounded-base border-2 border-border bg-secondary-background shadow-shadow overflow-hidden";
+
 type ClassNameProp<TState = unknown> =
   | string
   | undefined
@@ -77,4 +81,21 @@ export function toMarkdownDownloadFilename(title: string): string {
   const base = title.replace(/\.md$/i, "").trim();
   const stem = (base.replace(/\s+/g, "_") || "document").toLowerCase();
   return `${stem}.md`;
+}
+
+/** Canonical extension for encrypted Opsly documents. */
+export const OPSLY_FILE_EXTENSION = ".opsly";
+
+/** Strip known document extensions from a title or filename stem. */
+export function stripDocumentExtension(name: string): string {
+  return name
+    .replace(/\.(md|opsly|encrypted\.json|txt)$/i, "")
+    .trim();
+}
+
+/** Download name for encrypted Opsly documents. */
+export function toEncryptedDownloadFilename(title: string): string {
+  const base = stripDocumentExtension(title);
+  const stem = (base.replace(/\s+/g, "_") || "document").toLowerCase();
+  return `${stem}${OPSLY_FILE_EXTENSION}`;
 }

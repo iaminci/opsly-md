@@ -8,17 +8,21 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 const GITHUB_URL = "https://github.com/iaminci/opsly-md";
 
 const navLinks = [
-  { href: "/#features", label: "Features" },
   { href: "/roadmap", label: "Roadmap" },
 ] as const;
 
-export function SiteHeader() {
+type SiteHeaderProps = {
+  className?: string;
+};
+
+export function SiteHeader({ className }: SiteHeaderProps) {
   return (
-    <header className="w-full border-b-2 border-border">
+    <header className={cn("w-full border-b-2 border-border", className)}>
       <div className="flex min-h-16 flex-wrap items-center justify-between gap-4 py-3">
         <Link
           href="/"
