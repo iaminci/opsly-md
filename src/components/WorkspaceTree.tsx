@@ -319,6 +319,16 @@ export interface TreeMultiSelectConfig {
   onFolderNormalClick: (folder: Folder) => void;
 }
 
+function hasTreeMultiSelection(
+  treeMultiSelect?: TreeMultiSelectConfig | null,
+): boolean {
+  if (!treeMultiSelect) return false;
+  return (
+    treeMultiSelect.selectedDocumentIds.size > 0 ||
+    treeMultiSelect.selectedFolderIds.size > 0
+  );
+}
+
 export function WorkspaceTree({
   workspaces,
   folders,
@@ -693,14 +703,16 @@ function WorkspaceSection({
 
   const folderIds = folders.map((f) => f.id);
   const workspaceDragTarget = wsDragOver || wsContentDragOver;
+  const suppressOpenDocHighlight =
+    suppressDocHighlights || hasTreeMultiSelection(treeMultiSelect);
   const docActiveInWorkspace =
-    !suppressDocHighlights &&
+    !suppressOpenDocHighlight &&
     containsActiveDoc(workspace.id, null, currentId, getDocuments, getFolders);
   const workspaceRowActive =
     docActiveInWorkspace || workspaceMenuOpen;
 
   /** Open document: highlight only workspace/folder icons on the path — not labels or the file row. */
-  const openFileInTree = Boolean(currentId) && !suppressDocHighlights;
+  const openFileInTree = Boolean(currentId) && !suppressOpenDocHighlight;
   const workspaceIconPrimaryOnly =
     openFileInTree &&
     docActiveInWorkspace &&
@@ -1269,12 +1281,14 @@ function FolderItem({
     [claimDropTarget]
   );
 
+  const suppressOpenDocHighlight =
+    suppressDocHighlights || hasTreeMultiSelection(treeMultiSelect);
   const docActiveInFolder =
-    !suppressDocHighlights &&
+    !suppressOpenDocHighlight &&
     containsActiveDoc(workspaceId, folder.id, currentId, getDocuments, getFolders);
   const folderRowActive = docActiveInFolder || folderMenuOpen;
 
-  const openFileInTree = Boolean(currentId) && !suppressDocHighlights;
+  const openFileInTree = Boolean(currentId) && !suppressOpenDocHighlight;
   const folderIconPrimaryOnly = openFileInTree && docActiveInFolder && !folderMenuOpen;
   const folderFullRowAccent = folderRowActive && !folderIconPrimaryOnly;
   const folderShowPill = folderFullRowAccent || folderDragTarget;
@@ -1643,7 +1657,11 @@ function FileItem({
   const isRenaming = matchesPendingTreeRenameFile(pendingTreeRename, doc.id);
   const fileMultiSelected = treeMultiSelect?.selectedDocumentIds.has(doc.id) ?? false;
   const fileLooksSelected =
-    (isActive && !suppressDocHighlights && !isRenaming) || fileMultiSelected;
+    fileMultiSelected ||
+    (isActive &&
+      !suppressDocHighlights &&
+      !isRenaming &&
+      !hasTreeMultiSelection(treeMultiSelect));
 
   const fileActionsRef = useRef<HTMLDivElement>(null);
 
