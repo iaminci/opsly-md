@@ -81,17 +81,55 @@ export default function Home() {
             aria-labelledby="idea-heading"
           >
             <div className="home-idea__layout">
+              <div className="home-idea__aside">
+                <div
+                  className="home-idea__workspace"
+                  aria-hidden="true"
+                >
+                  <div className="home-idea__tree">
+                    <p className="home-idea__tree-root">OPSLY MD</p>
+                    <ul className="home-idea__tree-list">
+                      <li className="home-idea__tree-folder">
+                        <span className="home-idea__tree-label">projects</span>
+                        <ul>
+                          <li className="home-idea__tree-active">
+                            architecture.md
+                          </li>
+                          <li>decisions.md</li>
+                        </ul>
+                      </li>
+                      <li className="home-idea__tree-folder">
+                        <span className="home-idea__tree-label">notes</span>
+                        <ul>
+                          <li>ideas.md</li>
+                          <li>meeting-notes.md</li>
+                        </ul>
+                      </li>
+                      <li>README.md</li>
+                    </ul>
+                  </div>
+                  <div className="home-idea__doc">
+                    <p className="home-idea__doc-title">Architecture</p>
+                    <p className="home-idea__doc-h2">Overview</p>
+                    <p className="home-idea__doc-body">
+                      The system consists of three main components…
+                    </p>
+                    <p className="home-idea__doc-h2">Decisions</p>
+                    <ul className="home-idea__doc-list">
+                      <li>Keep the workspace simple</li>
+                      <li>Store documents as Markdown</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
               <div className="home-idea__primary">
                 <p className="home-idea__eyebrow">The idea</p>
                 <h2 id="idea-heading" className="home-idea__statement">
-                  Software should get out of the way.
+                  A simple place for your knowledge.
                 </h2>
-              </div>
-              <div className="home-idea__aside">
                 <p className="home-idea__support">
-                  Most tools compete to be the center of your workflow. Opsly MD
-                  is built to step back—a narrow room for text that never asks you
-                  to tend the workspace itself.
+                  Opsly MD brings writing, organization, and Markdown together in
+                  one focused workspace.
                 </p>
               </div>
             </div>
