@@ -13,6 +13,7 @@ All notable updates to Opsly MD will be documented here.
 - math rendering support
 - interactive code blocks
 - hidden field workflow (secure code)
+- document encryption and decryption (passphrase-protected documents)
 - table of contents navigation
 - responsive reading experience
 - browser-based workflow with no account requirement
@@ -22,7 +23,6 @@ All notable updates to Opsly MD will be documented here.
 
 ## Planned
 - expanded secure code block workflows
-- encryption/decryption support
 - full VS Code workspace integration (browse/edit workspaces in VS Code)
 - optional external database persistence and sync
 - improved markdown compatibility
