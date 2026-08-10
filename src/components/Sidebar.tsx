@@ -1240,7 +1240,6 @@ export function Sidebar({
               <SidebarGroupLabel className="sr-only">Files</SidebarGroupLabel>
               <SidebarGroupContent>
                 <WorkspaceActionBar
-                  label={defaultWorkspace?.name ?? "Default"}
                   onCreateFile={handleActionBarCreateFile}
                   onUploadFile={handleActionBarUploadFile}
                   onCreateFolder={handleActionBarCreateFolder}

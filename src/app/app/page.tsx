@@ -1233,7 +1233,7 @@ function AppContent() {
                   aria-controls="document-outline-panel"
                   onClick={() => setRightTocOpen((o) => !o)}
                   className={cn(
-                    "absolute top-1/2 z-30 hidden h-15 w-6 shrink-0 -translate-y-1/2 border border-border bg-background text-primary shadow-none transition-[right,background-color,color] duration-150 ease-linear hover:bg-primary hover:text-background hover:-translate-y-1/2",
+                    "absolute top-1/2 z-30 hidden h-15 w-6 shrink-0 -translate-y-1/2 border-2 border-border bg-background text-primary shadow-none transition-[right,background-color,color] duration-150 ease-linear hover:bg-primary hover:text-background hover:-translate-y-1/2",
                     "print:hidden lg:inline-flex",
                     rightTocOpen
                       ? "right-[calc(17rem+0.5rem-0.75rem)]"

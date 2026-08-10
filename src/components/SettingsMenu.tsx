@@ -3,6 +3,7 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
   Download,
+  Info,
   Lock,
   MessageSquare,
   Settings,
@@ -12,6 +13,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ThemeSettingsControl } from "@/components/ThemeSettingsControl";
 import { useTheme, type ThemePalette } from "@/components/ThemeProvider";
 import { openFeedbackForm } from "@/components/Feedback";
@@ -36,6 +38,33 @@ interface SettingsMenuProps {
   onExport: (mode: "plain" | "encrypted") => void;
   onDeleteAll: () => void;
   deleteLabel: string;
+}
+
+function SettingsInfoTooltip({
+  ariaLabel,
+  children,
+}: {
+  ariaLabel: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Tooltip delayDuration={300}>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex shrink-0 rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          aria-label={ariaLabel}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Info className="size-3.5" aria-hidden />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top" align="start" className="max-w-[14rem]">
+        {children}
+      </TooltipContent>
+    </Tooltip>
+  );
 }
 
 function SettingsSection({
@@ -160,9 +189,9 @@ export function SettingsMenu({
             e.preventDefault();
           }
         }}
-        className="w-[min(21rem,calc(100vw-2rem))] rounded-lg border-2 border-border bg-popover p-0 font-base shadow-shadow"
+        className="w-[min(25rem,calc(100vw-2rem))] rounded-lg border-2 border-border bg-popover p-0 font-base shadow-shadow"
       >
-        <div className="native-scrollbar max-h-[min(70vh,28rem)] overflow-y-auto">
+        <div className="native-scrollbar max-h-[min(70vh,35rem)] overflow-y-auto">
           <div className="flex flex-col gap-5 px-4 py-4">
             <SettingsSection title="General">
               <div className="flex flex-col gap-3">
@@ -181,12 +210,12 @@ export function SettingsMenu({
                   <ThemeSettingsControl />
                 </div>
                 <div className="flex flex-col gap-2 py-0.5">
-                  <span className="text-sm font-medium text-foreground">
-                    Experiment
-                    <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
-                      Palette pack for light/dark
-                    </span>
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-medium text-foreground">Theme Presets</span>
+                    <SettingsInfoTooltip ariaLabel="About theme presets">
+                      Temporary color palettes for testing
+                    </SettingsInfoTooltip>
+                  </div>
                   <div
                     role="group"
                     aria-label="Experimental palette"
@@ -215,24 +244,46 @@ export function SettingsMenu({
                     })}
                   </div>
                 </div>
-                <label className="flex cursor-pointer items-center justify-between gap-3 py-0.5">
-                  <span className="text-sm font-medium text-foreground">Stack Docs</span>
+                <div className="flex items-center justify-between gap-3 py-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <label
+                      htmlFor="stack-docs-switch"
+                      className="cursor-pointer text-sm font-medium text-foreground"
+                    >
+                      Stack Docs
+                    </label>
+                    <SettingsInfoTooltip ariaLabel="About stack docs">
+                      Return to the previously opened document when closing
+                    </SettingsInfoTooltip>
+                  </div>
                   <Switch
+                    id="stack-docs-switch"
                     size="sm"
                     checked={documentStackEnabled}
                     onCheckedChange={onDocumentStackEnabledChange}
                     aria-label="Stack viewed documents when closing"
                   />
-                </label>
-                <label className="flex cursor-pointer items-center justify-between gap-3 py-0.5">
-                  <span className="text-sm font-medium text-foreground">Workspaces</span>
+                </div>
+                <div className="flex items-center justify-between gap-3 py-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <label
+                      htmlFor="workspaces-switch"
+                      className="cursor-pointer text-sm font-medium text-foreground"
+                    >
+                      Workspaces
+                    </label>
+                    <SettingsInfoTooltip ariaLabel="About workspaces">
+                      Keep documents organized by workspace
+                    </SettingsInfoTooltip>
+                  </div>
                   <Switch
+                    id="workspaces-switch"
                     size="sm"
                     checked={workspacesEnabled}
                     onCheckedChange={onWorkspacesEnabledChange}
                     aria-label="Enable workspaces"
                   />
-                </label>
+                </div>
               </div>
             </SettingsSection>
 

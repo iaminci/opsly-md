@@ -174,18 +174,18 @@ mark.search-highlight-active {
  * `html[data-palette].dark` / `html[data-palette] .dark` beat ThemeProvider wrapper `.dark`.
  */
 
-/* Monochrome — black / white / gray only */
+/* Monochrome — black / beige / gray */
 html[data-palette="monochrome"],
 html.palette-monochrome {
-  --background: #f4f4f4;
-  --secondary-background: #ffffff;
-  --sidebar: #fafafa;
-  --card: #ffffff;
-  --popover: #ffffff;
-  --input: #ffffff;
-  --muted: #e5e5e5;
+  --background: #f2f0eb;
+  --secondary-background: #f8f6f1;
+  --sidebar: #f5f3ee;
+  --card: #f8f6f1;
+  --popover: #f8f6f1;
+  --input: #f8f6f1;
+  --muted: #e6e2d9;
   --foreground: #111111;
-  --main-foreground: #ffffff;
+  --main-foreground: #f8f6f1;
   --main: #111111;
   --border: #111111;
   --ring: #111111;
@@ -196,16 +196,16 @@ html.palette-monochrome {
   --popover-foreground: #111111;
   --primary: #111111;
   --primary-hover: #000000;
-  --primary-foreground: #ffffff;
-  --secondary: #e5e5e5;
-  --secondary-hover: #d4d4d4;
+  --primary-foreground: #f8f6f1;
+  --secondary: #e6e2d9;
+  --secondary-hover: #d9d4ca;
   --secondary-foreground: #111111;
-  --accent: #eeeeee;
+  --accent: #ece8e0;
   --accent-foreground: #111111;
   --destructive: #111111;
-  --destructive-foreground: #ffffff;
+  --destructive-foreground: #f8f6f1;
   --sidebar-foreground: #111111;
-  --sidebar-accent: #e8e8e8;
+  --sidebar-accent: #ebe7df;
   --sidebar-accent-foreground: #111111;
   --sidebar-border: #111111;
   --sidebar-ring: #111111;
