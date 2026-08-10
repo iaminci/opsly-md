@@ -790,6 +790,7 @@ function WorkspaceSection({
         <TreeGuideEntry>
           <InlineTreeCreateRow
             type="file"
+            initialValue="Untitled"
             onSubmit={onPendingTreeCreateSubmit}
             onCancel={onPendingTreeCreateCancel}
           />
@@ -1526,6 +1527,7 @@ function FolderItem({
             <TreeGuideEntry>
               <InlineTreeCreateRow
                 type="file"
+                initialValue="Untitled"
                 onSubmit={onPendingTreeCreateSubmit}
                 onCancel={onPendingTreeCreateCancel}
               />

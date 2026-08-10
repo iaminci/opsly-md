@@ -13,11 +13,18 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { ThemeSettingsControl } from "@/components/ThemeSettingsControl";
+import { useTheme, type ThemePalette } from "@/components/ThemeProvider";
 import { openFeedbackForm } from "@/components/Feedback";
 import { cn } from "@/lib/utils";
 
 const settingsActionButtonClassName =
   "w-full min-w-0 justify-center rounded-md border-2 border-border text-primary shadow-none hover:border-border hover:bg-primary hover:text-black hover:translate-x-0 hover:translate-y-0";
+
+const EXPERIMENT_PALETTES: { id: ThemePalette; label: string }[] = [
+  { id: "default", label: "Default" },
+  { id: "monochrome", label: "Mono" },
+  { id: "monokai", label: "Monokai" },
+];
 
 interface SettingsMenuProps {
   onOpenChange?: (open: boolean) => void;
@@ -74,6 +81,7 @@ export function SettingsMenu({
   const [exportOptionsOpen, setExportOptionsOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [popoverOffset, setPopoverOffset] = useState({ side: 16, align: -8 });
+  const { palette, setPalette } = useTheme();
 
   const updatePopoverOffset = useCallback(() => {
     const trigger = triggerRef.current;
@@ -171,6 +179,41 @@ export function SettingsMenu({
                 <div className="flex items-center justify-between gap-3 py-0.5">
                   <span className="text-sm font-medium text-foreground">Theme</span>
                   <ThemeSettingsControl />
+                </div>
+                <div className="flex flex-col gap-2 py-0.5">
+                  <span className="text-sm font-medium text-foreground">
+                    Experiment
+                    <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
+                      Palette pack for light/dark
+                    </span>
+                  </span>
+                  <div
+                    role="group"
+                    aria-label="Experimental palette"
+                    className="grid grid-cols-3 gap-1.5"
+                  >
+                    {EXPERIMENT_PALETTES.map((option) => {
+                      const active = palette === option.id;
+                      return (
+                        <Button
+                          key={option.id}
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          aria-pressed={active}
+                          className={cn(
+                            "h-8 min-w-0 justify-center rounded-md border-2 px-1 text-xs shadow-none hover:translate-x-0 hover:translate-y-0",
+                            active
+                              ? "border-border bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
+                              : "border-border text-foreground hover:bg-sidebar-accent",
+                          )}
+                          onClick={() => setPalette(option.id)}
+                        >
+                          {option.label}
+                        </Button>
+                      );
+                    })}
+                  </div>
                 </div>
                 <label className="flex cursor-pointer items-center justify-between gap-3 py-0.5">
                   <span className="text-sm font-medium text-foreground">Stack Docs</span>

@@ -305,6 +305,8 @@ function AppContent() {
 
   const hasUnsavedDraft =
     !!currentDoc && draftContent !== displayContent;
+  /** Autosave only after a document has saved content (skip brand-new empty files). */
+  const allowEditAutosave = displayContent.trim().length > 0;
   const editDirty = editMode && hasUnsavedDraft;
   const previewContent = hasUnsavedDraft ? draftContent : displayContent;
   useDeploymentReloadBlock(editMode || hasUnsavedDraft);
@@ -565,7 +567,10 @@ function AppContent() {
     const vp = contentScrollRef.current;
     scrollTopBeforeEditRef.current = vp?.scrollTop ?? 0;
     if (vp) vp.scrollTop = 0;
-    setDraftContent(displayContent);
+    // Keep unsaved draft when returning from preview; sync only when clean.
+    setDraftContent((prev) =>
+      prev !== displayContent ? prev : displayContent
+    );
     setDocumentViewMode("edit");
   }, [currentDoc, displayContent, encryption.isLocked]);
 
@@ -659,7 +664,7 @@ function AppContent() {
   };
 
   useEffect(() => {
-    if (!currentDoc?.id || !hasUnsavedDraft) {
+    if (!currentDoc?.id || !hasUnsavedDraft || !allowEditAutosave) {
       setEditAutosaveSecs(null);
       return;
     }
@@ -687,7 +692,7 @@ function AppContent() {
       window.clearInterval(id);
       setEditAutosaveSecs(null);
     };
-  }, [currentDoc?.id, hasUnsavedDraft]);
+  }, [currentDoc?.id, hasUnsavedDraft, allowEditAutosave]);
 
   const performDownloadStored = useCallback(async () => {
     if (!currentDoc) return;
@@ -1087,9 +1092,7 @@ function AppContent() {
                               <button
                                 type="button"
                                 className={workspaceToolbarTextActionClassName}
-                                onClick={() =>
-                                  void handleEditSave({ exitEditAfter: false })
-                                }
+                                onClick={() => void handleEditSave()}
                               >
                                 {editAutosaveUi === "saving"
                                   ? "Save · …"
@@ -1230,7 +1233,7 @@ function AppContent() {
                   aria-controls="document-outline-panel"
                   onClick={() => setRightTocOpen((o) => !o)}
                   className={cn(
-                    "absolute top-1/2 z-30 hidden h-15 w-6 shrink-0 -translate-y-1/2 border-2 border-border bg-background text-primary-hover shadow-shadow transition-[right] duration-150 ease-linear hover:bg-primary hover:text-background",
+                    "absolute top-1/2 z-30 hidden h-15 w-6 shrink-0 -translate-y-1/2 border border-border bg-background text-primary shadow-none transition-[right,background-color,color] duration-150 ease-linear hover:bg-primary hover:text-background hover:-translate-y-1/2",
                     "print:hidden lg:inline-flex",
                     rightTocOpen
                       ? "right-[calc(17rem+0.5rem-0.75rem)]"

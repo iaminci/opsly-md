@@ -11,13 +11,20 @@ import { flushSync } from "react-dom";
 
 export type ThemePreference = "light" | "dark" | "system";
 export type ResolvedTheme = "light" | "dark";
+/** Color pack; independent of light/dark. Default keeps existing tokens. */
+export type ThemePalette = "default" | "monochrome" | "monokai";
 
 export type ThemeToggleOrigin = { clientX: number; clientY: number };
+
+const THEME_STORAGE_KEY = "md-viewer-theme";
+const PALETTE_STORAGE_KEY = "md-viewer-palette";
 
 interface ThemeContextValue {
   theme: ResolvedTheme;
   themePreference: ThemePreference;
   setTheme: (theme: ThemePreference, origin?: ThemeToggleOrigin) => void;
+  palette: ThemePalette;
+  setPalette: (palette: ThemePalette) => void;
 }
 
 function getSystemTheme(): ResolvedTheme {
@@ -29,24 +36,44 @@ function resolveTheme(preference: ThemePreference): ResolvedTheme {
   return preference === "system" ? getSystemTheme() : preference;
 }
 
+function parsePalette(value: string | null): ThemePalette {
+  if (value === "monochrome" || value === "monokai") return value;
+  return "default";
+}
+
+function applyPaletteAttribute(palette: ThemePalette) {
+  const root = document.documentElement;
+  root.classList.remove("palette-monochrome", "palette-monokai");
+  if (palette === "default") {
+    root.removeAttribute("data-palette");
+  } else {
+    root.setAttribute("data-palette", palette);
+    root.classList.add(`palette-${palette}`);
+  }
+}
+
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themePreference, setThemePreference] = useState<ThemePreference>("system");
   const [theme, setThemeState] = useState<ResolvedTheme>("light");
+  const [palette, setPaletteState] = useState<ThemePalette>("default");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const stored = localStorage.getItem("md-viewer-theme") as ThemePreference | null;
+    const stored = localStorage.getItem(THEME_STORAGE_KEY) as ThemePreference | null;
     const initialPreference: ThemePreference =
       stored === "light" || stored === "dark" || stored === "system"
         ? stored
         : "system";
     const initialResolved = resolveTheme(initialPreference);
+    const initialPalette = parsePalette(localStorage.getItem(PALETTE_STORAGE_KEY));
     setThemePreference(initialPreference);
     setThemeState(initialResolved);
+    setPaletteState(initialPalette);
     document.documentElement.classList.toggle("dark", initialResolved === "dark");
+    applyPaletteAttribute(initialPalette);
   }, []);
 
   useEffect(() => {
@@ -63,11 +90,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => media.removeEventListener("change", handleChange);
   }, [mounted, themePreference]);
 
+  const setPalette = useCallback((next: ThemePalette) => {
+    setPaletteState(next);
+    localStorage.setItem(PALETTE_STORAGE_KEY, next);
+    applyPaletteAttribute(next);
+  }, []);
+
   const setTheme = useCallback((newPreference: ThemePreference, origin?: ThemeToggleOrigin) => {
     const resolved = resolveTheme(newPreference);
 
     const syncDocument = (resolvedTheme: ResolvedTheme, preference: ThemePreference) => {
-      localStorage.setItem("md-viewer-theme", preference);
+      localStorage.setItem(THEME_STORAGE_KEY, preference);
       document.documentElement.classList.toggle("dark", resolvedTheme === "dark");
     };
 
@@ -117,6 +150,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           theme: "light",
           themePreference: "system",
           setTheme,
+          palette: "default",
+          setPalette,
         }}
       >
         {children}
@@ -125,7 +160,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, themePreference, setTheme }}>
+    <ThemeContext.Provider value={{ theme, themePreference, setTheme, palette, setPalette }}>
       <div
         className={theme === "dark" ? "dark" : ""}
         suppressHydrationWarning
