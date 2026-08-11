@@ -56,6 +56,7 @@ import {
   isTreeDocumentDrag,
 } from "@/lib/workspace-tree-drag";
 import {
+  ArrowUp,
   ChevronLeft,
   ChevronRight,
   X,
@@ -145,6 +146,66 @@ function useLgAndUp() {
     return () => mq.removeEventListener("change", on);
   }, []);
   return lg;
+}
+
+const BACK_TO_TOP_SCROLL_THRESHOLD = 300;
+
+/** Floating scroll-to-top control anchored to the main reading column. */
+function BackToTopButton({
+  scrollContainerRef,
+  rightTocOpen,
+}: {
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
+  rightTocOpen: boolean;
+}) {
+  const isLg = useLgAndUp();
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    const onScroll = () => {
+      setVisible(el.scrollTop > BACK_TO_TOP_SCROLL_THRESHOLD);
+    };
+
+    onScroll();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [scrollContainerRef]);
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label="Back to top"
+          tabIndex={visible ? 0 : -1}
+          onClick={() =>
+            scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" })
+          }
+          className={cn(
+            "absolute bottom-6 z-20 size-10 rounded-full border-2 border-border bg-background text-primary shadow-md print:hidden",
+            "transition-[right,opacity,background-color,color,box-shadow] duration-200 ease-linear",
+            "hover:bg-primary hover:text-background hover:shadow-lg",
+            visible
+              ? "pointer-events-auto opacity-100"
+              : "pointer-events-none opacity-0",
+            isLg && rightTocOpen
+              ? "right-[calc(17rem+2rem)]"
+              : "right-8"
+          )}
+        >
+          <ArrowUp className="size-4" strokeWidth={3} aria-hidden />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="left" align="center">
+        Back to top
+      </TooltipContent>
+    </Tooltip>
+  );
 }
 
 /** Shown on the main panel when the sidebar is collapsed (off-canvas or mobile sheet closed). */
@@ -1220,6 +1281,13 @@ function AppContent() {
                 </aside>
               )}
             </div>
+          )}
+
+          {currentDoc && !editMode && (
+            <BackToTopButton
+              scrollContainerRef={contentScrollRef}
+              rightTocOpen={rightTocOpen}
+            />
           )}
 
           {currentDoc && !editMode && (

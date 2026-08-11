@@ -143,6 +143,7 @@ const WORKSPACE_TAB_MUTED_PILL = cn(
 );
 
 const TREE_ROW_SELECTED = "bg-sidebar-accent text-primary";
+const TREE_ROW_HOVER = "hover:bg-sidebar-accent/50";
 
 /** Guide lines on the path from workspace to the open document. */
 const TREE_GUIDE_ACTIVE_PATH = "tree-guide-entry--active-path";
@@ -953,9 +954,12 @@ function WorkspaceSection({
                     "!flex !min-h-8 !min-w-0 !flex-1 !items-start !gap-2 !py-1 !pl-[3px] !pr-0 !text-left !shadow-none !outline-none !ring-0",
                     TREE_DRAG_TARGET_PILL
                   )
-                : workspaceFullRowAccent
-                  ? WORKSPACE_TAB_CORAL_PILL
-                  : WORKSPACE_TAB_MUTED_PILL
+                : cn(
+                    workspaceFullRowAccent
+                      ? WORKSPACE_TAB_CORAL_PILL
+                      : WORKSPACE_TAB_MUTED_PILL,
+                    "hover:!bg-sidebar-accent/50"
+                  )
             )}
           >
             <Layers
@@ -1385,7 +1389,8 @@ function FolderItem({
             "flex min-h-8 min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded-md py-0.5 pl-1 pr-0 transition-colors duration-150",
             folderDragTarget && TREE_DRAG_TARGET_PILL,
             folderRowHighlighted && !folderDragTarget && TREE_ROW_SELECTED,
-            !folderRowHighlighted && "text-muted-foreground hover:text-foreground"
+            !folderRowHighlighted && "text-muted-foreground hover:text-foreground",
+            !folderDragTarget && TREE_ROW_HOVER
           )}
         >
         <div
