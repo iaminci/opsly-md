@@ -26,17 +26,17 @@ export function MultiSelectToolbarInfo() {
     <SidebarMenuItem className="w-auto shrink-0">
       <div className="flex h-9 items-center gap-2 pl-1.5 pr-0.5 text-muted-foreground">
         <div
-          className="h-5 w-0 shrink-0 self-center border-l border-muted-foreground"
+          className="h-5 w-0 shrink-0 self-center border-l-2 border-muted-foreground"
           aria-hidden
         />
         <Tooltip delayDuration={300}>
           <TooltipTrigger asChild>
             <button
               type="button"
-              className="inline-flex shrink-0 rounded-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+              className="inline-flex shrink-0 rounded-sm text-primary transition-colors hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
               aria-label="About multi-select"
             >
-              <Info className="size-3.5" strokeWidth={1.75} aria-hidden />
+              <Info className="size-4" strokeWidth={2.5} aria-hidden />
             </button>
           </TooltipTrigger>
           <TooltipContent
