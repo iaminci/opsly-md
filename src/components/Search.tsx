@@ -2,6 +2,7 @@
 
 import {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -10,19 +11,29 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
+import Highlighter from "react-highlight-words";
 import { ChevronDown, ChevronUp, Search as SearchIcon, X } from "lucide-react";
 import type { Document } from "@/types/document";
 import {
   getDocumentSearchPreview,
 } from "@/lib/search-result-preview";
 import {
-  getQueryMatchSegments,
   type SearchSnippetPreview,
 } from "@/lib/search-highlight";
+import {
+  createDocumentSearchIndex,
+  searchDocuments,
+} from "@/lib/document-search-index";
 import { Button } from "@/components/ui/button";
 import {
   workspaceControlChromeClassName,
+  workspaceIconActionClassName,
 } from "@/components/WorkspaceSwitcher";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 const SEARCH_RESULTS_PANEL_WIDTH_PX = 520;
@@ -41,6 +52,10 @@ interface SearchProps {
   onQueryChange: (query: string) => void;
   onSelect: (doc: Document) => void;
   matchNavigation?: SearchMatchNavigation | null;
+  variant?: "bar" | "toolbar";
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
+  className?: string;
 }
 
 interface SearchPanelPosition {
@@ -99,20 +114,16 @@ function formatMatchCount(count: number): string {
 }
 
 function HighlightedQueryText({ text, query }: { text: string; query: string }) {
-  const segments = useMemo(() => getQueryMatchSegments(text, query), [text, query]);
+  const searchWords = query.trim();
+  if (!searchWords) return <>{text}</>;
 
   return (
-    <>
-      {segments.map((segment, index) =>
-        segment.isMatch ? (
-          <mark key={index} className="search-highlight">
-            {segment.text}
-          </mark>
-        ) : (
-          <span key={index}>{segment.text}</span>
-        )
-      )}
-    </>
+    <Highlighter
+      searchWords={[searchWords]}
+      autoEscape
+      textToHighlight={text}
+      highlightClassName="search-highlight"
+    />
   );
 }
 
@@ -206,18 +217,148 @@ function SearchResultRow({
   );
 }
 
+const searchInlineControlClass =
+  "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 text-primary transition-colors hover:bg-sidebar-accent hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
+
+interface SearchInputChromeProps {
+  query: string;
+  onQueryChange: (value: string) => void;
+  onClear: () => void;
+  onClose?: () => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
+  inputRef?: RefObject<HTMLInputElement | null>;
+  matchNavigation?: SearchMatchNavigation | null;
+  className?: string;
+}
+
+function SearchInputChrome({
+  query,
+  onQueryChange,
+  onClear,
+  onClose,
+  onFocus,
+  onBlur,
+  onKeyDown,
+  inputRef,
+  matchNavigation,
+  className,
+}: SearchInputChromeProps) {
+  const showClear = query.length > 0;
+  const showSearchIcon = !showClear;
+  const showMatchNav = !!matchNavigation && matchNavigation.total > 0 && query.trim().length > 0;
+  const showClose = Boolean(onClose);
+  const showTrailingControls = showMatchNav || showClear || showClose;
+  const suppressChromeHoverFill = showTrailingControls;
+
+  return (
+    <div
+      className={cn(
+        workspaceControlChromeClassName,
+        "flex h-9 min-w-0 items-center gap-1.5 overflow-hidden pr-1 focus-within:ring-2 focus-within:ring-ring/40",
+        suppressChromeHoverFill && "hover:bg-background",
+        showSearchIcon ? "pl-2.5" : "pl-2",
+        className
+      )}
+    >
+      {showSearchIcon && (
+        <SearchIcon className="size-4 shrink-0 text-primary" aria-hidden />
+      )}
+      <input
+        ref={inputRef}
+        type="text"
+        placeholder="Search"
+        value={query}
+        onChange={(e) => onQueryChange(e.target.value)}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        onKeyDown={onKeyDown}
+        className="min-w-0 flex-1 border-0 bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-primary"
+        autoComplete="off"
+      />
+      {(showTrailingControls) && (
+        <div className="flex shrink-0 items-center gap-px pl-0.5">
+          {showMatchNav && matchNavigation && (
+            <>
+              <span className="shrink-0 px-0.5 text-[10px] font-medium tabular-nums leading-none text-muted-foreground">
+                {matchNavigation.activeIndex + 1}/{matchNavigation.total}
+              </span>
+              <button
+                type="button"
+                className={searchInlineControlClass}
+                aria-label="Previous match"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={matchNavigation.onPrevious}
+              >
+                <ChevronUp className="size-3" />
+              </button>
+              <button
+                type="button"
+                className={searchInlineControlClass}
+                aria-label="Next match"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={matchNavigation.onNext}
+              >
+                <ChevronDown className="size-3" />
+              </button>
+            </>
+          )}
+          {showMatchNav && (showClear || showClose) && (
+            <span aria-hidden className="mx-px h-3.5 w-px shrink-0 bg-border" />
+          )}
+          {showClear && !showClose && (
+            <button
+              type="button"
+              aria-label="Clear search"
+              className={searchInlineControlClass}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={onClear}
+            >
+              <X className="size-3 shrink-0" strokeWidth={2.5} />
+            </button>
+          )}
+          {showClose && onClose && (
+            <button
+              type="button"
+              aria-label="Close search"
+              className={searchInlineControlClass}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={onClose}
+            >
+              <X className="size-3 shrink-0" strokeWidth={2.5} />
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Search({
   documents,
   query,
   onQueryChange,
   onSelect,
   matchNavigation,
+  variant = "toolbar",
+  expanded = false,
+  onExpandedChange,
+  className,
 }: SearchProps) {
   const anchorRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [results, setResults] = useState<Document[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
-  const showResults = isOpen && results.length > 0;
+  const [resultsOpen, setResultsOpen] = useState(false);
+  const showResults = resultsOpen && results.length > 0;
   const panelPosition = useSearchResultsPanelPosition(showResults, anchorRef);
+
+  const searchIndex = useMemo(() => createDocumentSearchIndex(documents), [documents]);
+
+  const collapse = useCallback(() => {
+    onExpandedChange?.(false);
+    setResultsOpen(false);
+  }, [onExpandedChange]);
 
   const search = useCallback(
     (q: string) => {
@@ -226,32 +367,38 @@ export function Search({
         setResults([]);
         return;
       }
-      const lower = q.toLowerCase();
-      const matches = documents.filter(
-        (doc) =>
-          doc.title.toLowerCase().includes(lower) ||
-          doc.content.toLowerCase().includes(lower)
-      );
-      setResults(matches.slice(0, 8));
-      setIsOpen(true);
+      setResults(searchDocuments(searchIndex, documents, q));
+      setResultsOpen(true);
     },
-    [documents, onQueryChange]
+    [documents, onQueryChange, searchIndex]
   );
 
   const clear = useCallback(() => {
     onQueryChange("");
     setResults([]);
-    setIsOpen(false);
-  }, [onQueryChange]);
+    setResultsOpen(false);
+    collapse();
+  }, [onQueryChange, collapse]);
 
-  const showClear = query.length > 0;
-  const showSearchIcon = !showClear;
+  const close = useCallback(() => {
+    if (query.trim()) {
+      onQueryChange("");
+      setResults([]);
+    }
+    setResultsOpen(false);
+    collapse();
+  }, [query, onQueryChange, collapse]);
+
   const showMatchNav = !!matchNavigation && matchNavigation.total > 0 && query.trim().length > 0;
 
-  const matchNavButtonClass =
-    "inline-flex size-5 shrink-0 items-center justify-center rounded-sm text-primary transition-colors hover:bg-sidebar-accent hover:text-primary-hover";
-
   const handleSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      if (variant === "toolbar") {
+        collapse();
+      }
+      return;
+    }
     if (!showMatchNav || !matchNavigation) return;
     if (e.key === "Enter" && e.shiftKey) {
       e.preventDefault();
@@ -263,6 +410,31 @@ export function Search({
       matchNavigation.onNext();
     }
   };
+
+  const handleSelectDocument = useCallback(
+    (doc: Document) => {
+      onSelect(doc);
+      setResultsOpen(false);
+    },
+    [onSelect]
+  );
+
+  useEffect(() => {
+    if (!expanded || variant !== "toolbar") return;
+    const frame = window.requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [expanded, variant]);
+
+  const handleBlur = useCallback(() => {
+    setTimeout(() => {
+      setResultsOpen(false);
+      if (variant === "toolbar" && !query.trim()) {
+        collapse();
+      }
+    }, 150);
+  }, [variant, query, collapse]);
 
   const resultsPanel =
     showResults && panelPosition
@@ -283,10 +455,7 @@ export function Search({
                   variant="neutral"
                   className="h-auto w-full justify-start rounded-none border-0 border-b border-sidebar-border/50 px-3.5 py-3 font-normal shadow-none last:border-b-0 hover:translate-x-0 hover:translate-y-0 hover:bg-sidebar-accent hover:shadow-none"
                   onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    onSelect(doc);
-                    setIsOpen(false);
-                  }}
+                  onClick={() => handleSelectDocument(doc)}
                 >
                   <SearchResultRow doc={doc} query={query} />
                 </Button>
@@ -297,73 +466,63 @@ export function Search({
         )
       : null;
 
+  if (variant === "bar") {
+    return (
+      <div className={cn("relative overflow-visible", className)}>
+        <div ref={anchorRef}>
+          <SearchInputChrome
+            query={query}
+            onQueryChange={search}
+            onClear={clear}
+            onFocus={() => query && setResultsOpen(true)}
+            onBlur={handleBlur}
+            onKeyDown={handleSearchKeyDown}
+            matchNavigation={matchNavigation}
+          />
+        </div>
+        {resultsPanel}
+      </div>
+    );
+  }
+
+  const searchActive = query.trim().length > 0;
+
+  if (!expanded) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            className={cn(
+              workspaceIconActionClassName,
+              searchActive && "bg-sidebar-accent"
+            )}
+            aria-label="Search documents"
+            onClick={() => onExpandedChange?.(true)}
+          >
+            <SearchIcon className="size-4" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Search</TooltipContent>
+      </Tooltip>
+    );
+  }
+
   return (
-    <div className="relative overflow-visible">
-      <div
-        ref={anchorRef}
-        className={cn(
-          workspaceControlChromeClassName,
-          "flex h-9 min-w-0 items-center gap-1.5 overflow-hidden pr-1 focus-within:ring-2 focus-within:ring-ring/40",
-          showSearchIcon ? "pl-2.5" : "pl-2"
-        )}
-      >
-        {showSearchIcon && (
-          <SearchIcon className="size-4 shrink-0 text-primary" aria-hidden />
-        )}
-        <input
-          type="text"
-          placeholder="Search"
-          value={query}
-          onChange={(e) => search(e.target.value)}
-          onFocus={() => query && setIsOpen(true)}
-          onBlur={() => setTimeout(() => setIsOpen(false), 150)}
+    <div className={cn("relative min-w-0 flex-1 overflow-visible", className)}>
+      <div ref={anchorRef} className="min-w-0">
+        <SearchInputChrome
+          inputRef={inputRef}
+          query={query}
+          onQueryChange={search}
+          onClear={clear}
+          onClose={close}
+          onFocus={() => query && setResultsOpen(true)}
+          onBlur={handleBlur}
           onKeyDown={handleSearchKeyDown}
-          className="min-w-0 flex-1 border-0 bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-primary"
-          autoComplete="off"
+          matchNavigation={matchNavigation}
+          className="w-full"
         />
-        {(showMatchNav || showClear) && (
-          <div className="flex shrink-0 items-center gap-px pl-0.5">
-            {showMatchNav && matchNavigation && (
-              <>
-                <span className="shrink-0 px-0.5 text-[10px] font-medium tabular-nums leading-none text-muted-foreground">
-                  {matchNavigation.activeIndex + 1}/{matchNavigation.total}
-                </span>
-                <button
-                  type="button"
-                  className={matchNavButtonClass}
-                  aria-label="Previous match"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={matchNavigation.onPrevious}
-                >
-                  <ChevronUp className="size-3" />
-                </button>
-                <button
-                  type="button"
-                  className={matchNavButtonClass}
-                  aria-label="Next match"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={matchNavigation.onNext}
-                >
-                  <ChevronDown className="size-3" />
-                </button>
-              </>
-            )}
-            {showMatchNav && showClear && (
-              <span aria-hidden className="mx-px h-3.5 w-px shrink-0 bg-border" />
-            )}
-            {showClear && (
-              <button
-                type="button"
-                aria-label="Clear search"
-                className="inline-flex size-5 shrink-0 items-center justify-center rounded-sm text-primary transition-colors hover:bg-sidebar-accent hover:text-primary-hover"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => clear()}
-              >
-                <X className="size-3 shrink-0" strokeWidth={2.5} />
-              </button>
-            )}
-          </div>
-        )}
       </div>
       {resultsPanel}
     </div>

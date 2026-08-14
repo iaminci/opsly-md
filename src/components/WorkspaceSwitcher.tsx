@@ -22,6 +22,8 @@ import type { PendingTreeCreate, PendingTreeRename } from "@/components/Workspac
 import { TREE_DRAG_TARGET_PILL } from "@/components/WorkspaceTree";
 import { cn } from "@/lib/utils";
 import { WorkspaceToolbarActions } from "@/components/WorkspaceToolbarActions";
+import type { SearchMatchNavigation } from "@/components/Search";
+import type { Document } from "@/types/document";
 
 /** Native scrollbar (Radix scroll area breaks inside menus). */
 const workspaceSwitcherScrollbarClassName = cn(
@@ -94,6 +96,13 @@ interface WorkspaceSwitcherProps {
   pendingTreeRename?: PendingTreeRename | null;
   onPendingTreeRenameSubmit?: (name: string) => void | Promise<void>;
   onPendingTreeRenameCancel?: () => void;
+  search?: {
+    documents: Document[];
+    query: string;
+    onQueryChange: (query: string) => void;
+    onSelect: (doc: Document) => void;
+    matchNavigation?: SearchMatchNavigation | null;
+  };
 }
 
 export function WorkspaceSwitcher({
@@ -112,6 +121,7 @@ export function WorkspaceSwitcher({
   pendingTreeRename = null,
   onPendingTreeRenameSubmit,
   onPendingTreeRenameCancel,
+  search,
 }: WorkspaceSwitcherProps) {
   const skipCloseAutoFocusRef = useRef(false);
   const workspaceRowRef = useRef<HTMLUListElement>(null);
@@ -355,6 +365,7 @@ export function WorkspaceSwitcher({
         onCreateFile={onCreateFile}
         onUploadFile={onUploadFile}
         onCreateFolder={showCreateFolderButton ? onCreateFolder : undefined}
+        search={search}
       />
     </div>
   );

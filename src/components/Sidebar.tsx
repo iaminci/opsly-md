@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import type { Document } from "@/types/document";
 import type { Folder } from "@/types/workspace";
@@ -7,7 +8,7 @@ import { INLINE_TREE_EDIT_SELECTOR } from "./InlineTreeCreateRow";
 import { WORKSPACE_SWITCHER_DROPDOWN_SELECTOR } from "./WorkspaceSwitcher";
 import { WorkspaceTree, type PendingTreeCreate, type PendingTreeRename } from "./WorkspaceTree";
 import { TreeMultiSelectBar } from "./TreeMultiSelectBar";
-import { Search, type SearchMatchNavigation } from "./Search";
+import type { SearchMatchNavigation } from "./Search";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar as ShadcnSidebar,
@@ -71,6 +72,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { CommandPalette } from "./CommandPalette";
+import { HeaderLogo } from "./HeaderLogo";
 import { UploadFileModal } from "./UploadFileModal";
 import { CreateMarkdownModal } from "./CreateMarkdownModal";
 import { useDeploymentReloadBlock } from "@/components/DeploymentReloadGuard";
@@ -156,7 +158,6 @@ export function Sidebar({
   searchMatchNavigation,
 }: SidebarProps) {
   const { setOpen } = useSidebar();
-  const expandSearchBar = documentSearchQuery.trim().length > 0;
   const [pendingTreeCreate, setPendingTreeCreate] = useState<PendingTreeCreate | null>(null);
   const [pendingTreeRename, setPendingTreeRename] = useState<PendingTreeRename | null>(null);
   const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
@@ -251,11 +252,36 @@ export function Sidebar({
     return sortedWorkspaces.filter((w) => w.id === "default");
   }, [workspacesEnabled, selectedWorkspaceId, sortedWorkspaces, defaultWorkspace]);
 
-  const searchDocuments = workspacesEnabled
-    ? selectedWorkspaceId
-      ? documents.filter((d) => d.workspaceId === selectedWorkspaceId)
-      : documents
-    : documents.filter((d) => d.workspaceId === "default");
+  /**
+   * Stable reference when inputs are unchanged — `Search` rebuilds its MiniSearch
+   * index off this array, which would otherwise happen on every Sidebar render.
+   */
+  const searchDocuments = useMemo(
+    () =>
+      workspacesEnabled
+        ? selectedWorkspaceId
+          ? documents.filter((d) => d.workspaceId === selectedWorkspaceId)
+          : documents
+        : documents.filter((d) => d.workspaceId === "default"),
+    [documents, workspacesEnabled, selectedWorkspaceId]
+  );
+
+  const toolbarSearch = useMemo(
+    () => ({
+      documents: searchDocuments,
+      query: documentSearchQuery,
+      onQueryChange: onDocumentSearchQueryChange,
+      onSelect: onSearchSelectDocument,
+      matchNavigation: searchMatchNavigation,
+    }),
+    [
+      searchDocuments,
+      documentSearchQuery,
+      onDocumentSearchQueryChange,
+      onSearchSelectDocument,
+      searchMatchNavigation,
+    ]
+  );
 
   useEffect(() => {
     if (!workspacesEnabled) return;
@@ -1184,28 +1210,24 @@ export function Sidebar({
         <div className="flex min-h-0 flex-1 flex-col">
         <div className="shrink-0 border-b-2 border-border pb-3 pt-3">
           <SidebarGroup className="p-0">
-            <SidebarGroupLabel className="sr-only">Search</SidebarGroupLabel>
+            <SidebarGroupLabel className="sr-only">Sidebar</SidebarGroupLabel>
             <SidebarGroupContent>
-              <div className="flex min-w-0 items-start gap-2">
-                <div className="min-w-0 flex-1 overflow-visible">
-                  <Search
-                    documents={searchDocuments}
-                    query={documentSearchQuery}
-                    onQueryChange={onDocumentSearchQueryChange}
-                    onSelect={onSearchSelectDocument}
-                    matchNavigation={searchMatchNavigation}
-                  />
-                </div>
-                {!expandSearchBar && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <SidebarTrigger />
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" align="end">
-                      Collapse sidebar
-                    </TooltipContent>
-                  </Tooltip>
-                )}
+              <div className="flex min-w-0 items-center justify-between gap-2">
+                <Link
+                  href="/"
+                  aria-label="Opsly MD home"
+                  className="flex min-w-0 shrink items-center leading-none no-underline hover:opacity-90"
+                >
+                  <HeaderLogo className="h-7 w-auto max-w-full" />
+                </Link>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <SidebarTrigger />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" align="end">
+                    Collapse sidebar
+                  </TooltipContent>
+                </Tooltip>
               </div>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -1232,6 +1254,7 @@ export function Sidebar({
                   pendingTreeRename={pendingTreeRename}
                   onPendingTreeRenameSubmit={handlePendingTreeRenameSubmit}
                   onPendingTreeRenameCancel={handlePendingTreeRenameCancel}
+                  search={toolbarSearch}
                 />
               </SidebarGroupContent>
             </SidebarGroup>
@@ -1243,6 +1266,7 @@ export function Sidebar({
                   onCreateFile={handleActionBarCreateFile}
                   onUploadFile={handleActionBarUploadFile}
                   onCreateFolder={handleActionBarCreateFolder}
+                  search={toolbarSearch}
                 />
               </SidebarGroupContent>
             </SidebarGroup>
