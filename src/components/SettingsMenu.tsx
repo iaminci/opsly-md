@@ -2,6 +2,7 @@
 
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
+  ChevronDown,
   Download,
   Info,
   Lock,
@@ -19,8 +20,22 @@ import { useTheme, type ThemePalette } from "@/components/ThemeProvider";
 import { openFeedbackForm } from "@/components/Feedback";
 import { cn } from "@/lib/utils";
 
-const settingsActionButtonClassName =
-  "w-full min-w-0 justify-center rounded-md border-2 border-border text-primary shadow-none hover:border-border hover:bg-primary hover:text-black hover:translate-x-0 hover:translate-y-0";
+const settingsDataButtonClassName =
+  "h-9 w-full min-w-0 justify-center rounded-md border-2 border-border text-primary shadow-none hover:border-border hover:bg-primary hover:text-black hover:translate-x-0 hover:translate-y-0";
+
+const settingsExportGroupClassName =
+  "box-border flex w-full min-w-0 flex-col overflow-hidden rounded-md border-2 border-border text-primary shadow-none";
+
+const settingsExportRowClassName = "flex w-full min-w-0";
+
+const settingsExportMainClassName =
+  "inline-flex h-full min-w-0 flex-1 items-center gap-2 px-3 text-sm font-base text-primary transition-colors hover:bg-primary hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
+
+const settingsExportArrowClassName =
+  "inline-flex h-full w-9 shrink-0 items-center justify-center border-l-2 border-border bg-primary text-foreground transition-colors hover:bg-primary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
+
+const settingsExportMenuItemClassName =
+  "inline-flex h-9 w-full min-w-0 items-center justify-start gap-2 border-t-2 border-border px-3 text-sm font-base text-primary transition-colors hover:bg-primary hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
 
 const EXPERIMENT_PALETTES: { id: ThemePalette; label: string }[] = [
   { id: "default", label: "Default" },
@@ -199,22 +214,21 @@ export function SettingsMenu({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className={settingsActionButtonClassName}
+                  className={settingsDataButtonClassName}
                   onClick={() => closeAnd(openFeedbackForm)}
                 >
                   <MessageSquare className="size-4 shrink-0" />
                   Give Feedback
                 </Button>
-                <div className="flex items-center justify-between gap-3 py-0.5">
-                  <span className="text-sm font-medium text-foreground">Theme</span>
-                  <ThemeSettingsControl />
-                </div>
                 <div className="flex flex-col gap-2 py-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-medium text-foreground">Theme Presets</span>
-                    <SettingsInfoTooltip ariaLabel="About theme presets">
-                      Temporary color palettes for testing
-                    </SettingsInfoTooltip>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-medium text-foreground">Theme Presets</span>
+                      <SettingsInfoTooltip ariaLabel="About theme presets">
+                        Temporary color palettes for testing
+                      </SettingsInfoTooltip>
+                    </div>
+                    <ThemeSettingsControl />
                   </div>
                   <div
                     role="group"
@@ -293,47 +307,73 @@ export function SettingsMenu({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className={settingsActionButtonClassName}
+                  className={settingsDataButtonClassName}
                   onClick={() => closeAnd(onImport)}
                 >
                   <Upload className="size-4 shrink-0" />
                   Import
                 </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className={settingsActionButtonClassName}
-                  onClick={() => setExportOptionsOpen((current) => !current)}
+                <div
+                  className={cn(
+                    settingsExportGroupClassName,
+                    !exportOptionsOpen && "h-9",
+                  )}
                 >
-                  <Download className="size-4 shrink-0" />
-                  Export
-                </Button>
-              </div>
-              {exportOptionsOpen ? (
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className={settingsActionButtonClassName}
-                    onClick={() => closeAnd(() => onExport("plain"))}
+                  <div
+                    className={cn(
+                      settingsExportRowClassName,
+                      exportOptionsOpen ? "h-9" : "h-full",
+                    )}
                   >
-                    <Download className="size-4 shrink-0" />
-                    Plain
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className={settingsActionButtonClassName}
-                    onClick={() => closeAnd(() => onExport("encrypted"))}
-                  >
-                    <Lock className="size-4 shrink-0" />
-                    Encrypted
-                  </Button>
+                    <button
+                      type="button"
+                      className={cn(
+                        settingsExportMainClassName,
+                        exportOptionsOpen ? "justify-start" : "justify-center",
+                      )}
+                      onClick={() => closeAnd(() => onExport("plain"))}
+                    >
+                      <Download className="size-4 shrink-0" />
+                      Export
+                    </button>
+                    <button
+                      type="button"
+                      className={settingsExportArrowClassName}
+                      aria-label="Export options"
+                      aria-expanded={exportOptionsOpen}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={() => setExportOptionsOpen((current) => !current)}
+                    >
+                      <ChevronDown
+                        className={cn(
+                          "size-4 shrink-0 text-foreground transition-transform",
+                          exportOptionsOpen && "rotate-180",
+                        )}
+                      />
+                    </button>
+                  </div>
+                  {exportOptionsOpen ? (
+                    <>
+                      <button
+                        type="button"
+                        className={settingsExportMenuItemClassName}
+                        onClick={() => closeAnd(() => onExport("plain"))}
+                      >
+                        <Download className="size-4 shrink-0" />
+                        Plain
+                      </button>
+                      <button
+                        type="button"
+                        className={settingsExportMenuItemClassName}
+                        onClick={() => closeAnd(() => onExport("encrypted"))}
+                      >
+                        <Lock className="size-4 shrink-0" />
+                        Encrypted
+                      </button>
+                    </>
+                  ) : null}
                 </div>
-              ) : null}
+              </div>
             </SettingsSection>
 
             <SettingsSection
@@ -347,7 +387,7 @@ export function SettingsMenu({
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  settingsActionButtonClassName,
+                  settingsDataButtonClassName,
                   "text-destructive hover:bg-destructive focus-visible:ring-destructive [&_svg]:text-destructive hover:[&_svg]:text-black",
                 )}
                 onClick={() => closeAnd(onDeleteAll)}

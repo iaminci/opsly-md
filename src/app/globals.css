@@ -495,7 +495,7 @@ iframe[id^="encatch-iframe-"] {
 }
 
 ::view-transition-new(root) {
-  animation: theme-toggle-circle 0.85s cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation: theme-toggle-circle 1s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 @keyframes theme-toggle-circle {

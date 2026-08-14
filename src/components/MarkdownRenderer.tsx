@@ -1,6 +1,13 @@
 "use client";
 
-import { useMemo, useRef, type ComponentProps, type RefObject, createElement } from "react";
+import {
+  memo,
+  useMemo,
+  useRef,
+  type ComponentProps,
+  type RefObject,
+  createElement,
+} from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -24,7 +31,8 @@ import rehypeKatex from "rehype-katex";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize, { defaultSchema, type Options as RehypeSanitizeSchema } from "rehype-sanitize";
-import { useDocumentSearchHighlight } from "@/hooks/useDocumentSearchHighlight";
+import { rehypeSearchHighlight } from "@/lib/rehype-search-highlight";
+import { useSearchMatchCount } from "@/hooks/useSearchMatchCount";
 import { cn, normalizeInvalidAtxParagraphBreaks, reactNodeToPlainText } from "@/lib/utils";
 import { CodeBlock } from "./CodeBlock";
 import { HeadingAnchor } from "./markdown/HeadingAnchor";
@@ -86,9 +94,11 @@ const markdownRehypeSanitizeSchema: RehypeSanitizeSchema = {
       "value",
       ["type", "checkbox", "radio"],
     ],
+    mark: ["className", "dataSearchMatchIndex"],
   },
   tagNames: [
     ...(defaultSchema.tagNames ?? []),
+    "mark",
     "svg",
     "path",
     "g",
@@ -186,23 +196,21 @@ function mergeOpslyMarkdownComponentsWithSecureCopy(base: Components | undefined
   };
 }
 
-export function MarkdownRenderer({
-  content,
-  ctaLinks = false,
-  searchQuery = "",
-  activeMatchIndex = 0,
-  articleRef: articleRefProp,
-  onMatchCountChange,
-  onContentChange,
-}: MarkdownRendererProps) {
-  const internalArticleRef = useRef<HTMLElement>(null);
-  const articleRef = articleRefProp ?? internalArticleRef;
+interface MarkdownBodyProps {
+  normalizedContent: string;
+  ctaLinks: boolean;
+  searchQuery: string;
+  activeMatchIndex: number;
+  onContentChange?: MarkdownRendererProps["onContentChange"];
+}
 
-  /** Same normalization pipeline as TOC (`buildHeadingManifest` normalizes again; cheap and idempotent). */
-  const normalizedContent = useMemo(
-    () => normalizeInvalidAtxParagraphBreaks(content),
-    [content]
-  );
+const MarkdownBody = memo(function MarkdownBody({
+  normalizedContent,
+  ctaLinks,
+  searchQuery,
+  activeMatchIndex,
+  onContentChange,
+}: MarkdownBodyProps) {
   const manifest = useMemo(
     () => buildHeadingManifest(normalizedContent),
     [normalizedContent]
@@ -461,14 +469,71 @@ export function MarkdownRenderer({
 
   const components = useMemo(() => mergeOpslyMarkdownComponentsWithSecureCopy(baseComponents), [baseComponents]);
 
-  const searchMountKey = searchQuery.trim()
-    ? `${normalizedContent}\0${searchQuery}`
-    : normalizedContent;
+  const rehypePlugins = useMemo(() => {
+    const plugins: NonNullable<import("react-markdown").Options["rehypePlugins"]> = [
+      rehypeKatex,
+      [rehypeHighlight, { plainText: ["text", "plaintext", "txt", "tree"] }],
+      rehypeRaw,
+      [rehypeSanitize, markdownRehypeSanitizeSchema],
+    ];
 
-  useDocumentSearchHighlight(articleRef, {
+    const trimmedQuery = searchQuery.trim();
+    if (trimmedQuery) {
+      plugins.push([
+        rehypeSearchHighlight,
+        { query: searchQuery, activeMatchIndex },
+      ]);
+    }
+
+    return plugins;
+  }, [searchQuery, activeMatchIndex]);
+
+  return (
+    <ReactMarkdown
+        remarkPlugins={[
+          remarkGfm,
+          ...opslyMaskRemarkPlugins.slice(1),
+          remarkMath,
+          remarkCodeBlockLang,
+          remarkPrettyJsonBlocks,
+          remarkTreeStructure,
+        ]}
+        remarkRehypeOptions={opslyMaskRemarkRehypeOptions()}
+        rehypePlugins={rehypePlugins}
+        components={components}
+      >
+        {normalizedContent}
+      </ReactMarkdown>
+  );
+}, (prev, next) =>
+  prev.normalizedContent === next.normalizedContent &&
+  prev.ctaLinks === next.ctaLinks &&
+  prev.searchQuery === next.searchQuery &&
+  prev.activeMatchIndex === next.activeMatchIndex &&
+  prev.onContentChange === next.onContentChange
+);
+
+export function MarkdownRenderer({
+  content,
+  ctaLinks = false,
+  searchQuery = "",
+  activeMatchIndex = 0,
+  articleRef: articleRefProp,
+  onMatchCountChange,
+  onContentChange,
+}: MarkdownRendererProps) {
+  const internalArticleRef = useRef<HTMLElement>(null);
+  const articleRef = articleRefProp ?? internalArticleRef;
+
+  /** Same normalization pipeline as TOC (`buildHeadingManifest` normalizes again; cheap and idempotent). */
+  const normalizedContent = useMemo(
+    () => normalizeInvalidAtxParagraphBreaks(content),
+    [content]
+  );
+
+  useSearchMatchCount(articleRef, {
     searchQuery,
-    activeMatchIndex,
-    mountKey: searchMountKey,
+    mountKey: `${normalizedContent}\0${searchQuery}\0${activeMatchIndex}`,
     enabled: searchQuery.trim().length > 0,
     onMatchCountChange,
   });
@@ -480,27 +545,13 @@ export function MarkdownRenderer({
         "markdown-content prose prose-zinc dark:prose-invert mx-auto min-w-0 w-full break-words"
       )}
     >
-      <ReactMarkdown
-        key={searchMountKey}
-        remarkPlugins={[
-          remarkGfm,
-          ...opslyMaskRemarkPlugins.slice(1),
-          remarkMath,
-          remarkCodeBlockLang,
-          remarkPrettyJsonBlocks,
-          remarkTreeStructure,
-        ]}
-        remarkRehypeOptions={opslyMaskRemarkRehypeOptions()}
-        rehypePlugins={[
-          rehypeKatex,
-          [rehypeHighlight, { plainText: ["text", "plaintext", "txt", "tree"] }],
-          rehypeRaw,
-          [rehypeSanitize, markdownRehypeSanitizeSchema],
-        ]}
-        components={components}
-      >
-        {normalizedContent}
-      </ReactMarkdown>
+      <MarkdownBody
+        normalizedContent={normalizedContent}
+        ctaLinks={ctaLinks}
+        searchQuery={searchQuery}
+        activeMatchIndex={activeMatchIndex}
+        onContentChange={onContentChange}
+      />
     </article>
   );
 }

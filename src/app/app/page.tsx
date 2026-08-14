@@ -3,11 +3,13 @@
 import {
   Suspense,
   useCallback,
+  useDeferredValue,
   useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
+  useTransition,
 } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
@@ -18,6 +20,14 @@ function hashContent(s: string): number {
   }
   return h;
 }
+
+/**
+ * Documents at or below this size render fast enough that a synchronous,
+ * normal-priority update feels instant — deferring/transitioning them only
+ * adds perceptible delay for no benefit. Above it, the markdown pipeline is
+ * slow enough that deferring is worth it to avoid blocking the UI.
+ */
+const LONG_DOCUMENT_CHAR_THRESHOLD = 20_000;
 
 import type { Document } from "@/types/document";
 import {
@@ -31,6 +41,7 @@ import {
   DuplicateNameError,
 } from "@/lib/storage";
 import { scrollToSearchMatch } from "@/lib/search-highlight";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { EmptyState } from "@/components/EmptyState";
 import { Sidebar } from "@/components/Sidebar";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
@@ -308,6 +319,13 @@ function AppContent() {
   const searchParams = useSearchParams();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [currentDoc, setCurrentDoc] = useState<Document | null>(null);
+  /**
+   * Rendering a document (esp. a long one) re-runs the full markdown pipeline
+   * synchronously. Marking that update as a transition lets React deprioritize
+   * and interrupt it if the user immediately selects another document, instead
+   * of blocking the next click behind the slow render.
+   */
+  const [, startDocumentTransition] = useTransition();
   const navigatingToHomeRef = useRef(false);
   const justSelectedDocIdRef = useRef<string | null>(null);
   const selectDocumentGenerationRef = useRef(0);
@@ -332,6 +350,12 @@ function AppContent() {
   const contentScrollRef = useRef<HTMLDivElement>(null);
   const markdownArticleRef = useRef<HTMLElement>(null);
   const [documentSearchQuery, setDocumentSearchQuery] = useState("");
+  /**
+   * Decouples keystrokes from the expensive in-document highlight re-render
+   * (full markdown pipeline re-run) so typing stays responsive; the sidebar
+   * dropdown search still uses the immediate `documentSearchQuery`.
+   */
+  const debouncedDocumentSearchQuery = useDebouncedValue(documentSearchQuery, 200);
   const [searchActiveMatchIndex, setSearchActiveMatchIndex] = useState(0);
   const [searchMatchCount, setSearchMatchCount] = useState(0);
   const [editAutosaveUi, setEditAutosaveUi] = useState<"idle" | "saving" | "saved">("idle");
@@ -370,6 +394,34 @@ function AppContent() {
   const allowEditAutosave = displayContent.trim().length > 0;
   const editDirty = editMode && hasUnsavedDraft;
   const previewContent = hasUnsavedDraft ? draftContent : displayContent;
+  /**
+   * Rendering a document re-runs the full markdown pipeline synchronously — for a
+   * long document that can take a real, unavoidable amount of CPU time. Deferring
+   * this snapshot means React keeps showing the *previous* document's already-
+   * rendered output while it computes the new one in the background (interruptible,
+   * non-blocking), then swaps atomically once ready — instead of freezing the
+   * whole page for however long that document takes to process.
+   */
+  const previewSnapshot = useMemo(
+    () => ({
+      docId: currentDoc?.id ?? null,
+      content: previewContent,
+      searchQuery: debouncedDocumentSearchQuery,
+      activeMatchIndex: searchActiveMatchIndex,
+    }),
+    [currentDoc?.id, previewContent, debouncedDocumentSearchQuery, searchActiveMatchIndex]
+  );
+  const deferredPreviewSnapshot = useDeferredValue(previewSnapshot);
+  /**
+   * `useDeferredValue` trades a little delay for interruptibility — worth it for
+   * a long document (avoids freezing on it), but for short ones it just adds
+   * perceptible lag to what used to be an instant, synchronous swap. Only defer
+   * when the document being switched *to* is actually big enough to be slow.
+   */
+  const effectivePreviewSnapshot =
+    previewContent.length > LONG_DOCUMENT_CHAR_THRESHOLD
+      ? deferredPreviewSnapshot
+      : previewSnapshot;
   useDeploymentReloadBlock(editMode || hasUnsavedDraft);
   useEffect(() => {
     if (!hasUnsavedDraft) return;
@@ -888,10 +940,26 @@ function AppContent() {
       navigatingToHomeRef.current = false;
       justSelectedDocIdRef.current = doc.id;
       setDocumentViewMode("preview");
-      setCurrentDoc(doc);
+      // Only defer the update for documents big enough that rendering them is
+      // actually slow — transitioning a short document just adds scheduling
+      // delay to what should be an instant, synchronous swap.
+      if (doc.content.length > LONG_DOCUMENT_CHAR_THRESHOLD) {
+        startDocumentTransition(() => setCurrentDoc(doc));
+      } else {
+        setCurrentDoc(doc);
+      }
+      // `doc` (from the already-loaded sidebar list) generally already has full,
+      // current content — re-fetching is a safety net for staleness, not the
+      // common path, so only force a second (expensive) render if it actually differs.
       const fresh = await getDocument(doc.id);
       if (generation !== selectDocumentGenerationRef.current) return;
-      setCurrentDoc(fresh ?? doc);
+      if (fresh && (fresh.content !== doc.content || fresh.title !== doc.title)) {
+        if (fresh.content.length > LONG_DOCUMENT_CHAR_THRESHOLD) {
+          startDocumentTransition(() => setCurrentDoc(fresh));
+        } else {
+          setCurrentDoc(fresh);
+        }
+      }
       if (documentStackEnabled) {
         setDocStackIds((prev) => [...prev.filter((i) => i !== doc.id), doc.id]);
       }
@@ -899,7 +967,7 @@ function AppContent() {
       params.set("doc", doc.id);
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
-    [router, pathname, searchParams, documentStackEnabled]
+    [router, pathname, searchParams, documentStackEnabled, startDocumentTransition]
   );
 
   useEffect(() => {
@@ -972,14 +1040,14 @@ function AppContent() {
   );
 
   useLayoutEffect(() => {
-    if (!documentSearchQuery.trim() || !currentDoc || editMode) return;
+    if (!debouncedDocumentSearchQuery.trim() || !currentDoc || editMode) return;
 
     const viewport = contentScrollRef.current;
     if (!viewport) return;
 
     scrollToSearchMatch(viewport, searchActiveMatchIndex);
   }, [
-    documentSearchQuery,
+    debouncedDocumentSearchQuery,
     searchActiveMatchIndex,
     searchMatchCount,
     currentDoc,
@@ -1069,7 +1137,7 @@ function AppContent() {
         onSearchSelectDocument={handleSearchSelectDocument}
         searchMatchNavigation={
           currentDoc &&
-          documentSearchQuery.trim() &&
+          debouncedDocumentSearchQuery.trim() &&
           searchMatchCount > 0 &&
           !editMode
             ? {
@@ -1239,10 +1307,10 @@ function AppContent() {
                   />
                 ) : (
                   <MarkdownRenderer
-                    key={currentDoc.id}
-                    content={previewContent}
-                    searchQuery={documentSearchQuery}
-                    activeMatchIndex={searchActiveMatchIndex}
+                    key={effectivePreviewSnapshot.docId ?? "empty"}
+                    content={effectivePreviewSnapshot.content}
+                    searchQuery={effectivePreviewSnapshot.searchQuery}
+                    activeMatchIndex={effectivePreviewSnapshot.activeMatchIndex}
                     articleRef={markdownArticleRef}
                     onMatchCountChange={handleSearchMatchCountChange}
                     onContentChange={handlePreviewContentChange}
