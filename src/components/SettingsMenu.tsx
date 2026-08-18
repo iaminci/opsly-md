@@ -12,7 +12,17 @@ import {
   Upload,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import {
+  workspaceControlChromeClassName,
+  workspaceSwitcherDropdownContentClassName,
+} from "@/components/WorkspaceSwitcher";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ThemeSettingsControl } from "@/components/ThemeSettingsControl";
@@ -21,7 +31,7 @@ import { openFeedbackForm } from "@/components/Feedback";
 import { cn } from "@/lib/utils";
 
 const settingsDataButtonClassName =
-  "h-9 w-full min-w-0 justify-center rounded-md border-2 border-border text-primary shadow-none hover:border-border hover:bg-primary hover:text-black hover:translate-x-0 hover:translate-y-0";
+  "h-9 w-full min-w-0 justify-center rounded-md border-2 border-border text-primary shadow-none hover:border-border hover:bg-primary hover:text-primary-foreground hover:translate-x-0 hover:translate-y-0";
 
 const settingsExportGroupClassName =
   "box-border flex w-full min-w-0 flex-col overflow-hidden rounded-md border-2 border-border text-primary shadow-none";
@@ -29,17 +39,16 @@ const settingsExportGroupClassName =
 const settingsExportRowClassName = "flex w-full min-w-0";
 
 const settingsExportMainClassName =
-  "inline-flex h-full min-w-0 flex-1 items-center gap-2 px-3 text-sm font-base text-primary transition-colors hover:bg-primary hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
+  "inline-flex h-full min-w-0 flex-1 items-center gap-2 px-3 text-sm font-base text-primary transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
 
 const settingsExportArrowClassName =
-  "inline-flex h-full w-9 shrink-0 items-center justify-center border-l-2 border-border bg-primary text-foreground transition-colors hover:bg-primary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
+  "inline-flex h-full w-9 shrink-0 items-center justify-center border-l-2 border-border bg-primary text-primary-foreground transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
 
 const settingsExportMenuItemClassName =
-  "inline-flex h-9 w-full min-w-0 items-center justify-start gap-2 border-t-2 border-border px-3 text-sm font-base text-primary transition-colors hover:bg-primary hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
+  "inline-flex h-9 w-full min-w-0 items-center justify-start gap-2 border-t-2 border-border px-3 text-sm font-base text-primary transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
 
 const EXPERIMENT_PALETTES: { id: ThemePalette; label: string }[] = [
   { id: "default", label: "Default" },
-  { id: "monochrome", label: "Mono" },
   { id: "monokai", label: "Monokai" },
 ];
 
@@ -126,6 +135,8 @@ export function SettingsMenu({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [popoverOffset, setPopoverOffset] = useState({ side: 16, align: -8 });
   const { palette, setPalette } = useTheme();
+  const activePaletteLabel =
+    EXPERIMENT_PALETTES.find((option) => option.id === palette)?.label ?? "Default";
 
   const updatePopoverOffset = useCallback(() => {
     const trigger = triggerRef.current;
@@ -190,7 +201,8 @@ export function SettingsMenu({
           const target = e.target;
           if (
             target instanceof Element &&
-            target.closest("[data-theme-settings-control]")
+            (target.closest("[data-theme-settings-control]") ||
+              target.closest("[data-theme-palette-dropdown]"))
           ) {
             e.preventDefault();
           }
@@ -199,7 +211,8 @@ export function SettingsMenu({
           const target = e.target;
           if (
             target instanceof Element &&
-            target.closest("[data-theme-settings-control]")
+            (target.closest("[data-theme-settings-control]") ||
+              target.closest("[data-theme-palette-dropdown]"))
           ) {
             e.preventDefault();
           }
@@ -220,42 +233,54 @@ export function SettingsMenu({
                   <MessageSquare className="size-4 shrink-0" />
                   Give Feedback
                 </Button>
-                <div className="flex flex-col gap-2 py-0.5">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-medium text-foreground">Theme Presets</span>
-                      <SettingsInfoTooltip ariaLabel="About theme presets">
-                        Temporary color palettes for testing
-                      </SettingsInfoTooltip>
-                    </div>
-                    <ThemeSettingsControl />
+                <div className="flex items-center justify-between gap-3 py-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-medium text-foreground">Theme Presets</span>
+                    <SettingsInfoTooltip ariaLabel="About theme presets">
+                      Temporary color palettes for testing
+                    </SettingsInfoTooltip>
                   </div>
-                  <div
-                    role="group"
-                    aria-label="Experimental palette"
-                    className="grid grid-cols-3 gap-1.5"
-                  >
-                    {EXPERIMENT_PALETTES.map((option) => {
-                      const active = palette === option.id;
-                      return (
-                        <Button
-                          key={option.id}
+                  <div className="flex items-center gap-2">
+                    <DropdownMenu modal={false}>
+                      <DropdownMenuTrigger asChild>
+                        <button
                           type="button"
-                          variant="ghost"
-                          size="sm"
-                          aria-pressed={active}
+                          data-theme-palette-dropdown
+                          aria-label="Theme preset"
                           className={cn(
-                            "h-8 min-w-0 justify-center rounded-md border-2 px-1 text-xs shadow-none hover:translate-x-0 hover:translate-y-0",
-                            active
-                              ? "border-border bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
-                              : "border-border text-foreground hover:bg-sidebar-accent",
+                            "flex h-9 min-w-[7.5rem] items-center gap-2 px-3 text-left text-sm font-medium text-foreground",
+                            workspaceControlChromeClassName,
                           )}
-                          onClick={() => setPalette(option.id)}
+                          onPointerDown={(e) => e.stopPropagation()}
                         >
-                          {option.label}
-                        </Button>
-                      );
-                    })}
+                          <span className="min-w-0 flex-1 truncate">{activePaletteLabel}</span>
+                          <ChevronDown className="size-4 shrink-0 text-primary" aria-hidden />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        sideOffset={4}
+                        className={cn(workspaceSwitcherDropdownContentClassName, "min-w-[7.5rem]")}
+                        data-theme-palette-dropdown
+                      >
+                        <div className="p-1">
+                          {EXPERIMENT_PALETTES.map((option) => (
+                            <DropdownMenuItem
+                              key={option.id}
+                              onClick={() => setPalette(option.id)}
+                              className={cn(
+                                "cursor-pointer",
+                                palette === option.id &&
+                                  "bg-sidebar-accent font-semibold text-primary",
+                              )}
+                            >
+                              <span className="truncate">{option.label}</span>
+                            </DropdownMenuItem>
+                          ))}
+                        </div>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <ThemeSettingsControl />
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-3 py-0.5">
@@ -346,7 +371,7 @@ export function SettingsMenu({
                     >
                       <ChevronDown
                         className={cn(
-                          "size-4 shrink-0 text-foreground transition-transform",
+                          "size-4 shrink-0 text-primary-foreground transition-transform",
                           exportOptionsOpen && "rotate-180",
                         )}
                       />
@@ -388,7 +413,7 @@ export function SettingsMenu({
                 size="sm"
                 className={cn(
                   settingsDataButtonClassName,
-                  "text-destructive hover:bg-destructive focus-visible:ring-destructive [&_svg]:text-destructive hover:[&_svg]:text-black",
+                  "text-destructive hover:bg-destructive hover:text-destructive-foreground focus-visible:ring-destructive [&_svg]:text-destructive hover:[&_svg]:text-destructive-foreground",
                 )}
                 onClick={() => closeAnd(onDeleteAll)}
               >

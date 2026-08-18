@@ -41,7 +41,7 @@ export const workspaceControlChromeClassName =
 
 export const workspaceDropdownTriggerClassName = cn(
   "flex h-9 min-h-9 w-full min-w-0 items-center gap-2 px-3 text-left text-sm font-medium text-foreground",
-  workspaceControlChromeClassName
+  workspaceControlChromeClassName,
 );
 
 export const workspaceIconActionClassName = cn(
@@ -281,8 +281,8 @@ export function WorkspaceSwitcher({
                   dragTargetActive &&
                     cn(
                       "!border-[var(--tree-drag-target-border)] !bg-[var(--tree-drag-target-bg)] !text-[var(--tree-drag-target-fg)] hover:!bg-[var(--tree-drag-target-bg)]",
-                      TREE_DRAG_TARGET_PILL
-                    )
+                      TREE_DRAG_TARGET_PILL,
+                    ),
                 )}
               >
                 <span className="min-w-0 flex-1 truncate font-heading font-semibold">

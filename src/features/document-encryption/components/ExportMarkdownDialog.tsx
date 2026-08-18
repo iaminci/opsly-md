@@ -35,7 +35,7 @@ export function ExportMarkdownDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            className="hover:!bg-primary hover:!text-black border-2 text-foreground"
+            className="hover:!bg-primary hover:!text-primary-foreground border-2 text-foreground"
             onClick={onExport}
           >
             Export

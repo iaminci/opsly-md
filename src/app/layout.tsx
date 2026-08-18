@@ -97,9 +97,9 @@ export default function RootLayout({
                   document.documentElement.classList.remove('dark');
                 }
                 var root = document.documentElement;
-                root.classList.remove('palette-monochrome', 'palette-monokai');
+                root.classList.remove('palette-monokai');
                 var palette = localStorage.getItem('md-viewer-palette');
-                if (palette === 'monochrome' || palette === 'monokai') {
+                if (palette === 'monokai') {
                   root.setAttribute('data-palette', palette);
                   root.classList.add('palette-' + palette);
                 } else {

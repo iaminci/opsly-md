@@ -134,7 +134,7 @@ export function UnlockDocumentDialog({
               type="submit"
               disabled={!passphrase || submitting}
               className={cn(
-                "bg-background text-foreground hover:bg-main hover:text-black"
+                "bg-background text-foreground hover:bg-main hover:text-main-foreground"
               )}
             >
               {submitting ? "Unlocking…" : "Unlock"}

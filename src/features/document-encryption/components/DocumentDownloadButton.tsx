@@ -7,8 +7,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
 import { workspaceToolbarTextActionClassName } from "@/components/WorkspaceSwitcher";
+import { cn } from "@/lib/utils";
 
 export interface DocumentDownloadButtonProps {
   isEncryptedAtRest: boolean;

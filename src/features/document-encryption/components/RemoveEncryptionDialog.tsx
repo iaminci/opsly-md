@@ -40,7 +40,7 @@ export function RemoveEncryptionDialog({
           <AlertDialogCancel disabled={submitting}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             className={cn(
-              "border-2 text-destructive hover:!bg-destructive hover:!text-black"
+              "border-2 text-destructive hover:!bg-destructive hover:!text-destructive-foreground"
             )}
             disabled={submitting}
             onClick={onConfirm}

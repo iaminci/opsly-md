@@ -12,7 +12,7 @@ import { flushSync } from "react-dom";
 export type ThemePreference = "light" | "dark" | "system";
 export type ResolvedTheme = "light" | "dark";
 /** Color pack; independent of light/dark. Default keeps existing tokens. */
-export type ThemePalette = "default" | "monochrome" | "monokai";
+export type ThemePalette = "default" | "monokai";
 
 export type ThemeToggleOrigin = { clientX: number; clientY: number };
 
@@ -37,13 +37,13 @@ function resolveTheme(preference: ThemePreference): ResolvedTheme {
 }
 
 function parsePalette(value: string | null): ThemePalette {
-  if (value === "monochrome" || value === "monokai") return value;
+  if (value === "monokai") return value;
   return "default";
 }
 
 function applyPaletteAttribute(palette: ThemePalette) {
   const root = document.documentElement;
-  root.classList.remove("palette-monochrome", "palette-monokai");
+  root.classList.remove("palette-monokai");
   if (palette === "default") {
     root.removeAttribute("data-palette");
   } else {
