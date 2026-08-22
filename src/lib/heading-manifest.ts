@@ -90,6 +90,15 @@ function legacyLineHeadingManifest(src: string): HeadingManifestEntry[] {
   return assignSlugIds(raw);
 }
 
+/** Headings included in the document outline (levels 1–3). */
+export function getTocHeadings(markdown: string): HeadingManifestEntry[] {
+  return buildHeadingManifest(markdown).filter((h) => h.level <= 3);
+}
+
+export function hasTocHeadings(markdown: string): boolean {
+  return getTocHeadings(markdown).length > 0;
+}
+
 function assignSlugIds(raw: { level: number; text: string }[]): HeadingManifestEntry[] {
   const seen = new Map<string, number>();
   return raw.map(({ level, text }) => {

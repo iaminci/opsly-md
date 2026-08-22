@@ -55,6 +55,14 @@ export const workspaceToolbarTextActionClassName = cn(
   "inline-flex h-9 shrink-0 cursor-pointer items-center justify-center px-3.5 text-sm font-medium text-primary"
 );
 
+/** Document action bar — shared by preview and edit so Edit/Preview stay put. */
+export const documentActionToolbarClassName =
+  "flex h-12 shrink-0 items-center bg-input print:hidden";
+
+/** Left cluster inside the document action bar. */
+export const documentActionToolbarActionsClassName =
+  "flex shrink-0 items-center gap-2 pr-2";
+
 /** (+) “New workspace” and single-workspace ⋯ — same chrome as tabs, neutral surface. */
 export const workspaceNeutralChipClassName = cn(
   workspaceTabBaseClassName,

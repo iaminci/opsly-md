@@ -54,6 +54,9 @@ vscode-extension/.esbuild/
 .vscode-test/
 *.vsix
 
+# desktop app
+desktop/
+
 # devbox
 .devbox/
 devbox.json

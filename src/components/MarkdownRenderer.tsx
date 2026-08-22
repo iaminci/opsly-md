@@ -115,7 +115,7 @@ interface MarkdownRendererProps {
   content: string;
   /**
    * When true, links are classified into CTA buttons by `href`:
-   * - `/app*` → primary button
+   * - `/` → primary button
    * - any `github.com` URL → secondary button
    * Used on the homepage only so user document rendering is unaffected.
    */
@@ -136,7 +136,7 @@ function isMermaidCode(lang: string | undefined): boolean {
 
 function classifyCtaLink(href: string | undefined): string | undefined {
   if (!href) return undefined;
-  if (href.startsWith("/app")) return "cta cta-primary text-background";
+  if (href === "/" || href.startsWith("/?")) return "cta cta-primary text-background";
   if (/(^https?:)?\/\/([^/]+\.)?github\.com\//i.test(href)) {
     return "cta cta-secondary";
   }

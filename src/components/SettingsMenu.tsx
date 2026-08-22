@@ -3,9 +3,9 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
   ChevronDown,
+  ChevronRight,
   Download,
   Info,
-  Lock,
   MessageSquare,
   Settings,
   Trash2,
@@ -33,20 +33,6 @@ import { cn } from "@/lib/utils";
 const settingsDataButtonClassName =
   "h-9 w-full min-w-0 justify-center rounded-md border-2 border-border text-primary shadow-none hover:border-border hover:bg-primary hover:text-primary-foreground hover:translate-x-0 hover:translate-y-0";
 
-const settingsExportGroupClassName =
-  "box-border flex w-full min-w-0 flex-col overflow-hidden rounded-md border-2 border-border text-primary shadow-none";
-
-const settingsExportRowClassName = "flex w-full min-w-0";
-
-const settingsExportMainClassName =
-  "inline-flex h-full min-w-0 flex-1 items-center gap-2 px-3 text-sm font-base text-primary transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
-
-const settingsExportArrowClassName =
-  "inline-flex h-full w-9 shrink-0 items-center justify-center border-l-2 border-border bg-primary text-primary-foreground transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
-
-const settingsExportMenuItemClassName =
-  "inline-flex h-9 w-full min-w-0 items-center justify-start gap-2 border-t-2 border-border px-3 text-sm font-base text-primary transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
-
 const EXPERIMENT_PALETTES: { id: ThemePalette; label: string }[] = [
   { id: "default", label: "Default" },
   { id: "monokai", label: "Monokai" },
@@ -59,7 +45,7 @@ interface SettingsMenuProps {
   workspacesEnabled: boolean;
   onWorkspacesEnabledChange: (enabled: boolean) => void;
   onImport: () => void;
-  onExport: (mode: "plain" | "encrypted") => void;
+  onExport: () => void;
   onDeleteAll: () => void;
   deleteLabel: string;
 }
@@ -131,7 +117,6 @@ export function SettingsMenu({
   deleteLabel,
 }: SettingsMenuProps) {
   const [open, setOpen] = useState(false);
-  const [exportOptionsOpen, setExportOptionsOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [popoverOffset, setPopoverOffset] = useState({ side: 16, align: -8 });
   const { palette, setPalette } = useTheme();
@@ -163,8 +148,6 @@ export function SettingsMenu({
   const handleOpenChange = (nextOpen: boolean) => {
     if (nextOpen) {
       updatePopoverOffset();
-    } else {
-      setExportOptionsOpen(false);
     }
     setOpen(nextOpen);
     onOpenChange?.(nextOpen);
@@ -186,7 +169,8 @@ export function SettingsMenu({
           aria-expanded={open}
         >
           <Settings className="size-4 shrink-0 text-primary" />
-          Settings
+          <span className="min-w-0 flex-1 text-left">Settings</span>
+          <ChevronRight className="size-4 shrink-0 text-primary" aria-hidden />
         </button>
       </PopoverTrigger>
 
@@ -338,66 +322,16 @@ export function SettingsMenu({
                   <Upload className="size-4 shrink-0" />
                   Import
                 </Button>
-                <div
-                  className={cn(
-                    settingsExportGroupClassName,
-                    !exportOptionsOpen && "h-9",
-                  )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className={settingsDataButtonClassName}
+                  onClick={() => closeAnd(onExport)}
                 >
-                  <div
-                    className={cn(
-                      settingsExportRowClassName,
-                      exportOptionsOpen ? "h-9" : "h-full",
-                    )}
-                  >
-                    <button
-                      type="button"
-                      className={cn(
-                        settingsExportMainClassName,
-                        exportOptionsOpen ? "justify-start" : "justify-center",
-                      )}
-                      onClick={() => closeAnd(() => onExport("plain"))}
-                    >
-                      <Download className="size-4 shrink-0" />
-                      Export
-                    </button>
-                    <button
-                      type="button"
-                      className={settingsExportArrowClassName}
-                      aria-label="Export options"
-                      aria-expanded={exportOptionsOpen}
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onClick={() => setExportOptionsOpen((current) => !current)}
-                    >
-                      <ChevronDown
-                        className={cn(
-                          "size-4 shrink-0 text-primary-foreground transition-transform",
-                          exportOptionsOpen && "rotate-180",
-                        )}
-                      />
-                    </button>
-                  </div>
-                  {exportOptionsOpen ? (
-                    <>
-                      <button
-                        type="button"
-                        className={settingsExportMenuItemClassName}
-                        onClick={() => closeAnd(() => onExport("plain"))}
-                      >
-                        <Download className="size-4 shrink-0" />
-                        Plain
-                      </button>
-                      <button
-                        type="button"
-                        className={settingsExportMenuItemClassName}
-                        onClick={() => closeAnd(() => onExport("encrypted"))}
-                      >
-                        <Lock className="size-4 shrink-0" />
-                        Encrypted
-                      </button>
-                    </>
-                  ) : null}
-                </div>
+                  <Download className="size-4 shrink-0" />
+                  Export
+                </Button>
               </div>
             </SettingsSection>
 
