@@ -2,14 +2,18 @@
 
 import {
   AlertDialog,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import {
+  workspaceIconActionClassName,
+  workspaceToolbarTextActionClassName,
+} from "@/components/WorkspaceSwitcher";
+import { cn } from "@/lib/utils";
+import { X } from "lucide-react";
 
 interface SecureBlocksDetectedDialogProps {
   open: boolean;
@@ -35,8 +39,16 @@ export function SecureBlocksDetectedDialog({
       }}
     >
       <AlertDialogContent>
+        <button
+          type="button"
+          className={cn("absolute right-4 top-4", workspaceIconActionClassName)}
+          onClick={onCancel}
+          aria-label="Close"
+        >
+          <X className="size-4" />
+        </button>
         <AlertDialogHeader>
-          <AlertDialogTitle>Secure blocks detected</AlertDialogTitle>
+          <AlertDialogTitle className="pr-10">Secure blocks detected</AlertDialogTitle>
           <AlertDialogDescription>
             This document contains secure blocks.
             <br />
@@ -48,26 +60,21 @@ export function SecureBlocksDetectedDialog({
             Would you like to encrypt this document?
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
-          <AlertDialogCancel type="button" onClick={onCancel}>
-            Cancel
-          </AlertDialogCancel>
-          <Button
+        <AlertDialogFooter className="gap-2 sm:justify-end">
+          <button
             type="button"
-            variant="neutral"
-            className="bg-background"
+            className={workspaceToolbarTextActionClassName}
             onClick={onSaveWithoutEncryption}
           >
-            Save Without Encryption
-          </Button>
-          <Button
+            Without Encrypt
+          </button>
+          <button
             type="button"
-            variant="neutral"
-            className="bg-background hover:bg-main hover:text-main-foreground"
+            className={workspaceToolbarTextActionClassName}
             onClick={onEncrypt}
           >
             Encrypt
-          </Button>
+          </button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

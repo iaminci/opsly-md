@@ -241,6 +241,11 @@ export function useDocumentEncryption(
       }
 
       if (!interactive) {
+        // Background/autosave: persist markdown as-is when the document is not
+        // encrypted at rest. Interactive saves still prompt for encryption.
+        if (current.securityState === DocumentSecurityState.NotEncrypted) {
+          return { action: "save", content: markdown };
+        }
         return null;
       }
 

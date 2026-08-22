@@ -43,7 +43,7 @@ import {
   type AllWorkspacesExport,
 } from "@/lib/storage";
 import { cn, OPSLY_FILE_EXTENSION, titleFromMarkdownContent } from "@/lib/utils";
-import { WorkspaceSwitcher, workspaceToolbarTextActionClassName } from "./WorkspaceSwitcher";
+import { WorkspaceSwitcher, workspaceIconActionClassName, workspaceToolbarTextActionClassName } from "./WorkspaceSwitcher";
 import { WorkspaceActionBar } from "./WorkspaceActionBar";
 import {
   AlertDialog,
@@ -1490,46 +1490,52 @@ export function Sidebar({
       </AlertDialog>
 
       <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
-        <DialogContent className="sm:max-w-sm" showCloseButton>
+        <DialogContent
+          className="sm:max-w-sm"
+          showCloseButton
+          closeButtonClassName={cn(
+            "absolute right-4 top-4 opacity-100 hover:text-primary-hover",
+            workspaceIconActionClassName
+          )}
+        >
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="pr-10">
               {exportSelectedIds.size === 1 ? "Export workspace" : "Export workspaces"}
             </DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col gap-2 py-2">
-            <label className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-sidebar-accent">
-              <Checkbox
-                checked={
-                  exportDialogWorkspaces.length > 0 &&
-                  exportSelectedIds.size === exportDialogWorkspaces.length
-                }
-                onCheckedChange={toggleExportSelectAll}
-              />
-              <span className="text-sm font-medium">Select all</span>
-            </label>
-            <div className="max-h-48 overflow-y-auto flex flex-col gap-1 border border-2 rounded-md p-2">
-              {exportDialogWorkspaces.map((ws) => (
-                <label
-                  key={ws.id}
-                  className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-sidebar-accent"
-                >
+          <div className="py-2">
+            <div className="overflow-hidden rounded-md border-2 border-border">
+              <div className="bg-sidebar-accent/50 p-1">
+                <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-sidebar-accent">
                   <Checkbox
-                    checked={exportSelectedIds.has(ws.id)}
-                    onCheckedChange={() => toggleExportWorkspace(ws.id)}
+                    checked={
+                      exportDialogWorkspaces.length > 0 &&
+                      exportSelectedIds.size === exportDialogWorkspaces.length
+                    }
+                    onCheckedChange={toggleExportSelectAll}
                   />
-                  <span className="text-sm truncate">{ws.name}</span>
+                  <span className="text-sm font-medium">Select all</span>
                 </label>
-              ))}
+              </div>
+              <div className="max-h-48 overflow-y-auto border-t-2 border-border p-1">
+                <div className="flex flex-col gap-1">
+                  {exportDialogWorkspaces.map((ws) => (
+                    <label
+                      key={ws.id}
+                      className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-sidebar-accent"
+                    >
+                      <Checkbox
+                        checked={exportSelectedIds.has(ws.id)}
+                        onCheckedChange={() => toggleExportWorkspace(ws.id)}
+                      />
+                      <span className="text-sm truncate">{ws.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
           <DialogFooter className="gap-2 sm:justify-end">
-            <button
-              type="button"
-              className={workspaceToolbarTextActionClassName}
-              onClick={() => setExportDialogOpen(false)}
-            >
-              Cancel
-            </button>
             <button
               type="button"
               className={cn(
@@ -1539,7 +1545,7 @@ export function Sidebar({
               onClick={() => void handleExportSelected("plain")}
               disabled={exportSelectedIds.size === 0}
             >
-              Plain
+              Without Encrypted
             </button>
             <button
               type="button"
