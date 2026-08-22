@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { forwardRef, useLayoutEffect, useRef } from "react";
 import {
   Bold,
   ChevronDown,
@@ -71,20 +71,22 @@ function ToolbarButton({
 function ToolbarDivider() {
   return (
     <div
-      className="mx-1 hidden h-4 w-px shrink-0 bg-border/80 sm:block"
+      className="mx-1 hidden h-4 w-0 shrink-0 border-l-2 border-border sm:block"
       aria-hidden
     />
   );
 }
 
-function MarkdownFormatToolbar({
+export function MarkdownFormatToolbar({
   textareaRef,
   value,
   onChange,
+  className,
 }: {
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   value: string;
   onChange: (value: string) => void;
+  className?: string;
 }) {
   const pendingSelectionRef = useRef<{
     start: number;
@@ -120,7 +122,10 @@ function MarkdownFormatToolbar({
 
   return (
     <div
-      className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-0.5"
+      className={cn(
+        "flex min-w-0 flex-1 flex-wrap items-center justify-end gap-0.5",
+        className
+      )}
       role="toolbar"
       aria-label="Markdown formatting"
     >
@@ -191,43 +196,38 @@ function MarkdownFormatToolbar({
   );
 }
 
-export function MarkdownEditor({
-  value,
-  onChange,
-  placeholder = "Type markdown here…",
-  className,
-  autoFocus = false,
-}: MarkdownEditorProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  return (
-    <div
-      className={cn(
-        "markdown-editor flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border-2 border-border bg-background",
-        className
-      )}
-    >
-      <div className="flex shrink-0 items-center border-b-2 border-border bg-input px-2 py-1.5">
-        <MarkdownFormatToolbar
-          textareaRef={textareaRef}
-          value={value}
-          onChange={onChange}
-        />
+export const MarkdownEditor = forwardRef<HTMLTextAreaElement, MarkdownEditorProps>(
+  function MarkdownEditor(
+    {
+      value,
+      onChange,
+      placeholder = "Type markdown here…",
+      className,
+      autoFocus = false,
+    },
+    ref
+  ) {
+    return (
+      <div
+        className={cn(
+          "markdown-editor flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border-2 border-border bg-background",
+          className
+        )}
+      >
+        <div className="min-h-0 flex-1 overflow-hidden bg-background">
+          <LineNumberedTextarea
+            ref={ref}
+            autoFocus={autoFocus}
+            embedded
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            spellCheck={false}
+            className="h-full min-h-0 leading-relaxed"
+            textareaClassName="h-full min-h-0 resize-none leading-relaxed placeholder:text-muted-foreground"
+          />
+        </div>
       </div>
-
-      <div className="min-h-0 flex-1 overflow-hidden bg-background">
-        <LineNumberedTextarea
-          ref={textareaRef}
-          autoFocus={autoFocus}
-          embedded
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          spellCheck={false}
-          className="h-full min-h-0 leading-relaxed"
-          textareaClassName="h-full min-h-[12rem] resize-y leading-relaxed placeholder:text-muted-foreground"
-        />
-      </div>
-    </div>
-  );
-}
+    );
+  }
+);

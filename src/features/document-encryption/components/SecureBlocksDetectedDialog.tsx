@@ -63,7 +63,7 @@ export function SecureBlocksDetectedDialog({
           <Button
             type="button"
             variant="neutral"
-            className="bg-background hover:bg-main hover:text-black"
+            className="bg-background hover:bg-main hover:text-main-foreground"
             onClick={onEncrypt}
           >
             Encrypt

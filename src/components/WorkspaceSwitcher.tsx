@@ -41,7 +41,7 @@ export const workspaceControlChromeClassName =
 
 export const workspaceDropdownTriggerClassName = cn(
   "flex h-9 min-h-9 w-full min-w-0 items-center gap-2 px-3 text-left text-sm font-medium text-foreground",
-  workspaceControlChromeClassName
+  workspaceControlChromeClassName,
 );
 
 export const workspaceIconActionClassName = cn(
@@ -54,6 +54,14 @@ export const workspaceToolbarTextActionClassName = cn(
   workspaceControlChromeClassName,
   "inline-flex h-9 shrink-0 cursor-pointer items-center justify-center px-3.5 text-sm font-medium text-primary"
 );
+
+/** Document action bar — shared by preview and edit so Edit/Preview stay put. */
+export const documentActionToolbarClassName =
+  "flex h-12 shrink-0 items-center bg-input print:hidden";
+
+/** Left cluster inside the document action bar. */
+export const documentActionToolbarActionsClassName =
+  "flex shrink-0 items-center gap-2 pr-2";
 
 /** (+) “New workspace” and single-workspace ⋯ — same chrome as tabs, neutral surface. */
 export const workspaceNeutralChipClassName = cn(
@@ -281,8 +289,8 @@ export function WorkspaceSwitcher({
                   dragTargetActive &&
                     cn(
                       "!border-[var(--tree-drag-target-border)] !bg-[var(--tree-drag-target-bg)] !text-[var(--tree-drag-target-fg)] hover:!bg-[var(--tree-drag-target-bg)]",
-                      TREE_DRAG_TARGET_PILL
-                    )
+                      TREE_DRAG_TARGET_PILL,
+                    ),
                 )}
               >
                 <span className="min-w-0 flex-1 truncate font-heading font-semibold">

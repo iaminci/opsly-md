@@ -123,7 +123,7 @@ export function InlineLocationSelectors({
       : cn(
           workspaceNeutralChipClassName,
           "flex w-full min-w-0 items-center gap-2 px-3 text-left",
-          compact && "h-9 gap-2 px-3 text-sm"
+          compact && "h-9 gap-2 px-3 text-sm",
         );
 
   const labelClassName = "block text-sm font-medium text-foreground";

@@ -118,7 +118,7 @@ export function EncryptedDocumentPlaceholder({
               type="submit"
               disabled={!passphrase || submitting}
               className={cn(
-                "bg-background text-foreground hover:bg-main hover:text-black"
+                "bg-background text-foreground hover:bg-main hover:text-main-foreground"
               )}
             >
               <LockOpen aria-hidden />

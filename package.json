@@ -10,7 +10,11 @@
     "dev": "next dev",
     "build": "node scripts/write-deployment-id.mjs && next build",
     "start": "next start",
-    "lint": "eslint src scripts vscode-extension/src vscode-extension/esbuild.webview.mjs vscode-extension/scripts/copy-prose-fonts.mjs"
+    "lint": "eslint src scripts vscode-extension/src vscode-extension/esbuild.webview.mjs vscode-extension/scripts/copy-prose-fonts.mjs",
+    "desktop:dev": "pnpm --dir desktop run dev",
+    "desktop:build": "pnpm --dir desktop run build",
+    "desktop:package": "pnpm --dir desktop run package",
+    "desktop:package:dir": "pnpm --dir desktop run package:dir"
   },
   "dependencies": {
     "@encatch/web-sdk": "^1.4.0",

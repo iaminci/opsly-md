@@ -32,7 +32,6 @@ import {
   deleteFolder,
   deleteDocument,
   deleteAllData,
-  exportWorkspaceData,
   exportAllWorkspacesData,
   exportWorkspacesData,
   importWorkspaceData,
@@ -44,7 +43,7 @@ import {
   type AllWorkspacesExport,
 } from "@/lib/storage";
 import { cn, OPSLY_FILE_EXTENSION, titleFromMarkdownContent } from "@/lib/utils";
-import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
+import { WorkspaceSwitcher, workspaceToolbarTextActionClassName } from "./WorkspaceSwitcher";
 import { WorkspaceActionBar } from "./WorkspaceActionBar";
 import {
   AlertDialog,
@@ -168,9 +167,7 @@ export function Sidebar({
   const [deleteDocDialogOpen, setDeleteDocDialogOpen] = useState(false);
   const [deleteDocTarget, setDeleteDocTarget] = useState<{ id: string; title: string } | null>(null);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
-  const [exportConfirmDialogOpen, setExportConfirmDialogOpen] = useState(false);
   const [exportSelectedIds, setExportSelectedIds] = useState<Set<string>>(new Set());
-  const [exportMode, setExportMode] = useState<ExportMode>("plain");
   const [exportPassphraseDialogOpen, setExportPassphraseDialogOpen] = useState(false);
   const [pendingExport, setPendingExport] = useState<PendingExport | null>(null);
   const [importUnlockDialogOpen, setImportUnlockDialogOpen] = useState(false);
@@ -224,7 +221,6 @@ export function Sidebar({
     deleteFolderDialogOpen ||
     deleteDocDialogOpen ||
     exportDialogOpen ||
-    exportConfirmDialogOpen ||
     exportPassphraseDialogOpen ||
     importUnlockDialogOpen ||
     commandPaletteOpen ||
@@ -251,6 +247,13 @@ export function Sidebar({
     if (defaultWorkspace) return [defaultWorkspace];
     return sortedWorkspaces.filter((w) => w.id === "default");
   }, [workspacesEnabled, selectedWorkspaceId, sortedWorkspaces, defaultWorkspace]);
+
+  const exportDialogWorkspaces = useMemo(() => {
+    if (!workspacesEnabled) {
+      return sortedWorkspaces.filter((w) => w.id === "default");
+    }
+    return sortedWorkspaces;
+  }, [workspacesEnabled, sortedWorkspaces]);
 
   /**
    * Stable reference when inputs are unchanged — `Search` rebuilds its MiniSearch
@@ -975,7 +978,7 @@ export function Sidebar({
     (
       data: AllWorkspacesExport | WorkspaceExport,
       filename: string,
-      mode: ExportMode = exportMode
+      mode: ExportMode
     ) => {
       if (mode === "encrypted") {
         setPendingExport({ data, filename });
@@ -988,38 +991,21 @@ export function Sidebar({
         "application/json"
       );
     },
-    [exportMode]
+    []
   );
 
-  const handleExportClick = (mode: ExportMode = "plain") => {
-    setExportMode(mode);
+  const handleExportClick = () => {
     if (!workspacesEnabled) {
-      void handleExportWorkspace("default", mode);
-      return;
-    }
-    if (selectedWorkspaceId) {
-      setExportConfirmDialogOpen(true);
+      setExportSelectedIds(new Set(["default"]));
+    } else if (selectedWorkspaceId) {
+      setExportSelectedIds(new Set([selectedWorkspaceId]));
     } else {
       setExportSelectedIds(new Set(sortedWorkspaces.map((w) => w.id)));
-      setExportDialogOpen(true);
     }
+    setExportDialogOpen(true);
   };
 
-  const handleExportConfirm = async () => {
-    if (selectedWorkspaceId) {
-      await handleExportWorkspace(selectedWorkspaceId);
-      setExportConfirmDialogOpen(false);
-    }
-  };
-
-  const handleExportWorkspace = async (workspaceId: string, mode?: ExportMode) => {
-    const data = await exportWorkspaceData(workspaceId);
-    if (!data) return;
-    const filename = `${data.workspace.name.replace(/[^\w\s-]/g, "").replace(/\s+/g, "-")}-export.json`;
-    queueExportDownload(data, filename, mode);
-  };
-
-  const handleExportSelected = async () => {
+  const handleExportSelected = async (mode: ExportMode) => {
     const ids = Array.from(exportSelectedIds);
     if (ids.length === 0) return;
     const data =
@@ -1031,7 +1017,7 @@ export function Sidebar({
       ids.length === sortedWorkspaces.length
         ? "all-workspaces-export.json"
         : "workspaces-export.json";
-    queueExportDownload(data, filename);
+    queueExportDownload(data, filename, mode);
     setExportDialogOpen(false);
   };
 
@@ -1125,10 +1111,10 @@ export function Sidebar({
   };
 
   const toggleExportSelectAll = () => {
-    if (exportSelectedIds.size === sortedWorkspaces.length) {
+    if (exportSelectedIds.size === exportDialogWorkspaces.length) {
       setExportSelectedIds(new Set());
     } else {
-      setExportSelectedIds(new Set(sortedWorkspaces.map((w) => w.id)));
+      setExportSelectedIds(new Set(exportDialogWorkspaces.map((w) => w.id)));
     }
   };
 
@@ -1214,7 +1200,7 @@ export function Sidebar({
             <SidebarGroupContent>
               <div className="flex min-w-0 items-center justify-between gap-2">
                 <Link
-                  href="/"
+                  href="https://opsly.dev/md"
                   aria-label="Opsly MD home"
                   className="flex min-w-0 shrink items-center leading-none no-underline hover:opacity-90"
                 >
@@ -1222,7 +1208,7 @@ export function Sidebar({
                 </Link>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <SidebarTrigger />
+                    <SidebarTrigger className="relative top-1" />
                   </TooltipTrigger>
                   <TooltipContent side="bottom" align="end">
                     Collapse sidebar
@@ -1333,9 +1319,9 @@ export function Sidebar({
               setSettingsMenuOpen(false);
               window.setTimeout(() => importInputRef.current?.click(), 0);
             }}
-            onExport={(mode) => {
+            onExport={() => {
               setSettingsMenuOpen(false);
-              handleExportClick(mode);
+              handleExportClick();
             }}
             onDeleteAll={() => {
               setSettingsMenuOpen(false);
@@ -1349,35 +1335,6 @@ export function Sidebar({
         </div>
       </SidebarContent>
     </ShadcnSidebar>
-
-      <AlertDialog open={exportConfirmDialogOpen} onOpenChange={setExportConfirmDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {exportMode === "encrypted" ? "Export workspace encrypted" : "Export workspace"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {exportMode === "encrypted" ? (
-                <>
-                  Export &quot;{selectedWorkspaceName}&quot; as an encrypted file? You will choose a
-                  passphrase next. The export includes the workspace, all folders, and documents.
-                </>
-              ) : (
-                <>
-                  Export &quot;{selectedWorkspaceName}&quot; as a JSON file? This will include the
-                  workspace, all folders, and documents.
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void handleExportConfirm()}>
-              {exportMode === "encrypted" ? "Continue" : "Export"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <AlertDialog open={deleteAllDialogOpen} onOpenChange={setDeleteAllDialogOpen}>
         <AlertDialogContent>
@@ -1536,24 +1493,22 @@ export function Sidebar({
         <DialogContent className="sm:max-w-sm" showCloseButton>
           <DialogHeader>
             <DialogTitle>
-              {exportMode === "encrypted"
-                ? "Export workspaces encrypted"
-                : "Export workspaces"}
+              {exportSelectedIds.size === 1 ? "Export workspace" : "Export workspaces"}
             </DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-2 py-2">
             <label className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-sidebar-accent">
               <Checkbox
                 checked={
-                  sortedWorkspaces.length > 0 &&
-                  exportSelectedIds.size === sortedWorkspaces.length
+                  exportDialogWorkspaces.length > 0 &&
+                  exportSelectedIds.size === exportDialogWorkspaces.length
                 }
                 onCheckedChange={toggleExportSelectAll}
               />
               <span className="text-sm font-medium">Select all</span>
             </label>
             <div className="max-h-48 overflow-y-auto flex flex-col gap-1 border border-2 rounded-md p-2">
-              {sortedWorkspaces.map((ws) => (
+              {exportDialogWorkspaces.map((ws) => (
                 <label
                   key={ws.id}
                   className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-sidebar-accent"
@@ -1567,21 +1522,36 @@ export function Sidebar({
               ))}
             </div>
           </div>
-          <DialogFooter>
-            <Button
-              variant="neutral"
-              className="bg-background"
+          <DialogFooter className="gap-2 sm:justify-end">
+            <button
+              type="button"
+              className={workspaceToolbarTextActionClassName}
               onClick={() => setExportDialogOpen(false)}
             >
               Cancel
-            </Button>
-            <Button
-              onClick={() => void handleExportSelected()}
+            </button>
+            <button
+              type="button"
+              className={cn(
+                workspaceToolbarTextActionClassName,
+                "disabled:pointer-events-none disabled:opacity-50"
+              )}
+              onClick={() => void handleExportSelected("plain")}
               disabled={exportSelectedIds.size === 0}
-              className="bg-background text-foreground hover:bg-primary/90"
             >
-              {exportMode === "encrypted" ? "Continue" : "Export"}
-            </Button>
+              Plain
+            </button>
+            <button
+              type="button"
+              className={cn(
+                workspaceToolbarTextActionClassName,
+                "disabled:pointer-events-none disabled:opacity-50"
+              )}
+              onClick={() => void handleExportSelected("encrypted")}
+              disabled={exportSelectedIds.size === 0}
+            >
+              Encrypted
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1671,7 +1641,7 @@ export function Sidebar({
           ...(workspacesEnabled
             ? {
                 onSwitchWorkspace: () => setOpen(true),
-                onExportWorkspace: () => handleExportClick("plain"),
+                onExportWorkspace: () => handleExportClick(),
                 onImportWorkspace: handleImportWorkspace,
               }
             : {}),

@@ -2,7 +2,10 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { buildHeadingManifest, type HeadingManifestEntry } from "@/lib/heading-manifest";
+import {
+  getTocHeadings,
+  type HeadingManifestEntry,
+} from "@/lib/heading-manifest";
 
 function isSectionHeading(level: number): boolean {
   return level === 2;
@@ -87,12 +90,9 @@ function pickActiveHeadingId(
 }
 
 export function TableOfContents({ content, scrollContainerRef }: TableOfContentsProps) {
-  const headings = useMemo(
-    () => buildHeadingManifest(content).filter((h) => h.level <= 3),
-    [content]
-  );
-  const [activeId, setActiveId] = useState<string | null>(() =>
-    buildHeadingManifest(content).filter((h) => h.level <= 3)[0]?.id ?? null
+  const headings = useMemo(() => getTocHeadings(content), [content]);
+  const [activeId, setActiveId] = useState<string | null>(
+    () => getTocHeadings(content)[0]?.id ?? null
   );
   const tocScrollRef = useRef<HTMLDivElement | null>(null);
   const activeItemRef = useRef<HTMLAnchorElement | null>(null);

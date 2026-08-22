@@ -18,6 +18,8 @@ const firaCode = Fira_Code({
   display: "swap",
 });
 
+const isDesktopBuild = process.env.NEXT_PUBLIC_OPSLY_DESKTOP === "1";
+
 function metadataBaseUrl(): URL {
   // In dev, a production NEXT_PUBLIC_SITE_URL would otherwise make all metadata
   // (including `metadata.icons` absolute URLs) point at the wrong host.
@@ -72,18 +74,22 @@ export default function RootLayout({
       className={`${firaCode.variable} ${GeistSans.variable} ${GeistMono.variable}`}
     >
       <body className="antialiased">
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-NVQTEF2STY"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-NVQTEF2STY');
-          `}
-        </Script>
+        {!isDesktopBuild && (
+          <>
+            <Script
+              src="https://www.googletagmanager.com/gtag/js?id=G-NVQTEF2STY"
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', 'G-NVQTEF2STY');
+              `}
+            </Script>
+          </>
+        )}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -97,9 +103,9 @@ export default function RootLayout({
                   document.documentElement.classList.remove('dark');
                 }
                 var root = document.documentElement;
-                root.classList.remove('palette-monochrome', 'palette-monokai');
+                root.classList.remove('palette-monokai');
                 var palette = localStorage.getItem('md-viewer-palette');
-                if (palette === 'monochrome' || palette === 'monokai') {
+                if (palette === 'monokai') {
                   root.setAttribute('data-palette', palette);
                   root.classList.add('palette-' + palette);
                 } else {
