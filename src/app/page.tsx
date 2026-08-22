@@ -747,15 +747,16 @@ function AppContent() {
   }, [editDirty, editAutosaveUi]);
 
   const handleEditSave = useCallback(
-    async (options?: { exitEditAfter?: boolean }) => {
+    async (options?: { exitEditAfter?: boolean; interactive?: boolean }) => {
       const exitEditAfter = options?.exitEditAfter ?? true;
+      const interactive = options?.interactive ?? true;
       if (!currentDoc) return;
       if (!exitEditAfter) {
         setEditAutosaveUi("saving");
       }
       try {
         const decision = await encryption.prepareContentForSave(draftContent, {
-          interactive: exitEditAfter,
+          interactive,
         });
         if (!decision) {
           if (!exitEditAfter) {
@@ -830,7 +831,10 @@ function AppContent() {
       const latest = editAutosaveLatestRef.current;
       const dirty = latest.draft !== latest.savedContent;
       if (secCount % EDIT_AUTOSAVE_INTERVAL_SEC === 0 && dirty) {
-        void handleEditSaveRef.current({ exitEditAfter: false });
+        void handleEditSaveRef.current({
+          exitEditAfter: false,
+          interactive: false,
+        });
       }
       const rem =
         secCount % EDIT_AUTOSAVE_INTERVAL_SEC === 0

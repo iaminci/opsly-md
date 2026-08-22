@@ -57,7 +57,7 @@ export const workspaceToolbarTextActionClassName = cn(
 
 /** Document action bar — shared by preview and edit so Edit/Preview stay put. */
 export const documentActionToolbarClassName =
-  "flex h-12 shrink-0 items-center bg-input print:hidden";
+  "flex h-12 shrink-0 items-center bg-secondary-background print:hidden";
 
 /** Left cluster inside the document action bar. */
 export const documentActionToolbarActionsClassName =
