@@ -277,7 +277,7 @@ function SidebarTrigger({
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
       className={cn(
-        "inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-md border-2 border-border bg-background p-0 text-primary shadow-none transition-colors hover:border-border hover:bg-sidebar-accent hover:text-primary-hover hover:translate-x-0 hover:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+        "inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-md border-2 border-border bg-surface-raised p-0 text-primary shadow-none transition-colors hover:border-border hover:bg-surface-hover hover:text-primary-hover hover:translate-x-0 hover:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
         className
       )}
       onClick={(event) => {

@@ -1194,7 +1194,7 @@ export function Sidebar({
       />
       <SidebarContent className="flex min-h-0 flex-col overflow-hidden px-3">
         <div className="flex min-h-0 flex-1 flex-col">
-        <div className="shrink-0 border-b-2 border-border pb-3 pt-3">
+        <div className="shrink-0 border-b border-border-subtle pb-3 pt-3">
           <SidebarGroup className="p-0">
             <SidebarGroupLabel className="sr-only">Sidebar</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -1219,7 +1219,7 @@ export function Sidebar({
           </SidebarGroup>
         </div>
 
-        <div className="mb-0 shrink-0 border-b-2 border-border pb-3 pt-3">
+        <div className="mb-0 shrink-0 border-b border-border-subtle pb-3 pt-3">
           {workspacesEnabled ? (
             <SidebarGroup className="p-0">
               <SidebarGroupLabel className="sr-only">Workspace</SidebarGroupLabel>
@@ -1261,7 +1261,7 @@ export function Sidebar({
 
         {hasMultiSelection ? (
           <TreeMultiSelectBar
-            className="border-b-2 border-border"
+            className="border-b border-border-subtle"
             selectedCount={selectedCount}
             onDelete={() => setBulkDeleteDialogOpen(true)}
             onClear={clearSelectionAndAnchor}
@@ -1308,7 +1308,7 @@ export function Sidebar({
           </SidebarGroup>
         </div>
 
-        <div className="shrink-0 border-t-2 border-border py-2">
+        <div className="shrink-0 border-t border-border-subtle py-2">
           <SettingsMenu
             onOpenChange={setSettingsMenuOpen}
             documentStackEnabled={documentStackEnabled}

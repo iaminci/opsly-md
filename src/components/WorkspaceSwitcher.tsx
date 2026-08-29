@@ -34,7 +34,7 @@ const workspaceSwitcherDropdownMaxHeightClassName =
   "max-h-[min(50vh,16rem)]";
 
 export const workspaceTabBaseClassName =
-  "!h-9 !min-h-9 !rounded-[5px] !border-2 !border-border !font-heading !font-bold !shadow-shadow !outline-0 transition-[transform,box-shadow] hover:!translate-x-boxShadowX hover:!translate-y-boxShadowY hover:!shadow-none hover:!outline-0 focus-visible:!outline-0 focus-visible:!shadow-shadow";
+  "!h-9 !min-h-9 !rounded-[5px] !border-2 !border-border !font-heading !font-bold !shadow-none !outline-0 transition-colors hover:!shadow-none hover:!outline-0 focus-visible:!outline-0 focus-visible:!shadow-none";
 
 export const workspaceControlChromeClassName =
   "rounded-md border-2 border-border bg-surface-raised shadow-none transition-colors hover:border-border hover:bg-surface-hover hover:translate-x-0 hover:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
@@ -66,13 +66,13 @@ export const documentActionToolbarActionsClassName =
 /** (+) “New workspace” and single-workspace ⋯ — same chrome as tabs, neutral surface. */
 export const workspaceNeutralChipClassName = cn(
   workspaceTabBaseClassName,
-  "!bg-background !text-foreground hover:!bg-background hover:!text-foreground focus-visible:!bg-background focus-visible:!text-foreground"
+  "!bg-surface-raised !text-foreground hover:!bg-surface-hover hover:!text-foreground focus-visible:!bg-surface-raised focus-visible:!text-foreground"
 );
 
 /** Single-workspace view: wide name + ⋯ as two matching “cards” (white fill, black border, hard shadow). */
 export const workspacePairTabClassName = cn(
   workspaceTabBaseClassName,
-  "!bg-background !text-foreground focus-visible:!bg-primary"
+  "!bg-surface-raised !text-foreground hover:!bg-surface-hover focus-visible:!bg-primary"
 );
 
 /** Workspace switcher dropdown panel (inline create/rename lives here). */

@@ -327,7 +327,7 @@ function DocumentRightSidebar({
             Info
           </TabsTrigger>
         </TabsList>
-        <div className="mt-2 border-b-2 border-border" aria-hidden />
+        <div className="mt-2 border-b border-border-subtle" aria-hidden />
       </div>
       <TabsContent value="on-this-page" className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden">
         <TableOfContents
@@ -1199,7 +1199,7 @@ function AppContent() {
         <SidebarExpandTrigger />
         <div
           className={cn(
-            "relative min-h-0 flex-1 overflow-hidden",
+            "relative min-h-0 flex-1 gap-1 overflow-hidden bg-surface-panel p-1",
             currentDoc
               ? "flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:grid-rows-1"
               : "flex flex-col"
@@ -1228,7 +1228,7 @@ function AppContent() {
                   documentActionToolbarClassName,
                   !editMode && "lg:mt-4 lg:h-9",
                   editMode && "lg:mt-4",
-                  editMode && "border-b-2 border-border"
+                  editMode && "border-b border-border-subtle"
                 )}
               >
                 <DocumentToolbarContent editMode={editMode}>
@@ -1362,7 +1362,7 @@ function AppContent() {
             <div
               className={cn(
                 "hidden min-h-0 min-w-0 shrink-0 print:hidden lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:flex lg:h-full lg:min-h-0 lg:flex-col",
-                showRightToc ? "p-2 pl-0" : "w-0 p-0"
+                showRightToc ? "w-[17rem]" : "w-0"
               )}
             >
               {showRightToc && (
@@ -1405,7 +1405,7 @@ function AppContent() {
                     "absolute top-1/2 z-30 hidden h-15 w-6 shrink-0 -translate-y-1/2 border-2 border-border bg-background text-primary shadow-none transition-[right,background-color,color] duration-150 ease-linear hover:bg-primary hover:text-background hover:-translate-y-1/2",
                     "print:hidden lg:inline-flex",
                     rightTocOpen
-                      ? "right-[calc(17rem+0.5rem-0.75rem)]"
+                      ? "right-[calc(17rem+0.25rem-0.75rem)]"
                       : "right-2"
                   )}
                 >

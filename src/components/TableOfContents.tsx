@@ -199,7 +199,7 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
                   href={`#${id}`}
                   onClick={(e) => handleClick(e, id)}
                   className={cn(
-                    "block scroll-m-4 rounded-md px-1.5 py-1.5 text-sm leading-snug transition-colors [overflow-wrap:anywhere] hover:bg-sidebar-accent/50",
+                    "block scroll-m-4 rounded-md px-1.5 py-1.5 text-sm leading-snug transition-colors [overflow-wrap:anywhere] hover:bg-surface-hover",
                     isFirst && "pt-0",
                     isLast && "pb-0",
                     isHighlighted

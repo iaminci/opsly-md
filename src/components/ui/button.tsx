@@ -11,12 +11,12 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "text-main-foreground bg-primary/90 border-2 border-border shadow-shadow hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none",
+          "border-2 border-border bg-primary/90 text-main-foreground shadow-none hover:bg-primary-hover",
         noShadow: "text-main-foreground bg-primary/90 border-2 border-border",
         neutral:
-          "bg-secondary-background text-foreground border-2 border-border shadow-shadow hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none",
+          "border-2 border-border bg-surface-raised text-foreground shadow-none hover:bg-surface-hover",
         reverse:
-          "text-main-foreground bg-primary/90 border-2 border-border hover:translate-x-reverseBoxShadowX hover:translate-y-reverseBoxShadowY hover:shadow-shadow",
+          "border-2 border-border bg-primary/90 text-main-foreground shadow-none hover:bg-primary-hover",
         outline:
           "border-2 border-border bg-surface-raised text-foreground shadow-none hover:bg-surface-hover",
         ghost:
