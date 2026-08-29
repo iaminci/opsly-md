@@ -18,9 +18,9 @@ const buttonVariants = cva(
         reverse:
           "text-main-foreground bg-primary/90 border-2 border-border hover:translate-x-reverseBoxShadowX hover:translate-y-reverseBoxShadowY hover:shadow-shadow",
         outline:
-          "border-2 border-border bg-transparent text-foreground shadow-none hover:bg-secondary-background",
+          "border-2 border-border bg-surface-raised text-foreground shadow-none hover:bg-surface-hover",
         ghost:
-          "border-2 border-transparent bg-transparent text-foreground shadow-none hover:bg-secondary-background",
+          "border-2 border-transparent bg-transparent text-foreground shadow-none hover:bg-surface-hover",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -52,6 +52,7 @@ function Button({
   return (
     <Comp
       data-slot="button"
+      data-variant={variant ?? "default"}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />

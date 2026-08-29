@@ -210,11 +210,11 @@ export const MarkdownEditor = forwardRef<HTMLTextAreaElement, MarkdownEditorProp
     return (
       <div
         className={cn(
-          "markdown-editor flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border-2 border-border bg-background",
+          "markdown-editor flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border-2 border-border bg-surface-workspace",
           className
         )}
       >
-        <div className="min-h-0 flex-1 overflow-hidden bg-background">
+        <div className="min-h-0 flex-1 overflow-hidden bg-surface-workspace">
           <LineNumberedTextarea
             ref={ref}
             autoFocus={autoFocus}

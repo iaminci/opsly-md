@@ -37,7 +37,7 @@ export const workspaceTabBaseClassName =
   "!h-9 !min-h-9 !rounded-[5px] !border-2 !border-border !font-heading !font-bold !shadow-shadow !outline-0 transition-[transform,box-shadow] hover:!translate-x-boxShadowX hover:!translate-y-boxShadowY hover:!shadow-none hover:!outline-0 focus-visible:!outline-0 focus-visible:!shadow-shadow";
 
 export const workspaceControlChromeClassName =
-  "rounded-md border-2 border-border bg-background shadow-none transition-colors hover:border-border hover:bg-sidebar-accent hover:translate-x-0 hover:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
+  "rounded-md border-2 border-border bg-surface-raised shadow-none transition-colors hover:border-border hover:bg-surface-hover hover:translate-x-0 hover:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
 
 export const workspaceDropdownTriggerClassName = cn(
   "flex h-9 min-h-9 w-full min-w-0 items-center gap-2 px-3 text-left text-sm font-medium text-foreground",
@@ -57,7 +57,7 @@ export const workspaceToolbarTextActionClassName = cn(
 
 /** Document action bar — shared by preview and edit so Edit/Preview stay put. */
 export const documentActionToolbarClassName =
-  "flex h-12 shrink-0 items-center bg-secondary-background print:hidden";
+  "flex h-12 shrink-0 items-center bg-surface-workspace print:hidden";
 
 /** Left cluster inside the document action bar. */
 export const documentActionToolbarActionsClassName =

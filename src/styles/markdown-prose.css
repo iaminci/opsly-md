@@ -13,14 +13,16 @@
   --prose-wide: min(100%, 68rem);
   --prose-body-size: 1.0625rem;
   --prose-body-line-height: 1.65;
-  --prose-inline-code-bg: color-mix(in srgb, var(--muted) 55%, var(--background));
+  --prose-inline-code-bg: color-mix(in srgb, var(--surface-raised) 72%, var(--surface-nested));
   --prose-blockquote-accent: color-mix(in srgb, var(--foreground) 18%, transparent);
   --prose-table-radius: 0.6875rem;
   --prose-table-outer-border: color-mix(in srgb, var(--foreground) 12%, transparent);
   --prose-table-col-rule: color-mix(in srgb, var(--foreground) 7%, transparent);
   --prose-table-row-rule: color-mix(in srgb, var(--foreground) 7%, transparent);
   --prose-hr-color: color-mix(in srgb, var(--foreground) 7%, transparent);
-  --prose-code-shell-bg: color-mix(in srgb, var(--muted) 42%, var(--background));
+  --prose-code-shell-bg: var(--surface-nested);
+  --prose-table-bg: var(--surface-raised);
+  --prose-table-header-bg: var(--surface-nested);
   --prose-code-border: color-mix(in srgb, var(--foreground) 6%, transparent);
   --prose-chrome-radius: 0.5rem;
   --prose-toolbar-min-height: 2rem;
@@ -37,7 +39,7 @@
 
 .dark {
   /* Darkest: code blocks → inline code → tables → prose (on secondary-background) */
-  --prose-code-shell-bg: color-mix(in srgb, #0b0f14 48%, var(--secondary-background));
+  --prose-code-shell-bg: color-mix(in srgb, var(--surface-canvas) 38%, var(--surface-nested));
   --prose-code-toolbar-bg: color-mix(in srgb, var(--prose-code-shell-bg) 70%, var(--card));
   --prose-inline-code-bg: color-mix(in srgb, var(--prose-code-shell-bg) 32%, var(--secondary-background));
   --prose-code-border: color-mix(in srgb, var(--foreground) 12%, transparent);
@@ -592,6 +594,7 @@
   border-spacing: 0;
   border: 1px solid var(--prose-table-outer-border) !important;
   border-radius: var(--prose-table-radius);
+  background-color: var(--prose-table-bg);
   font-family: var(--prose-font-sans);
   font-size: 0.9375rem;
   line-height: 1.5;
@@ -602,7 +605,7 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  background-color: var(--prose-toolbar-bg);
+  background-color: var(--prose-table-header-bg);
   text-align: left;
   vertical-align: middle;
   background-clip: padding-box;

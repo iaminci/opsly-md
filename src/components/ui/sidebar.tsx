@@ -141,7 +141,7 @@ function SidebarProvider({
             } as React.CSSProperties
           }
           className={cn(
-            "group/sidebar-wrapper has-data-[variant=inset]:bg-background flex min-h-svh w-full gap-2 p-2",
+            "group/sidebar-wrapper bg-surface-canvas flex min-h-svh w-full gap-2 p-2",
             className,
           )}
           {...props}
@@ -173,7 +173,7 @@ function Sidebar({
       <div
         data-slot="sidebar"
         className={cn(
-          "bg-secondary-background text-foreground flex h-full w-(--sidebar-width) flex-col",
+          "bg-surface-panel text-foreground flex h-full w-(--sidebar-width) flex-col",
           className,
         )}
         {...props}
@@ -191,7 +191,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="bg-secondary-background text-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
+          className="bg-surface-panel text-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -222,7 +222,10 @@ function Sidebar({
       <div
         data-slot="sidebar-gap"
         className={cn(
-          "relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear",
+          "relative bg-transparent transition-[width] duration-200 ease-linear",
+          variant === "floating" || variant === "inset"
+            ? "w-[calc(var(--sidebar-width)-(--spacing(4)))]"
+            : "w-(--sidebar-width)",
           "group-data-[collapsible=offcanvas]:w-0",
           "group-data-[side=right]:rotate-180",
           variant === "floating" || variant === "inset"
@@ -249,7 +252,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar-inner"
           className={cn(
-            "bg-sidebar flex h-full w-full flex-col",
+            "bg-surface-panel flex h-full w-full flex-col",
             "group-data-[variant=floating]:rounded-base group-data-[variant=floating]:border-2 group-data-[variant=floating]:border-border group-data-[variant=floating]:shadow-shadow group-data-[variant=floating]:overflow-hidden",
             "group-data-[variant=inset]:rounded-base group-data-[variant=inset]:border-2 group-data-[variant=inset]:border-border group-data-[variant=inset]:shadow-shadow group-data-[variant=inset]:overflow-hidden",
           )}

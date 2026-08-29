@@ -1212,7 +1212,7 @@ function AppContent() {
             className={cn(
               // Native overflow (not Radix ScrollArea): Radix wraps content in display:table + minWidth:100%,
               // which can grow wider than the grid column and clip right-aligned doc actions beside the TOC.
-              "relative z-[1] min-h-0 min-w-0 flex-1 font-base outline-none native-scrollbar",
+              "relative z-[1] min-h-0 min-w-0 flex-1 bg-surface-workspace font-base outline-none native-scrollbar",
               currentDoc
                 ? "flex flex-col overflow-hidden"
                 : "overflow-y-auto overflow-x-hidden",
