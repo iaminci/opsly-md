@@ -77,8 +77,7 @@ import {
 } from "@/lib/workspace-tree-drag";
 import {
   ArrowUp,
-  ChevronLeft,
-  ChevronRight,
+  PanelRight,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -214,7 +213,7 @@ function BackToTopButton({
               ? "pointer-events-auto opacity-100"
               : "pointer-events-none opacity-0",
             isLg && rightTocOpen
-              ? "right-[calc(17rem+2.5rem)]"
+              ? "right-[calc(15rem+2.5rem)]"
               : "right-8"
           )}
         >
@@ -311,15 +310,35 @@ function DocumentRightSidebar({
   doc,
   content,
   contentScrollRef,
+  onHide,
 }: {
   doc: Document;
   content: string;
   contentScrollRef: React.RefObject<HTMLDivElement | null>;
+  onHide: () => void;
 }) {
   return (
     <Tabs defaultValue="on-this-page" className="flex min-h-0 flex-1 flex-col">
       <div className="mb-3 shrink-0">
         <TabsList className="h-9 w-full shrink-0 justify-start gap-1.5 border-0 bg-transparent p-0">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Hide outline"
+                aria-controls="document-outline-panel"
+                onClick={onHide}
+                className={workspaceIconActionClassName}
+              >
+                <PanelRight aria-hidden />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left" align="center">
+              Hide outline
+            </TooltipContent>
+          </Tooltip>
           <TabsTrigger value="on-this-page" className="h-9 flex-none px-3">
             On This Page
           </TabsTrigger>
@@ -1199,7 +1218,7 @@ function AppContent() {
         <SidebarExpandTrigger />
         <div
           className={cn(
-            "relative min-h-0 flex-1 gap-1 overflow-hidden bg-surface-panel p-1",
+            "relative min-h-0 flex-1 gap-0 overflow-hidden bg-surface-panel p-1",
             currentDoc
               ? "flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:grid-rows-1"
               : "flex flex-col"
@@ -1226,8 +1245,8 @@ function AppContent() {
               <div
                 className={cn(
                   documentActionToolbarClassName,
-                  !editMode && "lg:mt-4 lg:h-9",
-                  editMode && "lg:mt-4",
+                  !editMode && "lg:mt-3 lg:h-9",
+                  editMode && "lg:mt-3",
                   editMode && "border-b border-border-subtle"
                 )}
               >
@@ -1310,6 +1329,25 @@ function AppContent() {
                     >
                       <X className="size-4 shrink-0" strokeWidth={2.5} aria-hidden />
                     </button>
+                    {documentHasTocHeadings && !rightTocOpen && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label="Show outline"
+                            aria-expanded={false}
+                            aria-controls="document-outline-panel"
+                            onClick={() => setRightTocOpen(true)}
+                            className={workspaceIconActionClassName}
+                          >
+                            <PanelRight aria-hidden />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" align="center">
+                          Show outline
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                   </div>
                 )}
                 </DocumentToolbarContent>
@@ -1362,22 +1400,20 @@ function AppContent() {
             <div
               className={cn(
                 "hidden min-h-0 min-w-0 shrink-0 print:hidden lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:flex lg:h-full lg:min-h-0 lg:flex-col",
-                showRightToc ? "w-[17rem]" : "w-0"
+                showRightToc ? "w-[15rem]" : "w-0"
               )}
             >
               {showRightToc && (
                 <aside
                   id="document-outline-panel"
                   aria-hidden={!showRightToc}
-                  className={cn(
-                    appCapsuleClassName,
-                    "flex min-h-0 w-[17rem] flex-1 flex-col px-3 pt-2 pb-4"
-                  )}
+                  className="flex min-h-0 w-[15rem] flex-1 flex-col bg-surface-workspace py-3 pl-5 pr-3"
                 >
                   <DocumentRightSidebar
                     doc={currentDoc}
                     content={displayContent}
                     contentScrollRef={contentScrollRef}
+                    onHide={() => setRightTocOpen(false)}
                   />
                 </aside>
               )}
@@ -1391,39 +1427,6 @@ function AppContent() {
             />
           )}
 
-          {currentDoc && !editMode && documentHasTocHeadings && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-expanded={rightTocOpen}
-                  aria-controls="document-outline-panel"
-                  onClick={() => setRightTocOpen((o) => !o)}
-                  className={cn(
-                    "absolute top-1/2 z-30 hidden h-15 w-6 shrink-0 -translate-y-1/2 border-2 border-border bg-background text-primary shadow-none transition-[right,background-color,color] duration-150 ease-linear hover:bg-primary hover:text-background hover:-translate-y-1/2",
-                    "print:hidden lg:inline-flex",
-                    rightTocOpen
-                      ? "right-[calc(17rem+0.25rem-0.75rem)]"
-                      : "right-2"
-                  )}
-                >
-                  {rightTocOpen ? (
-                    <ChevronRight aria-hidden />
-                  ) : (
-                    <ChevronLeft aria-hidden />
-                  )}
-                  <span className="sr-only">
-                    {rightTocOpen ? "Hide outline" : "Show outline"}
-                  </span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left" align="center">
-                {rightTocOpen ? "Hide outline" : "Show outline"}
-              </TooltipContent>
-            </Tooltip>
-          )}
         </div>
       </SidebarInset>
 

@@ -413,8 +413,12 @@ html[data-window-inactive].dark *::-moz-selection {
 }
 
 #document-outline-panel {
-  background-color: var(--surface-nested);
-  box-shadow: inset 0 0 0 1px var(--border-subtle);
+  background-color: var(--surface-workspace);
+  box-shadow: none;
+}
+
+#document-outline-panel [data-slot="tabs-list"] {
+  background-color: transparent;
 }
 
 [data-slot="input"],
