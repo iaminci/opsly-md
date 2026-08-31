@@ -111,6 +111,7 @@ interface WorkspaceSwitcherProps {
     onSelect: (doc: Document) => void;
     matchNavigation?: SearchMatchNavigation | null;
   };
+  onCollapseTree?: () => void;
 }
 
 export function WorkspaceSwitcher({
@@ -130,6 +131,7 @@ export function WorkspaceSwitcher({
   onPendingTreeRenameSubmit,
   onPendingTreeRenameCancel,
   search,
+  onCollapseTree,
 }: WorkspaceSwitcherProps) {
   const skipCloseAutoFocusRef = useRef(false);
   const workspaceRowRef = useRef<HTMLUListElement>(null);
@@ -374,6 +376,7 @@ export function WorkspaceSwitcher({
         onUploadFile={onUploadFile}
         onCreateFolder={showCreateFolderButton ? onCreateFolder : undefined}
         search={search}
+        onCollapseTree={onCollapseTree}
       />
     </div>
   );

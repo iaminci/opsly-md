@@ -1,13 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { FilePlus, FolderPlus, Upload } from "lucide-react";
+import {
+  FilePlus,
+  FolderPlus,
+  Upload,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   SidebarMenu,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { workspaceIconActionClassName } from "@/components/WorkspaceSwitcher";
 import {
   Tooltip,
   TooltipContent,
@@ -20,8 +23,35 @@ import type { Document } from "@/types/document";
 export const workspaceToolbarActionRowClassName =
   "flex w-full flex-row items-center";
 
+const sidebarToolbarButtonClassName = cn(
+  "inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent p-0 text-primary shadow-none transition-colors",
+  "hover:bg-surface-hover hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+);
+
 const toolbarDividerClassName =
   "h-5 w-0 shrink-0 self-center border-l-2 border-muted-foreground";
+
+function CollapseAllIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      className="size-4"
+      fill="currentColor"
+      stroke="currentColor"
+      strokeWidth="0.5"
+      strokeLinejoin="round"
+      paintOrder="stroke fill"
+      aria-hidden="true"
+    >
+      <path d="M9 9H4v1h5V9z" />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M5 3l1-1h7l1 1v7l-1 1h-2v2l-1 1H3l-1-1V6l1-1h2V3zm1 2h4l1 1v4h2V3H6v2zm4 1H3v7h7V6z"
+      />
+    </svg>
+  );
+}
 
 interface WorkspaceToolbarSearchProps {
   documents: Document[];
@@ -37,6 +67,7 @@ interface WorkspaceToolbarActionsProps {
   onCreateFolder?: () => void;
   className?: string;
   search?: WorkspaceToolbarSearchProps;
+  onCollapseTree?: () => void;
 }
 
 export function WorkspaceToolbarActions({
@@ -45,6 +76,7 @@ export function WorkspaceToolbarActions({
   onCreateFolder,
   className,
   search,
+  onCollapseTree,
 }: WorkspaceToolbarActionsProps) {
   const [searchExpanded, setSearchExpanded] = useState(
     () => (search?.query.trim().length ?? 0) > 0
@@ -52,12 +84,27 @@ export function WorkspaceToolbarActions({
 
   const actionButtons = (
     <>
+      {onCollapseTree ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className={sidebarToolbarButtonClassName}
+              aria-label="Collapse all folders and workspaces"
+              onClick={onCollapseTree}
+            >
+              <CollapseAllIcon />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Collapse all</TooltipContent>
+        </Tooltip>
+      ) : null}
       {onCreateFolder ? (
         <Tooltip>
           <TooltipTrigger asChild>
             <button
               type="button"
-              className={workspaceIconActionClassName}
+              className={sidebarToolbarButtonClassName}
               aria-label="Create folder"
               onClick={onCreateFolder}
             >
@@ -71,7 +118,7 @@ export function WorkspaceToolbarActions({
         <TooltipTrigger asChild>
           <button
             type="button"
-            className={workspaceIconActionClassName}
+            className={sidebarToolbarButtonClassName}
             aria-label="Upload file"
             onClick={onUploadFile}
           >
@@ -84,7 +131,7 @@ export function WorkspaceToolbarActions({
         <TooltipTrigger asChild>
           <button
             type="button"
-            className={workspaceIconActionClassName}
+            className={sidebarToolbarButtonClassName}
             aria-label="Create file"
             onClick={onCreateFile}
           >

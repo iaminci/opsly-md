@@ -496,36 +496,3 @@ iframe[id^="encatch-iframe-"] {
 #encatch-iframe-container iframe {
   border-radius: 10px !important;
 }
-
-/* Sidebar tree branch lines (vertical spine is border-l-2 on drop areas) */
-.tree-drop-with-branches {
-  --tree-guide-inset: 0.25rem; /* matches pl-1 on drop areas */
-}
-
-.tree-guide-entry {
-  --tree-guide-line: var(--sidebar-guide);
-  position: relative;
-  min-width: 0;
-}
-
-/* Horizontal branch (──) from spine to row icon */
-.tree-guide-entry::before {
-  content: "";
-  position: absolute;
-  left: calc(-1 * var(--tree-guide-inset));
-  top: 50%;
-  width: calc(var(--tree-guide-inset) + 0.25rem);
-  height: 2px;
-  background-color: var(--tree-guide-line);
-  pointer-events: none;
-  transform: translateY(-50%);
-}
-
-.tree-guide-entry--active-path::before {
-  background-color: var(--primary);
-  opacity: 0.7;
-}
-
-.tree-drop-with-branches--drag-target .tree-guide-entry::before {
-  background-color: var(--tree-drag-target-border);
-}

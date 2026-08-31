@@ -495,6 +495,7 @@ export function Search({
             type="button"
             className={cn(
               workspaceIconActionClassName,
+              "border-0 bg-transparent",
               searchActive && "bg-sidebar-accent"
             )}
             aria-label="Search documents"

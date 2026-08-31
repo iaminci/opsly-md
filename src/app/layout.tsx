@@ -90,9 +90,8 @@ export default function RootLayout({
             </Script>
           </>
         )}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
+        <Script id="theme-bootstrap" strategy="beforeInteractive">
+          {`
               try {
                 var stored = localStorage.getItem('md-viewer-theme');
                 var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -112,9 +111,8 @@ export default function RootLayout({
                   root.removeAttribute('data-palette');
                 }
               } catch (e) {}
-            `,
-          }}
-        />
+            `}
+        </Script>
         <ThemeProvider>
           <DeploymentReloadGuardProvider>
             <DeploymentRefreshWatcher />

@@ -88,12 +88,12 @@ function ComingSoonRow({ label }: { label: string }) {
 
 function ToolbarLockIcon({ visual }: { visual: ToolbarVisual }) {
   if (visual === "not-encrypted") {
-    return <Shield className="size-4 shrink-0" strokeWidth={2} aria-hidden />;
+    return <Shield className="size-6 shrink-0" strokeWidth={2} aria-hidden />;
   }
   if (visual === "unlocked") {
-    return <LockOpen className="size-4 shrink-0" strokeWidth={2} aria-hidden />;
+    return <LockOpen className="size-6 shrink-0" strokeWidth={2} aria-hidden />;
   }
-  return <Lock className="size-4 shrink-0" strokeWidth={2} aria-hidden />;
+  return <Lock className="size-6 shrink-0" strokeWidth={2} aria-hidden />;
 }
 
 function AccessContext({
@@ -248,7 +248,7 @@ export function DocumentSecurityMenu({
               type="button"
               className={cn(
                 workspaceIconActionClassName,
-                "relative shrink-0 !text-primary",
+                "relative shrink-0 border-0 bg-transparent !text-primary hover:border-0",
                 className
               )}
               aria-label={`Document security: ${statusLabel}. Click to open.`}

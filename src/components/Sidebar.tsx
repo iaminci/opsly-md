@@ -6,7 +6,12 @@ import type { Document } from "@/types/document";
 import type { Folder } from "@/types/workspace";
 import { INLINE_TREE_EDIT_SELECTOR } from "./InlineTreeCreateRow";
 import { WORKSPACE_SWITCHER_DROPDOWN_SELECTOR } from "./WorkspaceSwitcher";
-import { WorkspaceTree, type PendingTreeCreate, type PendingTreeRename } from "./WorkspaceTree";
+import {
+  WorkspaceTree,
+  type PendingTreeCreate,
+  type PendingTreeRename,
+  type TreeExpansionCommand,
+} from "./WorkspaceTree";
 import { TreeMultiSelectBar } from "./TreeMultiSelectBar";
 import type { SearchMatchNavigation } from "./Search";
 import { Button } from "@/components/ui/button";
@@ -211,6 +216,8 @@ export function Sidebar({
     workspaceIds: string[];
     folderIds: string[];
   }>({ workspaceIds: [], folderIds: [] });
+  const [treeExpansionCommand, setTreeExpansionCommand] =
+    useState<TreeExpansionCommand | null>(null);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   const sidebarBlocksDeployReload =
@@ -235,6 +242,12 @@ export function Sidebar({
   const WORKSPACE_KEY = "md-viewer-current-workspace";
 
   const effectiveWorkspaceId = workspacesEnabled ? selectedWorkspaceId : "default";
+  const handleCollapseTree = useCallback(() => {
+    setTreeExpansionCommand((previous) => ({
+      id: (previous?.id ?? 0) + 1,
+      mode: "collapse",
+    }));
+  }, []);
   const defaultWorkspace =
     sortedWorkspaces.find((w) => w.id === "default") ?? sortedWorkspaces[0];
 
@@ -1241,6 +1254,7 @@ export function Sidebar({
                   onPendingTreeRenameSubmit={handlePendingTreeRenameSubmit}
                   onPendingTreeRenameCancel={handlePendingTreeRenameCancel}
                   search={toolbarSearch}
+                  onCollapseTree={handleCollapseTree}
                 />
               </SidebarGroupContent>
             </SidebarGroup>
@@ -1253,6 +1267,7 @@ export function Sidebar({
                   onUploadFile={handleActionBarUploadFile}
                   onCreateFolder={handleActionBarCreateFolder}
                   search={toolbarSearch}
+                  onCollapseTree={handleCollapseTree}
                 />
               </SidebarGroupContent>
             </SidebarGroup>
@@ -1303,6 +1318,7 @@ export function Sidebar({
               onPendingTreeRenameCancel={handlePendingTreeRenameCancel}
               treeMultiSelect={treeMultiSelect}
               onTreeExpansionSnapshot={setTreeExpansionSnapshot}
+              expansionCommand={treeExpansionCommand}
             />
             </SidebarGroupContent>
           </SidebarGroup>

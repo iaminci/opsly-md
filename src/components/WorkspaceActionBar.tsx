@@ -17,6 +17,7 @@ interface WorkspaceActionBarProps {
     onSelect: (doc: Document) => void;
     matchNavigation?: SearchMatchNavigation | null;
   };
+  onCollapseTree?: () => void;
 }
 
 export function WorkspaceActionBar({
@@ -25,6 +26,7 @@ export function WorkspaceActionBar({
   onCreateFolder,
   className,
   search,
+  onCollapseTree,
 }: WorkspaceActionBarProps) {
   return (
     <WorkspaceToolbarActions
@@ -33,6 +35,7 @@ export function WorkspaceActionBar({
       onUploadFile={onUploadFile}
       onCreateFolder={onCreateFolder}
       search={search}
+      onCollapseTree={onCollapseTree}
     />
   );
 }

@@ -134,22 +134,19 @@ export const TREE_DRAG_TARGET_SECTION = cn(
 
 /** Workspace name strip when the open document lives in this workspace. */
 const WORKSPACE_TAB_CORAL_PILL = cn(
-  "!flex !min-h-8 !min-w-0 !flex-1 !items-start !gap-2 !rounded-md !border-0 !bg-transparent !py-1 !pl-[3px] !pr-0 !text-left !font-heading !font-bold !text-primary !shadow-none !outline-none !ring-0 !transition-colors focus-visible:!ring-0 focus-visible:!ring-ring"
+  "!flex !min-h-8 !min-w-0 !flex-1 !items-center !gap-2 !rounded-md !border-0 !bg-transparent !py-1 !pl-[3px] !pr-0 !text-left !font-heading !font-semibold !text-foreground !shadow-none !outline-none !ring-0 !transition-colors focus-visible:!ring-0 focus-visible:!ring-ring"
 );
 
 /** Inactive workspace row — label uses muted (icons override when path-highlighted). */
 const WORKSPACE_TAB_MUTED_PILL = cn(
-  "!flex !min-h-8 !min-w-0 !flex-1 !items-start !gap-2 !rounded-md !border-0 !bg-transparent !py-1 !pl-[3px] !pr-0 !text-left !font-heading !font-normal !text-muted-foreground !shadow-none !outline-none !ring-0 !transition-colors hover:!text-primary-hover"
+  "!flex !min-h-8 !min-w-0 !flex-1 !items-center !gap-2 !rounded-md !border-0 !bg-transparent !py-1 !pl-[3px] !pr-0 !text-left !font-heading !font-semibold !text-muted-foreground !shadow-none !outline-none !ring-0 !transition-colors hover:!text-primary-hover"
 );
 
 const TREE_ROW_SELECTED = "bg-sidebar-accent text-primary";
 const TREE_ROW_HOVER = "hover:bg-sidebar-accent/50";
 
-/** Guide lines on the path from workspace to the open document. */
-const TREE_GUIDE_ACTIVE_PATH = "tree-guide-entry--active-path";
-
 function treeDropSpineClass() {
-  return "border-l-2 border-[color:var(--sidebar-guide)] pb-0.5 pt-0 tree-drop-with-branches";
+  return "pb-0.5 pt-0";
 }
 
 function TreeGuideEntry({
@@ -166,8 +163,8 @@ function TreeGuideEntry({
   return (
     <div
       className={cn(
-        guide && "tree-guide-entry",
-        guide && activePath && TREE_GUIDE_ACTIVE_PATH,
+        guide && "min-w-0",
+        activePath && "min-w-0",
         className
       )}
     >
@@ -309,6 +306,12 @@ interface WorkspaceTreeProps {
     workspaceIds: string[];
     folderIds: string[];
   }) => void;
+  expansionCommand?: TreeExpansionCommand | null;
+}
+
+export interface TreeExpansionCommand {
+  id: number;
+  mode: "expand" | "collapse";
 }
 
 export interface TreeMultiSelectConfig {
@@ -361,6 +364,7 @@ export function WorkspaceTree({
   onPendingTreeRenameCancel,
   treeMultiSelect = null,
   onTreeExpansionSnapshot,
+  expansionCommand = null,
 }: WorkspaceTreeProps) {
   void onAddWorkspace;
   const effectiveSelectedWorkspaceId = workspacesEnabled
@@ -375,6 +379,22 @@ export function WorkspaceTree({
   const [expandedWorkspaces, setExpandedWorkspaces] = useState<string[]>([]);
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
   const [expansionHydrated, setExpansionHydrated] = useState(false);
+
+  useEffect(() => {
+    if (!expansionCommand) return;
+    if (expansionCommand.mode === "collapse") {
+      setExpandedWorkspaces([]);
+      setExpandedFolders([]);
+      return;
+    }
+
+    setExpandedWorkspaces(workspaceIds);
+    setExpandedFolders(
+      workspaces.flatMap((workspace) =>
+        getFoldersFlat(workspace.id).map((folder) => folder.id)
+      )
+    );
+  }, [expansionCommand, getFoldersFlat, workspaceIds, workspaces]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -989,7 +1009,7 @@ function WorkspaceSection({
             ) : (
               <span
                 className={cn(
-                  "min-w-0 flex-1 text-left font-heading text-lg leading-snug transition-colors line-clamp-2 break-words",
+                  "min-w-0 flex-1 text-left font-heading text-sm leading-snug transition-colors line-clamp-2 break-words",
                   workspaceDragTarget && "font-semibold text-[var(--tree-drag-target-fg)]",
                   workspaceIconPrimaryOnly &&
                     !workspaceShowPill &&
@@ -1386,7 +1406,7 @@ function FolderItem({
           guide={showTreeGuide}
           activePath={openFileInTree && docActiveInFolder}
           className={cn(
-            "flex min-h-8 min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded-md py-0.5 pl-1 pr-0 transition-colors duration-150",
+            "flex min-h-7 min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded-md py-0.5 pl-1 pr-0 transition-colors duration-150",
             folderDragTarget && TREE_DRAG_TARGET_PILL,
             folderRowHighlighted && !folderDragTarget && TREE_ROW_SELECTED,
             !folderRowHighlighted && "text-muted-foreground hover:text-foreground",
@@ -1398,7 +1418,7 @@ function FolderItem({
           onDragStart={handleFolderDragStart}
           onDragEnd={handleFolderDragEnd}
           onClick={handleFolderRowClick}
-          className="flex min-h-8 min-w-0 flex-1 items-center gap-1.5"
+          className="flex min-h-7 min-w-0 flex-1 items-center gap-1.5"
         >
           <FolderIcon
             className={cn(
@@ -1709,7 +1729,7 @@ function FileItem({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       className={cn(
-        "group/file flex min-h-8 cursor-pointer items-center rounded-md py-0.5 pl-1 pr-0 transition-colors hover:bg-sidebar-accent/50",
+        "group/file flex min-h-7 cursor-pointer items-center rounded-md py-0.5 pl-1 pr-0 transition-colors hover:bg-sidebar-accent/50",
         fileLooksSelected && TREE_ROW_SELECTED
       )}
       onClick={(e) => {
@@ -1725,7 +1745,7 @@ function FileItem({
     >
       <div
         className={cn(
-          "flex min-h-8 min-w-0 flex-1 items-center gap-2 rounded-[5px] py-0 pl-1 pr-0 transition-colors",
+          "flex min-h-7 min-w-0 flex-1 items-center gap-2 rounded-[5px] py-0 pl-1 pr-0 transition-colors",
           fileLooksSelected && "font-medium"
         )}
       >
@@ -1734,7 +1754,7 @@ function FileItem({
             <button
               type="button"
               className={cn(
-                "flex min-h-8 min-w-0 flex-1 items-center justify-start gap-2 border-0 bg-transparent text-left text-sm transition-colors hover:bg-transparent",
+                "flex min-h-7 min-w-0 flex-1 items-center justify-start gap-2 border-0 bg-transparent text-left text-sm transition-colors hover:bg-transparent",
                 !fileLooksSelected && !fileMenuOpen && "text-muted-foreground",
                 !fileLooksSelected && fileMenuOpen && "text-foreground",
                 nameTruncated && "min-w-0"

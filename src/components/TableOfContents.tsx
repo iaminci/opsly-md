@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { HeadingIconLabel } from "@/components/markdown/HeadingIconLabel";
 import {
   getTocHeadings,
   type HeadingManifestEntry,
@@ -348,7 +349,7 @@ export function TableOfContents({ content, scrollContainerRef }: TableOfContents
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                {text}
+                <HeadingIconLabel text={text} />
               </a>
             );
           })}

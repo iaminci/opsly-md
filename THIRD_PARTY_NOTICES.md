@@ -1,5 +1,15 @@
 # Third-party notices
 
+## VS Code Codicons
+
+The collapse-all SVG path in `src/components/WorkspaceToolbarActions.tsx` is
+from Microsoft VS Code Codicons and is used under the Creative Commons
+Attribution 4.0 International license.
+
+Attribution: Microsoft Corporation et al.
+
+Source: https://github.com/microsoft/vscode-codicons
+
 ## Fumadocs
 
 The table-of-contents track implementation in
