@@ -77,7 +77,8 @@ import {
 } from "@/lib/workspace-tree-drag";
 import {
   ArrowUp,
-  PanelRight,
+  ChevronLeft,
+  ChevronRight,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -319,22 +320,8 @@ function DocumentRightSidebar({
 }) {
   return (
     <Tabs defaultValue="on-this-page" className="flex min-h-0 flex-1 flex-col">
-      <div className="mb-3 flex h-10 shrink-0 items-stretch gap-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              aria-label="Hide outline"
-              aria-controls="document-outline-panel"
-              onClick={onHide}
-              className="relative -left-5 inline-flex size-10 shrink-0 items-center justify-center rounded-md border-0 bg-transparent p-0 text-primary transition-colors hover:bg-surface-hover hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-            >
-              <PanelRight className="size-6" aria-hidden />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" align="start">Hide outline</TooltipContent>
-        </Tooltip>
-        <TabsList className="-ml-5 h-10 min-w-0 flex-1 justify-start gap-0 rounded-none border-0 border-b border-border-subtle bg-transparent p-0">
+      <div className="mb-3 flex h-10 shrink-0 items-center gap-2 border-b border-border-subtle">
+        <TabsList className="h-10 min-w-0 flex-1 justify-start gap-0 rounded-none border-0 bg-transparent p-0">
           <TabsTrigger
             value="on-this-page"
             className="h-10 flex-none rounded-none border-0 border-b-2 border-b-transparent bg-transparent px-3 text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:bg-transparent data-[state=active]:text-primary"
@@ -348,6 +335,20 @@ function DocumentRightSidebar({
             Info
           </TabsTrigger>
         </TabsList>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label="Hide outline"
+              aria-controls="document-outline-panel"
+              onClick={onHide}
+              className="relative -top-0.5 left-2 inline-flex h-9 w-5 shrink-0 items-center justify-center rounded-md border-2 border-border bg-surface-raised p-0 text-primary shadow-none transition-colors hover:bg-surface-hover hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            >
+              <ChevronRight className="size-5" strokeWidth={2.5} aria-hidden />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" align="end">Hide outline</TooltipContent>
+        </Tooltip>
       </div>
       <TabsContent value="on-this-page" className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden">
         <TableOfContents
@@ -1331,7 +1332,7 @@ function AppContent() {
                       )}
                       onClick={handleCloseDocument}
                     >
-                      <X className="size-6 shrink-0" strokeWidth={2.5} aria-hidden />
+                      <X className="size-5 shrink-0" strokeWidth={2.5} aria-hidden />
                     </button>
                     {documentHasTocHeadings && !rightTocOpen && (
                       <Tooltip>
@@ -1342,12 +1343,9 @@ function AppContent() {
                             aria-expanded={rightTocOpen}
                             aria-controls="document-outline-panel"
                             onClick={() => setRightTocOpen((open) => !open)}
-                            className={cn(
-                              workspaceIconActionClassName,
-                              "relative left-7 border-0 bg-transparent hover:border-0"
-                            )}
+                            className="relative left-7 inline-flex h-9 w-5 shrink-0 cursor-pointer items-center justify-center rounded-md border-2 border-border bg-surface-raised p-0 text-primary shadow-none transition-colors hover:bg-surface-hover hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                           >
-                            <PanelRight aria-hidden />
+                            <ChevronLeft className="size-5" strokeWidth={2.5} aria-hidden />
                           </button>
                         </TooltipTrigger>
                         <TooltipContent side="bottom" align="center">
