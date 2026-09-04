@@ -265,10 +265,13 @@ export function SettingsMenu({
     setOpen(nextOpen);
   };
 
-  const preventDismissDuringThemeToggle = (e: { preventDefault: () => void; target: EventTarget }) => {
+  const preventDismissDuringThemeToggle = (e: {
+    preventDefault: () => void;
+    target: EventTarget | null;
+  }) => {
     if (shouldIgnoreSettingsDismiss()) {
       e.preventDefault();
-      return true;
+      return;
     }
     const target = e.target;
     if (
@@ -278,9 +281,7 @@ export function SettingsMenu({
         target.closest("[data-theme-palette-dropdown]"))
     ) {
       e.preventDefault();
-      return true;
     }
-    return false;
   };
 
   const panelTall = feedback.open || exportPanel?.open || deletePanel?.open || additionalFeaturesOpen;

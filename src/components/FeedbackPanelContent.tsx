@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   FEEDBACK_MAX_IMAGE_BYTES,
   type FeedbackFormSchema,
-  sanitizeImagePreviewSrc,
   submitNativeFeedback,
 } from "@/lib/feedback-form";
 import { feedbackPanelMaxHeightClassName } from "@/components/Feedback";
@@ -26,6 +25,29 @@ const typeButtonClassName = cn(
   "h-9 justify-center rounded-md border-2 border-border bg-background text-foreground shadow-none transition-colors",
   feedbackButtonHoverClassName
 );
+
+function FeedbackImagePreview({ file }: { file: File }) {
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    const img = imgRef.current;
+    if (!img) return;
+    const objectUrl = URL.createObjectURL(file);
+    img.setAttribute("src", objectUrl);
+    return () => {
+      img.removeAttribute("src");
+      URL.revokeObjectURL(objectUrl);
+    };
+  }, [file]);
+
+  return (
+    <img
+      ref={imgRef}
+      alt="Selected attachment preview"
+      className="max-h-28 max-w-full rounded-md object-contain"
+    />
+  );
+}
 
 function getCategoryButtonLayout(choices: string[]) {
   if (choices.length !== 2) {
@@ -85,7 +107,6 @@ export function FeedbackPanelContent({
   const [category, setCategory] = useState<string | null>(null);
   const [comments, setComments] = useState("");
   const [image, setImage] = useState<File | null>(null);
-  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -98,18 +119,7 @@ export function FeedbackPanelContent({
     setDragOver(false);
   }, [schema?.formConfigurationId]);
 
-  useEffect(() => {
-    if (!image) {
-      setImagePreviewUrl(null);
-      return;
-    }
-    const url = URL.createObjectURL(image);
-    setImagePreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [image]);
-
   const maxCommentLength = schema?.maxCommentLength ?? 5000;
-  const safeImagePreviewSrc = sanitizeImagePreviewSrc(imagePreviewUrl);
   const canSubmit =
     !!schema &&
     !!category &&
@@ -270,13 +280,9 @@ export function FeedbackPanelContent({
                     dragOver && "border-primary bg-sidebar-accent"
                   )}
                 >
-                  {safeImagePreviewSrc ? (
+                  {image ? (
                     <>
-                      <img
-                        src={safeImagePreviewSrc}
-                        alt="Selected attachment preview"
-                        className="max-h-28 max-w-full rounded-md object-contain"
-                      />
+                      <FeedbackImagePreview file={image} />
                       <p className="text-sm font-medium text-foreground">
                         {image?.name}
                       </p>
