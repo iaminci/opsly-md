@@ -11,6 +11,31 @@ export interface FeedbackFormSchema {
 
 export const FEEDBACK_MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
+/** Only allow in-memory image previews — blocks javascript: and other unsafe src values. */
+export function sanitizeImagePreviewSrc(
+  src: string | null | undefined
+): string | undefined {
+  if (!src) return undefined;
+  try {
+    const parsed = new URL(
+      src,
+      typeof window !== "undefined" ? window.location.href : "https://localhost"
+    );
+    if (parsed.protocol === "blob:") {
+      return src;
+    }
+    if (parsed.protocol === "data:") {
+      const mediaType = parsed.pathname.split(";")[0] ?? "";
+      if (mediaType.startsWith("image/")) {
+        return src;
+      }
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
+
 function collectQuestionNodes(node: unknown, out: Record<string, unknown>[]): void {
   if (!node || typeof node !== "object") return;
   if (Array.isArray(node)) {

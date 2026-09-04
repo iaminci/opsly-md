@@ -444,21 +444,37 @@ textarea {
   background-color: var(--surface-hover);
 }
 
-/* Theme toggle: circular reveal from click (View Transitions API) */
-::view-transition-old(root) {
+/* Theme toggle: circular reveal from viewport center */
+::view-transition-group(root) {
+  width: 100vw;
+  height: 100vh;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+}
+
+html[data-theme-transition="mode"]::view-transition-group(root) {
+  animation-duration: 1.75s;
+}
+
+html[data-theme-transition="mode"]::view-transition-old(root) {
   animation: none;
 }
 
-::view-transition-new(root) {
-  animation: theme-toggle-circle 1s cubic-bezier(0.4, 0, 0.2, 1) both;
+html[data-theme-transition="mode"]::view-transition-new(root) {
+  animation: theme-toggle-circle 1.75s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 @keyframes theme-toggle-circle {
   from {
-    clip-path: circle(0px at var(--theme-toggle-x) var(--theme-toggle-y));
+    clip-path: circle(0px at 50% 50%);
   }
   to {
-    clip-path: circle(var(--theme-toggle-r) at var(--theme-toggle-x) var(--theme-toggle-y));
+    clip-path: circle(150vmax at 50% 50%);
   }
 }
 
