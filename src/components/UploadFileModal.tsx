@@ -53,7 +53,7 @@ function mergeSelectedFiles(existing: File[], incoming: File[]): File[] {
 }
 
 const settingsActionButtonClassName =
-  "w-full min-w-0 justify-center rounded-md border-2 border-border text-primary shadow-none hover:border-border hover:bg-primary hover:text-primary-foreground hover:translate-x-0 hover:translate-y-0";
+  "w-full min-w-0 justify-center rounded-md border-2 border-border text-primary shadow-none hover:border-border hover:bg-sidebar-accent hover:text-foreground hover:translate-x-0 hover:translate-y-0";
 
 const settingsCancelButtonClassName =
   "w-full min-w-0 justify-center rounded-md border-2 border-border bg-background text-foreground shadow-none hover:border-border hover:bg-sidebar-accent hover:text-foreground hover:translate-x-0 hover:translate-y-0";

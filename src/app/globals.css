@@ -444,18 +444,6 @@ textarea {
   background-color: var(--surface-hover);
 }
 
-/*
- * Encatch SDK iframe — dashboard CSS cannot target this node; form chrome is encatch-form.css (repo root).
- * Iframe shell uses the same border/radius/shadow tokens as the app UI.
- */
-iframe[src*="app.encatch.com/s/web-sdk-form"],
-iframe[id^="encatch-iframe-"] {
-  border: 2px solid var(--border) !important;
-  border-radius: var(--radius-base) !important;
-  box-shadow: var(--shadow) !important;
-  overflow: hidden !important;
-}
-
 /* Theme toggle: circular reveal from click (View Transitions API) */
 ::view-transition-old(root) {
   animation: none;
@@ -491,8 +479,4 @@ iframe[id^="encatch-iframe-"] {
   .print\:hidden {
     display: none !important;
   }
-}
-
-#encatch-iframe-container iframe {
-  border-radius: 10px !important;
 }

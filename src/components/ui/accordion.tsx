@@ -52,9 +52,9 @@ function AccordionTrigger({
         className={cn(
           "min-w-0 flex flex-1 items-center gap-2.5 text-left text-base border-border focus-visible:ring-[3px] rounded-base transition-all [&[data-state=open]>svg:last-child]:rotate-90 disabled:pointer-events-none disabled:opacity-50",
           triggerVariant === "section" && !isActive && "text-muted-foreground p-2 hover:bg-sidebar-accent font-normal",
-          triggerVariant === "section" && isActive && "bg-sidebar-accent text-primary p-2 border-2 border-border hover:bg-sidebar-accent",
+          triggerVariant === "section" && isActive && "bg-sidebar-accent text-primary p-2 border-2 border-border hover:bg-sidebar-accent hover:text-foreground",
           triggerVariant === "tree" && !isActive && "bg-transparent text-muted-foreground font-normal p-1 hover:bg-sidebar-accent",
-          triggerVariant === "tree" && isActive && "bg-transparent text-primary p-1 hover:bg-sidebar-accent",
+          triggerVariant === "tree" && isActive && "bg-transparent text-primary p-1 hover:bg-sidebar-accent hover:text-foreground",
           !triggerVariant && "bg-transparent text-muted-foreground font-normal p-1.5 hover:bg-sidebar-accent",
           className,
         )}

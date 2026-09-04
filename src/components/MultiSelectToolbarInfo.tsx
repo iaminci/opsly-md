@@ -33,7 +33,7 @@ export function MultiSelectToolbarInfo() {
           <TooltipTrigger asChild>
             <button
               type="button"
-              className="inline-flex shrink-0 rounded-sm text-primary transition-colors hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+              className="inline-flex shrink-0 rounded-sm text-primary transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
               aria-label="About multi-select"
             >
               <Info className="size-4" strokeWidth={2.5} aria-hidden />

@@ -223,8 +223,8 @@ export const MarkdownEditor = forwardRef<HTMLTextAreaElement, MarkdownEditorProp
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             spellCheck={false}
-            className="h-full min-h-0 leading-relaxed"
-            textareaClassName="h-full min-h-0 resize-none leading-relaxed placeholder:text-muted-foreground"
+            className="h-full min-h-0 leading-7"
+            textareaClassName="h-full min-h-0 resize-none leading-7 placeholder:text-muted-foreground"
           />
         </div>
       </div>

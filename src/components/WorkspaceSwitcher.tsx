@@ -45,14 +45,14 @@ export const workspaceDropdownTriggerClassName = cn(
 );
 
 export const workspaceIconActionClassName = cn(
-  "inline-flex size-9 shrink-0 cursor-pointer items-center justify-center p-0 text-primary hover:text-primary-hover",
+  "inline-flex size-9 shrink-0 cursor-pointer items-center justify-center p-0 text-primary hover:text-foreground",
   workspaceControlChromeClassName
 );
 
 /** Flat toolbar label buttons (Edit, Download, Cancel, Save). */
 export const workspaceToolbarTextActionClassName = cn(
   workspaceControlChromeClassName,
-  "inline-flex h-9 shrink-0 cursor-pointer items-center justify-center px-3.5 text-sm font-medium text-primary"
+  "inline-flex h-9 shrink-0 cursor-pointer items-center justify-center px-3.5 text-sm font-medium text-primary hover:text-foreground"
 );
 
 /** Document action bar — shared by preview and edit so Edit/Preview stay put. */
@@ -254,7 +254,7 @@ export function WorkspaceSwitcher({
               aria-label={`Rename ${ws.name}`}
               className={cn(
                 "pointer-events-auto ml-1 inline-flex size-7 shrink-0 items-center justify-center rounded-sm border-0 bg-transparent p-0 text-muted-foreground opacity-0 transition-opacity",
-                "hover:bg-sidebar-accent hover:text-primary",
+                "hover:bg-sidebar-accent hover:text-foreground",
                 "group-hover/workspace-row:opacity-100 group-focus-within/workspace-row:opacity-100"
               )}
               onClick={(e) => {

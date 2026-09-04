@@ -25,7 +25,7 @@ export const workspaceToolbarActionRowClassName =
 
 const sidebarToolbarButtonClassName = cn(
   "inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent p-0 text-primary shadow-none transition-colors",
-  "hover:bg-surface-hover hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+  "hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
 );
 
 const toolbarDividerClassName =

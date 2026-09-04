@@ -48,7 +48,7 @@ import {
   type AllWorkspacesExport,
 } from "@/lib/storage";
 import { cn, OPSLY_FILE_EXTENSION, titleFromMarkdownContent } from "@/lib/utils";
-import { WorkspaceSwitcher, workspaceIconActionClassName, workspaceToolbarTextActionClassName } from "./WorkspaceSwitcher";
+import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import { WorkspaceActionBar } from "./WorkspaceActionBar";
 import {
   AlertDialog,
@@ -60,14 +60,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
 import { SettingsMenu } from "./SettingsMenu";
 import { toast } from "sonner";
 import {
@@ -164,14 +156,14 @@ export function Sidebar({
   const { setOpen } = useSidebar();
   const [pendingTreeCreate, setPendingTreeCreate] = useState<PendingTreeCreate | null>(null);
   const [pendingTreeRename, setPendingTreeRename] = useState<PendingTreeRename | null>(null);
-  const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
+  const [deletePanelOpen, setDeletePanelOpen] = useState(false);
   const [deleteWorkspaceDialogOpen, setDeleteWorkspaceDialogOpen] = useState(false);
   const [deleteWorkspaceTarget, setDeleteWorkspaceTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleteFolderDialogOpen, setDeleteFolderDialogOpen] = useState(false);
   const [deleteFolderTarget, setDeleteFolderTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleteDocDialogOpen, setDeleteDocDialogOpen] = useState(false);
   const [deleteDocTarget, setDeleteDocTarget] = useState<{ id: string; title: string } | null>(null);
-  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [exportPanelOpen, setExportPanelOpen] = useState(false);
   const [exportSelectedIds, setExportSelectedIds] = useState<Set<string>>(new Set());
   const [exportPassphraseDialogOpen, setExportPassphraseDialogOpen] = useState(false);
   const [pendingExport, setPendingExport] = useState<PendingExport | null>(null);
@@ -223,11 +215,11 @@ export function Sidebar({
   const sidebarBlocksDeployReload =
     pendingTreeCreate !== null ||
     pendingTreeRename !== null ||
-    deleteAllDialogOpen ||
+    deletePanelOpen ||
     deleteWorkspaceDialogOpen ||
     deleteFolderDialogOpen ||
     deleteDocDialogOpen ||
-    exportDialogOpen ||
+    exportPanelOpen ||
     exportPassphraseDialogOpen ||
     importUnlockDialogOpen ||
     commandPaletteOpen ||
@@ -967,7 +959,11 @@ export function Sidebar({
     await refreshFoldersAndDocuments();
   };
 
-  const handleDeleteAllClick = () => setDeleteAllDialogOpen(true);
+  const handleDeleteAllClick = () => {
+    setExportPanelOpen(false);
+    setDeletePanelOpen(true);
+    setSettingsMenuOpen(true);
+  };
 
   const handleDeleteAllConfirm = async () => {
     if (workspacesEnabled && selectedWorkspaceId) {
@@ -983,7 +979,8 @@ export function Sidebar({
         localStorage.setItem(WORKSPACE_KEY, "");
       }
     }
-    setDeleteAllDialogOpen(false);
+    setDeletePanelOpen(false);
+    setSettingsMenuOpen(false);
     await refreshFoldersAndDocuments();
   };
 
@@ -1015,7 +1012,9 @@ export function Sidebar({
     } else {
       setExportSelectedIds(new Set(sortedWorkspaces.map((w) => w.id)));
     }
-    setExportDialogOpen(true);
+    setDeletePanelOpen(false);
+    setExportPanelOpen(true);
+    setSettingsMenuOpen(true);
   };
 
   const handleExportSelected = async (mode: ExportMode) => {
@@ -1031,7 +1030,7 @@ export function Sidebar({
         ? "all-workspaces-export.json"
         : "workspaces-export.json";
     queueExportDownload(data, filename, mode);
-    setExportDialogOpen(false);
+    setExportPanelOpen(false);
   };
 
   const handleEncryptedExportSubmit = async (passphrase: string) => {
@@ -1326,6 +1325,7 @@ export function Sidebar({
 
         <div className="shrink-0 border-t border-border-subtle py-2">
           <SettingsMenu
+            open={settingsMenuOpen}
             onOpenChange={setSettingsMenuOpen}
             documentStackEnabled={documentStackEnabled}
             onDocumentStackEnabledChange={onDocumentStackEnabledChange}
@@ -1335,58 +1335,50 @@ export function Sidebar({
               setSettingsMenuOpen(false);
               window.setTimeout(() => importInputRef.current?.click(), 0);
             }}
-            onExport={() => {
-              setSettingsMenuOpen(false);
-              handleExportClick();
-            }}
-            onDeleteAll={() => {
-              setSettingsMenuOpen(false);
-              handleDeleteAllClick();
-            }}
             deleteLabel={
               workspacesEnabled && selectedWorkspaceId ? "Delete Workspace" : "Delete Everything"
             }
+            exportPanel={{
+              open: exportPanelOpen,
+              workspaces: exportDialogWorkspaces,
+              selectedIds: exportSelectedIds,
+              onOpen: handleExportClick,
+              onClose: () => setExportPanelOpen(false),
+              onToggleWorkspace: toggleExportWorkspace,
+              onToggleSelectAll: toggleExportSelectAll,
+              onExport: (mode) => void handleExportSelected(mode),
+            }}
+            deletePanel={{
+              open: deletePanelOpen,
+              title:
+                workspacesEnabled && selectedWorkspaceId
+                  ? `Delete "${selectedWorkspaceName}" and all its contents?`
+                  : "Delete all workspaces, folders, and documents?",
+              description:
+                workspacesEnabled && selectedWorkspaceId ? (
+                  <>
+                    This will permanently delete the workspace &quot;{selectedWorkspaceName}&quot; and
+                    everything inside it (folders and documents). This action cannot be undone.
+                  </>
+                ) : (
+                  <>
+                    This will permanently delete all workspaces, folders, and documents. A default
+                    empty workspace will be created. This action cannot be undone.
+                  </>
+                ),
+              confirmLabel:
+                workspacesEnabled && selectedWorkspaceId
+                  ? "Delete Workspace"
+                  : "Delete Everything",
+              onOpen: handleDeleteAllClick,
+              onClose: () => setDeletePanelOpen(false),
+              onConfirm: handleDeleteAllConfirm,
+            }}
           />
         </div>
         </div>
       </SidebarContent>
     </ShadcnSidebar>
-
-      <AlertDialog open={deleteAllDialogOpen} onOpenChange={setDeleteAllDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {workspacesEnabled && selectedWorkspaceId
-                ? <>Delete &quot;{selectedWorkspaceName}&quot; and all its contents?</>
-                : "Delete all workspaces, folders, and documents?"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {workspacesEnabled && selectedWorkspaceId ? (
-                <>
-                  This will permanently delete the workspace &quot;{selectedWorkspaceName}&quot; and
-                  everything inside it (folders and documents). This action cannot be undone.
-                </>
-              ) : (
-                <>
-                  This will permanently delete all workspaces, folders, and documents. A default empty
-                  workspace will be created. This action cannot be undone.
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e: React.MouseEvent) => {
-                e.preventDefault();
-                void handleDeleteAllConfirm();
-              }}
-            >
-              {workspacesEnabled && selectedWorkspaceId ? "Delete Workspace" : "Delete Everything"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <AlertDialog
         open={deleteWorkspaceDialogOpen}
@@ -1504,79 +1496,6 @@ export function Sidebar({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
-        <DialogContent
-          className="sm:max-w-sm"
-          showCloseButton
-          closeButtonClassName={cn(
-            "absolute right-4 top-4 opacity-100 hover:text-primary-hover",
-            workspaceIconActionClassName
-          )}
-        >
-          <DialogHeader>
-            <DialogTitle className="pr-10">
-              {exportSelectedIds.size === 1 ? "Export workspace" : "Export workspaces"}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-2">
-            <div className="overflow-hidden rounded-md border-2 border-border">
-              <div className="bg-sidebar-accent/50 p-1">
-                <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-sidebar-accent">
-                  <Checkbox
-                    checked={
-                      exportDialogWorkspaces.length > 0 &&
-                      exportSelectedIds.size === exportDialogWorkspaces.length
-                    }
-                    onCheckedChange={toggleExportSelectAll}
-                  />
-                  <span className="text-sm font-medium">Select all</span>
-                </label>
-              </div>
-              <div className="max-h-48 overflow-y-auto border-t-2 border-border p-1">
-                <div className="flex flex-col gap-1">
-                  {exportDialogWorkspaces.map((ws) => (
-                    <label
-                      key={ws.id}
-                      className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-sidebar-accent"
-                    >
-                      <Checkbox
-                        checked={exportSelectedIds.has(ws.id)}
-                        onCheckedChange={() => toggleExportWorkspace(ws.id)}
-                      />
-                      <span className="text-sm truncate">{ws.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-          <DialogFooter className="gap-2 sm:justify-end">
-            <button
-              type="button"
-              className={cn(
-                workspaceToolbarTextActionClassName,
-                "disabled:pointer-events-none disabled:opacity-50"
-              )}
-              onClick={() => void handleExportSelected("plain")}
-              disabled={exportSelectedIds.size === 0}
-            >
-              Without Encrypted
-            </button>
-            <button
-              type="button"
-              className={cn(
-                workspaceToolbarTextActionClassName,
-                "disabled:pointer-events-none disabled:opacity-50"
-              )}
-              onClick={() => void handleExportSelected("encrypted")}
-              disabled={exportSelectedIds.size === 0}
-            >
-              Encrypted
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <AlertDialog
         open={disableWorkspacesDialogOpen}

@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 const DEFAULT_NEW_DOCUMENT_TITLE = "Untitled";
 
 const settingsActionButtonClassName =
-  "h-9 shrink-0 px-3.5 text-sm rounded-md border-2 border-border text-primary shadow-none hover:border-border hover:bg-primary hover:text-primary-foreground hover:translate-x-0 hover:translate-y-0";
+  "h-9 shrink-0 px-3.5 text-sm rounded-md border-2 border-border text-primary shadow-none hover:border-border hover:bg-sidebar-accent hover:text-foreground hover:translate-x-0 hover:translate-y-0";
 
 const settingsCancelButtonClassName =
   "h-9 shrink-0 px-3.5 text-sm rounded-md border-2 border-border bg-background text-foreground shadow-none hover:border-border hover:bg-sidebar-accent hover:text-foreground hover:translate-x-0 hover:translate-y-0";
