@@ -14,7 +14,7 @@ import type { Folder, Workspace } from "@/types/workspace";
 import { getAllFolders, getWorkspaces, ensureConsolidatedWhenWorkspacesDisabled } from "@/lib/storage";
 
 type WorkspaceTreeContextValue = {
-  /** Same ordering as the sidebar: A → Z. */
+  /** Same ordering as the sidebar: natural A → Z (2 before 10). */
   sortedWorkspaces: Workspace[];
   getFoldersInWorkspace: (workspaceId: string) => Folder[];
   /** False until the first load from storage finishes (for inline create spinners). */
@@ -91,7 +91,10 @@ export function WorkspaceTreeProvider({
   const sortedWorkspaces = useMemo(
     () =>
       [...workspaces].sort((a, b) =>
-        a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+        a.name.localeCompare(b.name, undefined, {
+          sensitivity: "base",
+          numeric: true,
+        })
       ),
     [workspaces]
   );

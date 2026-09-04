@@ -21,15 +21,7 @@ export function ThemeSettingsControl({ className }: { className?: string }) {
         className,
       )}
       onPointerDown={(e) => e.stopPropagation()}
-      onClick={(e) => {
-        let { clientX, clientY } = e;
-        if (clientX === 0 && clientY === 0) {
-          const rect = e.currentTarget.getBoundingClientRect();
-          clientX = rect.left + rect.width / 2;
-          clientY = rect.top + rect.height / 2;
-        }
-        setTheme(isDark ? "light" : "dark", { clientX, clientY });
-      }}
+      onClick={() => setTheme(isDark ? "light" : "dark", { clientX: 0, clientY: 0 })}
     >
       {isDark ? <Moon className="size-4" aria-hidden /> : <Sun className="size-4" aria-hidden />}
     </button>

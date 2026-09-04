@@ -3,11 +3,13 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Download,
   Info,
   MessageSquare,
   Settings,
+  Sparkles,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -107,6 +109,64 @@ function SettingsInfoTooltip({
   );
 }
 
+function SettingsBackButton({ onBack }: { onBack: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onBack}
+      className="inline-flex w-fit items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium text-primary transition-colors hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+    >
+      <ChevronLeft className="size-4 shrink-0" aria-hidden />
+      Back to settings
+    </button>
+  );
+}
+
+function SettingsToggleRow({
+  id,
+  label,
+  tooltip,
+  tooltipAriaLabel,
+  checked,
+  onCheckedChange,
+  switchAriaLabel,
+  disabled,
+}: {
+  id: string;
+  label: string;
+  tooltip: React.ReactNode;
+  tooltipAriaLabel: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+  switchAriaLabel: string;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-0.5">
+      <div className="flex items-center gap-1.5">
+        <label
+          htmlFor={id}
+          className={cn(
+            "text-sm font-medium text-foreground",
+            disabled ? "cursor-default opacity-60" : "cursor-pointer",
+          )}
+        >
+          {label}
+        </label>
+        <SettingsInfoTooltip ariaLabel={tooltipAriaLabel}>{tooltip}</SettingsInfoTooltip>
+      </div>
+      <Switch
+        id={id}
+        size="sm"
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        aria-label={switchAriaLabel}
+        disabled={disabled}
+      />
+    </div>
+  );
+}
+
 function SettingsSection({
   title,
   children,
@@ -160,8 +220,9 @@ export function SettingsMenu({
   );
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [popoverOffset, setPopoverOffset] = useState({ side: 16, align: -8 });
-  const { palette, setPalette } = useTheme();
+  const { palette, setPalette, glitchEnabled, setGlitchEnabled } = useTheme();
   const feedback = useSettingsFeedbackView();
+  const [additionalFeaturesOpen, setAdditionalFeaturesOpen] = useState(false);
   const activePaletteLabel =
     EXPERIMENT_PALETTES.find((option) => option.id === palette)?.label ?? "Default";
 
@@ -187,18 +248,42 @@ export function SettingsMenu({
     return () => window.removeEventListener("resize", updatePopoverOffset);
   }, [open, updatePopoverOffset]);
 
+  const shouldIgnoreSettingsDismiss = () =>
+    document.documentElement.dataset.themeTransition === "mode";
+
   const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen && shouldIgnoreSettingsDismiss()) return;
+
     if (nextOpen) {
       updatePopoverOffset();
     } else {
       feedback.close();
       exportPanel?.onClose();
       deletePanel?.onClose();
+      setAdditionalFeaturesOpen(false);
     }
     setOpen(nextOpen);
   };
 
-  const panelTall = feedback.open || exportPanel?.open || deletePanel?.open;
+  const preventDismissDuringThemeToggle = (e: { preventDefault: () => void; target: EventTarget }) => {
+    if (shouldIgnoreSettingsDismiss()) {
+      e.preventDefault();
+      return true;
+    }
+    const target = e.target;
+    if (
+      target instanceof Element &&
+      (target.closest("[data-settings-popover]") ||
+        target.closest("[data-theme-settings-control]") ||
+        target.closest("[data-theme-palette-dropdown]"))
+    ) {
+      e.preventDefault();
+      return true;
+    }
+    return false;
+  };
+
+  const panelTall = feedback.open || exportPanel?.open || deletePanel?.open || additionalFeaturesOpen;
   const popoverWidthClassName = feedback.open
     ? feedbackPanelWidthClassName
     : "w-[min(25rem,calc(100vw-2rem))]";
@@ -225,32 +310,16 @@ export function SettingsMenu({
       </PopoverTrigger>
 
       <PopoverContent
+        data-settings-popover
         side="right"
         align="end"
         sideOffset={popoverOffset.side}
         alignOffset={popoverOffset.align}
         avoidCollisions={false}
         collisionPadding={{ top: 16, right: 16, left: 16, bottom: 8 }}
-        onPointerDownOutside={(e) => {
-          const target = e.target;
-          if (
-            target instanceof Element &&
-            (target.closest("[data-theme-settings-control]") ||
-              target.closest("[data-theme-palette-dropdown]"))
-          ) {
-            e.preventDefault();
-          }
-        }}
-        onInteractOutside={(e) => {
-          const target = e.target;
-          if (
-            target instanceof Element &&
-            (target.closest("[data-theme-settings-control]") ||
-              target.closest("[data-theme-palette-dropdown]"))
-          ) {
-            e.preventDefault();
-          }
-        }}
+        onPointerDownOutside={preventDismissDuringThemeToggle}
+        onInteractOutside={preventDismissDuringThemeToggle}
+        onFocusOutside={preventDismissDuringThemeToggle}
         className={cn(
           "rounded-lg border-2 border-border bg-popover p-0 font-base shadow-shadow",
           popoverWidthClassName
@@ -289,6 +358,45 @@ export function SettingsMenu({
               onConfirm={deletePanel.onConfirm}
               onBack={deletePanel.onClose}
             />
+          ) : additionalFeaturesOpen ? (
+            <div className="flex flex-col gap-5 px-4 py-4">
+              <SettingsBackButton onBack={() => setAdditionalFeaturesOpen(false)} />
+              <div className="border-t border-border/50" aria-hidden />
+              <SettingsSection title="Additional Features">
+                <SettingsToggleRow
+                  id="stack-docs-switch"
+                  label="Stack Docs"
+                  tooltip="Return to the previously opened document when closing"
+                  tooltipAriaLabel="About stack docs"
+                  checked={documentStackEnabled}
+                  onCheckedChange={onDocumentStackEnabledChange}
+                  switchAriaLabel="Stack viewed documents when closing"
+                />
+              </SettingsSection>
+              <SettingsSection title="Experimental">
+                <SettingsToggleRow
+                  id="palette-glitch-switch"
+                  label="Glitch"
+                  tooltip="Flash accent colors when switching theme presets"
+                  tooltipAriaLabel="About glitch"
+                  checked={glitchEnabled}
+                  onCheckedChange={setGlitchEnabled}
+                  switchAriaLabel="Play glitch animation when changing theme presets"
+                />
+              </SettingsSection>
+              <SettingsSection title="Coming Soon">
+                <SettingsToggleRow
+                  id="eight-bit-sidebar-switch"
+                  label="8 bit sidebar"
+                  tooltip="A pixel-style sidebar. Not available yet"
+                  tooltipAriaLabel="About 8 bit sidebar"
+                  checked={false}
+                  onCheckedChange={() => {}}
+                  switchAriaLabel="8 bit sidebar (coming soon)"
+                  disabled
+                />
+              </SettingsSection>
+            </div>
           ) : (
           <div className="flex flex-col gap-5 px-4 py-4">
             <SettingsSection title="General">
@@ -359,26 +467,6 @@ export function SettingsMenu({
                 <div className="flex items-center justify-between gap-3 py-0.5">
                   <div className="flex items-center gap-1.5">
                     <label
-                      htmlFor="stack-docs-switch"
-                      className="cursor-pointer text-sm font-medium text-foreground"
-                    >
-                      Stack Docs
-                    </label>
-                    <SettingsInfoTooltip ariaLabel="About stack docs">
-                      Return to the previously opened document when closing
-                    </SettingsInfoTooltip>
-                  </div>
-                  <Switch
-                    id="stack-docs-switch"
-                    size="sm"
-                    checked={documentStackEnabled}
-                    onCheckedChange={onDocumentStackEnabledChange}
-                    aria-label="Stack viewed documents when closing"
-                  />
-                </div>
-                <div className="flex items-center justify-between gap-3 py-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <label
                       htmlFor="workspaces-switch"
                       className="cursor-pointer text-sm font-medium text-foreground"
                     >
@@ -430,16 +518,28 @@ export function SettingsMenu({
               titleClassName="text-destructive"
               contentClassName="mt-2"
             >
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className={settingsDestructiveButtonClassName}
-                onClick={() => deletePanel?.onOpen()}
-              >
-                <Trash2 className="size-4 shrink-0" />
-                {deleteLabel}
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className={settingsDestructiveButtonClassName}
+                  onClick={() => deletePanel?.onOpen()}
+                >
+                  <Trash2 className="size-4 shrink-0" />
+                  {deleteLabel}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className={settingsDataButtonClassName}
+                  onClick={() => setAdditionalFeaturesOpen(true)}
+                >
+                  <Sparkles className="size-4 shrink-0" />
+                  Additional Features
+                </Button>
+              </div>
             </SettingsSection>
           </div>
           )}

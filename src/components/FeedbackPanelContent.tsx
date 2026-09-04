@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   FEEDBACK_MAX_IMAGE_BYTES,
   type FeedbackFormSchema,
+  sanitizeImagePreviewSrc,
   submitNativeFeedback,
 } from "@/lib/feedback-form";
 import { feedbackPanelMaxHeightClassName } from "@/components/Feedback";
@@ -108,6 +109,7 @@ export function FeedbackPanelContent({
   }, [image]);
 
   const maxCommentLength = schema?.maxCommentLength ?? 5000;
+  const safeImagePreviewSrc = sanitizeImagePreviewSrc(imagePreviewUrl);
   const canSubmit =
     !!schema &&
     !!category &&
@@ -268,10 +270,10 @@ export function FeedbackPanelContent({
                     dragOver && "border-primary bg-sidebar-accent"
                   )}
                 >
-                  {imagePreviewUrl ? (
+                  {safeImagePreviewSrc ? (
                     <>
                       <img
-                        src={imagePreviewUrl}
+                        src={safeImagePreviewSrc}
                         alt="Selected attachment preview"
                         className="max-h-28 max-w-full rounded-md object-contain"
                       />
