@@ -27,11 +27,23 @@ import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ThemeSettingsControl } from "@/components/ThemeSettingsControl";
 import { useTheme, type ThemePalette } from "@/components/ThemeProvider";
-import { openFeedbackForm } from "@/components/Feedback";
+import { openFeedbackForm, useSettingsFeedbackView, SettingsFeedbackPanel, feedbackPanelWidthClassName, feedbackPanelMaxHeightClassName } from "@/components/Feedback";
+import { ExportPanelContent, type ExportMode } from "@/components/ExportPanelContent";
+import { DeletePanelContent } from "@/components/DeletePanelContent";
 import { cn } from "@/lib/utils";
 
-const settingsDataButtonClassName =
-  "h-9 w-full min-w-0 justify-center rounded-md border-2 border-border text-primary shadow-none hover:border-border hover:bg-primary hover:text-primary-foreground hover:translate-x-0 hover:translate-y-0";
+const settingsDataButtonBaseClassName =
+  "h-9 w-full min-w-0 justify-center rounded-md border-2 border-border shadow-none hover:border-border hover:translate-x-0 hover:translate-y-0";
+
+export const settingsDataButtonClassName = cn(
+  settingsDataButtonBaseClassName,
+  "text-primary hover:bg-sidebar-accent hover:text-foreground"
+);
+
+const settingsDestructiveButtonClassName = cn(
+  settingsDataButtonBaseClassName,
+  "text-destructive hover:!bg-destructive hover:!text-destructive-foreground focus-visible:ring-destructive [&_svg]:text-destructive hover:[&_svg]:!text-destructive-foreground"
+);
 
 const EXPERIMENT_PALETTES: { id: ThemePalette; label: string }[] = [
   { id: "default", label: "Default" },
@@ -39,15 +51,33 @@ const EXPERIMENT_PALETTES: { id: ThemePalette; label: string }[] = [
 ];
 
 interface SettingsMenuProps {
+  open?: boolean;
   onOpenChange?: (open: boolean) => void;
   documentStackEnabled: boolean;
   onDocumentStackEnabledChange: (enabled: boolean) => void;
   workspacesEnabled: boolean;
   onWorkspacesEnabledChange: (enabled: boolean) => void;
   onImport: () => void;
-  onExport: () => void;
-  onDeleteAll: () => void;
   deleteLabel: string;
+  exportPanel?: {
+    open: boolean;
+    workspaces: { id: string; name: string }[];
+    selectedIds: Set<string>;
+    onOpen: () => void;
+    onClose: () => void;
+    onToggleWorkspace: (id: string) => void;
+    onToggleSelectAll: () => void;
+    onExport: (mode: ExportMode) => void;
+  };
+  deletePanel?: {
+    open: boolean;
+    title: string;
+    description: React.ReactNode;
+    confirmLabel: string;
+    onOpen: () => void;
+    onClose: () => void;
+    onConfirm: () => void | Promise<void>;
+  };
 }
 
 function SettingsInfoTooltip({
@@ -106,20 +136,32 @@ function SettingsSection({
 }
 
 export function SettingsMenu({
+  open: openProp,
   onOpenChange,
   documentStackEnabled,
   onDocumentStackEnabledChange,
   workspacesEnabled,
   onWorkspacesEnabledChange,
   onImport,
-  onExport,
-  onDeleteAll,
   deleteLabel,
+  exportPanel,
+  deletePanel,
 }: SettingsMenuProps) {
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = openProp ?? uncontrolledOpen;
+  const setOpen = useCallback(
+    (nextOpen: boolean) => {
+      if (openProp === undefined) {
+        setUncontrolledOpen(nextOpen);
+      }
+      onOpenChange?.(nextOpen);
+    },
+    [onOpenChange, openProp]
+  );
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [popoverOffset, setPopoverOffset] = useState({ side: 16, align: -8 });
   const { palette, setPalette } = useTheme();
+  const feedback = useSettingsFeedbackView();
   const activePaletteLabel =
     EXPERIMENT_PALETTES.find((option) => option.id === palette)?.label ?? "Default";
 
@@ -148,10 +190,18 @@ export function SettingsMenu({
   const handleOpenChange = (nextOpen: boolean) => {
     if (nextOpen) {
       updatePopoverOffset();
+    } else {
+      feedback.close();
+      exportPanel?.onClose();
+      deletePanel?.onClose();
     }
     setOpen(nextOpen);
-    onOpenChange?.(nextOpen);
   };
+
+  const panelTall = feedback.open || exportPanel?.open || deletePanel?.open;
+  const popoverWidthClassName = feedback.open
+    ? feedbackPanelWidthClassName
+    : "w-[min(25rem,calc(100vw-2rem))]";
 
   const closeAnd = (action?: () => void) => {
     action?.();
@@ -201,9 +251,45 @@ export function SettingsMenu({
             e.preventDefault();
           }
         }}
-        className="w-[min(25rem,calc(100vw-2rem))] rounded-lg border-2 border-border bg-popover p-0 font-base shadow-shadow"
+        className={cn(
+          "rounded-lg border-2 border-border bg-popover p-0 font-base shadow-shadow",
+          popoverWidthClassName
+        )}
       >
-        <div className="native-scrollbar max-h-[min(70vh,35rem)] overflow-y-auto">
+        <div
+          className={cn(
+            "native-scrollbar overflow-y-auto",
+            panelTall
+              ? feedbackPanelMaxHeightClassName
+              : "max-h-[min(70vh,35rem)]"
+          )}
+        >
+          {feedback.open ? (
+            <SettingsFeedbackPanel
+              open={feedback.open}
+              loading={feedback.loading}
+              schema={feedback.schema}
+              onBack={feedback.back}
+              onClose={() => closeAnd()}
+            />
+          ) : exportPanel?.open ? (
+            <ExportPanelContent
+              workspaces={exportPanel.workspaces}
+              selectedIds={exportPanel.selectedIds}
+              onToggleWorkspace={exportPanel.onToggleWorkspace}
+              onToggleSelectAll={exportPanel.onToggleSelectAll}
+              onExport={exportPanel.onExport}
+              onBack={exportPanel.onClose}
+            />
+          ) : deletePanel?.open ? (
+            <DeletePanelContent
+              title={deletePanel.title}
+              description={deletePanel.description}
+              confirmLabel={deletePanel.confirmLabel}
+              onConfirm={deletePanel.onConfirm}
+              onBack={deletePanel.onClose}
+            />
+          ) : (
           <div className="flex flex-col gap-5 px-4 py-4">
             <SettingsSection title="General">
               <div className="flex flex-col gap-3">
@@ -212,7 +298,10 @@ export function SettingsMenu({
                   variant="ghost"
                   size="sm"
                   className={settingsDataButtonClassName}
-                  onClick={() => closeAnd(openFeedbackForm)}
+                  onClick={() => {
+                    feedback.prepare();
+                    openFeedbackForm("settings");
+                  }}
                 >
                   <MessageSquare className="size-4 shrink-0" />
                   Give Feedback
@@ -327,7 +416,7 @@ export function SettingsMenu({
                   variant="ghost"
                   size="sm"
                   className={settingsDataButtonClassName}
-                  onClick={() => closeAnd(onExport)}
+                  onClick={() => exportPanel?.onOpen()}
                 >
                   <Download className="size-4 shrink-0" />
                   Export
@@ -345,17 +434,15 @@ export function SettingsMenu({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className={cn(
-                  settingsDataButtonClassName,
-                  "text-destructive hover:bg-destructive hover:text-destructive-foreground focus-visible:ring-destructive [&_svg]:text-destructive hover:[&_svg]:text-destructive-foreground",
-                )}
-                onClick={() => closeAnd(onDeleteAll)}
+                className={settingsDestructiveButtonClassName}
+                onClick={() => deletePanel?.onOpen()}
               >
                 <Trash2 className="size-4 shrink-0" />
                 {deleteLabel}
               </Button>
             </SettingsSection>
           </div>
+          )}
         </div>
       </PopoverContent>
     </Popover>

@@ -7,7 +7,7 @@ import { applyMarkdownTabKey } from "@/lib/markdown-editor-tab";
 import { cn } from "@/lib/utils";
 
 const textareaChromeClasses = [
-  "font-mono text-sm leading-normal",
+  "font-mono text-sm leading-relaxed",
   "overflow-y-auto overflow-x-hidden native-scrollbar",
   "border-border text-foreground",
 ].join(" ");
@@ -238,8 +238,8 @@ export const LineNumberedTextarea = React.forwardRef<
       {showLineNumbers ? (
         <div
           ref={gutterRef}
-          className="h-full shrink-0 overflow-hidden border-r border-border py-2 pl-2 pr-2.5 text-muted-foreground select-none tabular-nums"
-          style={{ width: `${gutterCh}ch` }}
+          className="h-full shrink-0 overflow-hidden border-r border-border py-2 pl-2 pr-4 text-muted-foreground select-none tabular-nums"
+          style={{ width: `calc(${gutterCh}ch + 0.375rem)` }}
           aria-hidden
         >
           <pre

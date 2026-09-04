@@ -218,7 +218,7 @@ function SearchResultRow({
 }
 
 const searchInlineControlClass =
-  "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 text-primary transition-colors hover:bg-sidebar-accent hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
+  "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 text-primary transition-colors hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
 
 interface SearchInputChromeProps {
   query: string;
@@ -495,6 +495,7 @@ export function Search({
             type="button"
             className={cn(
               workspaceIconActionClassName,
+              "border-0 bg-transparent",
               searchActive && "bg-sidebar-accent"
             )}
             aria-label="Search documents"

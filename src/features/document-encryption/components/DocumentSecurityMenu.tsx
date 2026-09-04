@@ -3,9 +3,8 @@
 import { useState } from "react";
 import {
   ChevronRight,
+  FileLock2,
   Lock,
-  LockOpen,
-  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -44,7 +43,7 @@ function getToolbarVisual(
 }
 
 const STATUS_DOT_CLASS: Record<ToolbarVisual, string | null> = {
-  "not-encrypted": null,
+  "not-encrypted": "bg-red-500",
   locked: "bg-muted-foreground",
   unlocked: "bg-emerald-500",
 };
@@ -86,14 +85,40 @@ function ComingSoonRow({ label }: { label: string }) {
   );
 }
 
+function FileLockOpenIcon({
+  className,
+  "aria-hidden": ariaHidden,
+}: {
+  className?: string;
+  "aria-hidden"?: boolean;
+}) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("shrink-0", className)}
+      aria-hidden={ariaHidden}
+    >
+      <path d="M4 9.8V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.7.7L19.3 6.3A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2h-3" />
+      <path d="M14 2v5a1 1 0 0 0 1 1h5" />
+      <path d="M5 17v-2a2 2 0 0 1 3.4-1.4" />
+      <rect width="8" height="5" x="3" y="17" rx="1" />
+    </svg>
+  );
+}
+
 function ToolbarLockIcon({ visual }: { visual: ToolbarVisual }) {
   if (visual === "not-encrypted") {
-    return <Shield className="size-4 shrink-0" strokeWidth={2} aria-hidden />;
+    return <FileLockOpenIcon className="size-6" aria-hidden />;
   }
   if (visual === "unlocked") {
-    return <LockOpen className="size-4 shrink-0" strokeWidth={2} aria-hidden />;
+    return <FileLockOpenIcon className="size-6" aria-hidden />;
   }
-  return <Lock className="size-4 shrink-0" strokeWidth={2} aria-hidden />;
+  return <FileLock2 className="size-6 shrink-0" strokeWidth={2} aria-hidden />;
 }
 
 function AccessContext({
@@ -248,7 +273,7 @@ export function DocumentSecurityMenu({
               type="button"
               className={cn(
                 workspaceIconActionClassName,
-                "relative shrink-0 !text-primary",
+                "relative shrink-0 border-0 bg-transparent !text-primary hover:border-0",
                 className
               )}
               aria-label={`Document security: ${statusLabel}. Click to open.`}
@@ -294,7 +319,7 @@ export function DocumentSecurityMenu({
               {isPlain && (
                 <>
                   <AccessContext
-                    icon={Shield}
+                    icon={FileLockOpenIcon}
                     headline="Document is not encrypted"
                     helper="This document is currently stored as plain Markdown."
                   />
@@ -311,7 +336,7 @@ export function DocumentSecurityMenu({
               {isLocked && (
                 <>
                   <AccessContext
-                    icon={Lock}
+                    icon={FileLock2}
                     headline="Document is encrypted and locked"
                     helper="Unlock the document to view, edit, and export plain Markdown."
                   />
@@ -327,7 +352,7 @@ export function DocumentSecurityMenu({
               )}
               {isUnlocked && (
                 <AccessContext
-                  icon={LockOpen}
+                  icon={FileLockOpenIcon}
                   headline="Document is currently unlocked"
                   helper=""
                 />

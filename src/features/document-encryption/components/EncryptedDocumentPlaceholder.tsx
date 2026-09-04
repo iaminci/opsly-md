@@ -48,7 +48,7 @@ export function EncryptedDocumentPlaceholder({
   };
 
   return (
-    <div className="flex min-h-[calc(100svh-14rem)] -translate-y-80 items-center justify-center px-4">
+    <div className="flex min-h-[calc(100dvh-14rem)] items-center justify-center px-4 py-8">
       <div className="w-full max-w-2xl rounded-lg border-2 border-border bg-violet-50 px-8 py-8 text-center">
         <p className="mx-auto mt-3 inline-flex max-w-full items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-sm">
           <Lock className="size-3.5 shrink-0 text-violet-600" aria-hidden />

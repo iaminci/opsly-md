@@ -1,6 +1,7 @@
 import { Link2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { HeadingIconChildren } from "./HeadingIconLabel";
 
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -24,7 +25,7 @@ export function HeadingAnchor({ level, id, children }: HeadingAnchorProps) {
 
   return (
     <Tag id={id} className={cn(id && "heading-anchor")}>
-      {children}
+      <HeadingIconChildren>{children}</HeadingIconChildren>
       {id ? (
         <a
           href={`#${id}`}

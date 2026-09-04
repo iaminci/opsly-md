@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DeploymentReloadGuardProvider } from "@/components/DeploymentReloadGuard";
 import { DeploymentRefreshWatcher } from "@/components/DeploymentRefreshWatcher";
+import { FeedbackHost } from "@/components/Feedback";
 import { WindowInactiveAttribute } from "@/components/WindowInactiveAttribute";
 import "./globals.css";
 
@@ -90,9 +91,8 @@ export default function RootLayout({
             </Script>
           </>
         )}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
+        <Script id="theme-bootstrap" strategy="beforeInteractive">
+          {`
               try {
                 var stored = localStorage.getItem('md-viewer-theme');
                 var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -112,14 +112,14 @@ export default function RootLayout({
                   root.removeAttribute('data-palette');
                 }
               } catch (e) {}
-            `,
-          }}
-        />
+            `}
+        </Script>
         <ThemeProvider>
           <DeploymentReloadGuardProvider>
             <DeploymentRefreshWatcher />
             <WindowInactiveAttribute />
             <TooltipProvider>{children}</TooltipProvider>
+            <FeedbackHost />
             <Toaster />
           </DeploymentReloadGuardProvider>
         </ThemeProvider>

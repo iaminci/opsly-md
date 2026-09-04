@@ -157,12 +157,12 @@ const alertDialogFooterButtonBase =
 
 const alertDialogActionClassName = cn(
   alertDialogFooterButtonBase,
-  "border-2 border-border bg-background text-destructive shadow-shadow hover:!bg-main hover:text-main-foreground hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+  "border-2 border-border bg-surface-raised text-destructive shadow-none hover:!bg-surface-hover hover:text-destructive"
 )
 
 const alertDialogCancelClassName = cn(
   alertDialogFooterButtonBase,
-  "border-2 border-border !bg-background text-foreground shadow-shadow hover:!bg-background hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+  "border-2 border-border !bg-surface-raised text-foreground shadow-none hover:!bg-surface-hover"
 )
 
 function AlertDialogAction({

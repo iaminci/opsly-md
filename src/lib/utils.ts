@@ -21,7 +21,7 @@ export function cn(...inputs: ClassValue[]) {
 
 /** Shared neo-brutalist panel shell for sidebar, editor, terminal, etc. */
 export const appCapsuleClassName =
-  "rounded-base border-2 border-border bg-secondary-background shadow-shadow overflow-hidden";
+  "rounded-base border-2 border-border bg-surface-panel shadow-shadow overflow-hidden";
 
 type ClassNameProp<TState = unknown> =
   | string

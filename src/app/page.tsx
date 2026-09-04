@@ -90,6 +90,7 @@ import {
   DocumentSecurityMenu,
   DocumentDownloadButton,
   DocumentSecurityState,
+  hasSecureBlocks,
   isStoredContentEncrypted,
   getStoredDownloadPayload,
   getExportMarkdownPayload,
@@ -102,7 +103,8 @@ import {
 const CURRENT_DOC_KEY = "md-viewer-current-doc";
 const RIGHT_TOC_OPEN_KEY = "md-viewer-right-toc-open";
 const DOC_STACK_ENABLED_KEY = "md-viewer-doc-stack-enabled";
-const EDIT_AUTOSAVE_INTERVAL_SEC = 10;
+const EDIT_AUTOSAVE_DELAY_MS = 1000;
+const EDIT_AUTOSAVE_STATUS_MS = 4000;
 
 /**
  * Open Radix overlays that handle Escape. Used in the capture phase so we still see
@@ -170,15 +172,12 @@ function useLgAndUp() {
 
 const BACK_TO_TOP_SCROLL_THRESHOLD = 300;
 
-/** Floating scroll-to-top control anchored to the main reading column. */
+/** Floating scroll-to-top control — right edge aligned with the toolbar close button. */
 function BackToTopButton({
   scrollContainerRef,
-  rightTocOpen,
 }: {
   scrollContainerRef: React.RefObject<HTMLDivElement | null>;
-  rightTocOpen: boolean;
 }) {
-  const isLg = useLgAndUp();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -200,22 +199,18 @@ function BackToTopButton({
         <Button
           type="button"
           variant="ghost"
-          size="icon"
           aria-label="Back to top"
           tabIndex={visible ? 0 : -1}
           onClick={() =>
             scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" })
           }
           className={cn(
-            "absolute bottom-6 z-20 size-10 rounded-full border-2 border-border bg-background text-primary shadow-md print:hidden",
-            "transition-[right,opacity,background-color,color,box-shadow] duration-200 ease-linear",
+            "absolute bottom-6 right-8 z-20 size-9 rounded-full border-2 border-border bg-background p-0 text-primary shadow-md print:hidden",
+            "transition-[opacity,background-color,color,box-shadow] duration-200 ease-linear",
             "hover:bg-primary hover:text-background hover:shadow-lg",
             visible
               ? "pointer-events-auto opacity-100"
-              : "pointer-events-none opacity-0",
-            isLg && rightTocOpen
-              ? "right-[calc(17rem+2.5rem)]"
-              : "right-8"
+              : "pointer-events-none opacity-0"
           )}
         >
           <ArrowUp className="size-4" strokeWidth={3} aria-hidden />
@@ -311,23 +306,44 @@ function DocumentRightSidebar({
   doc,
   content,
   contentScrollRef,
+  onHide,
 }: {
   doc: Document;
   content: string;
   contentScrollRef: React.RefObject<HTMLDivElement | null>;
+  onHide: () => void;
 }) {
   return (
     <Tabs defaultValue="on-this-page" className="flex min-h-0 flex-1 flex-col">
-      <div className="mb-3 shrink-0">
-        <TabsList className="h-9 w-full shrink-0 justify-start gap-1.5 border-0 bg-transparent p-0">
-          <TabsTrigger value="on-this-page" className="h-9 flex-none px-3">
+      <div className="mb-3 flex h-10 shrink-0 items-center gap-2 border-b border-border-subtle">
+        <TabsList className="h-10 min-w-0 flex-1 justify-start gap-0 rounded-none border-0 bg-transparent p-0">
+          <TabsTrigger
+            value="on-this-page"
+            className="h-10 flex-none rounded-none border-0 border-b-2 border-b-transparent bg-transparent px-3 text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:bg-transparent data-[state=active]:text-primary"
+          >
             On This Page
           </TabsTrigger>
-          <TabsTrigger value="info" className="h-9 flex-none px-3">
+          <TabsTrigger
+            value="info"
+            className="h-10 flex-none rounded-none border-0 border-b-2 border-b-transparent bg-transparent px-3 text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:bg-transparent data-[state=active]:text-primary"
+          >
             Info
           </TabsTrigger>
         </TabsList>
-        <div className="mt-2 border-b-2 border-border" aria-hidden />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label="Hide outline"
+              aria-controls="document-outline-panel"
+              onClick={onHide}
+              className="relative -top-0.5 left-2 inline-flex h-9 w-5 shrink-0 items-center justify-center rounded-md border-2 border-border bg-surface-raised p-0 text-primary shadow-none transition-colors hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            >
+              <ChevronRight className="size-5" strokeWidth={2.5} aria-hidden />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" align="end">Hide outline</TooltipContent>
+        </Tooltip>
       </div>
       <TabsContent value="on-this-page" className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden">
         <TableOfContents
@@ -393,7 +409,8 @@ function AppContent() {
   const [searchActiveMatchIndex, setSearchActiveMatchIndex] = useState(0);
   const [searchMatchCount, setSearchMatchCount] = useState(0);
   const [editAutosaveUi, setEditAutosaveUi] = useState<"idle" | "saving" | "saved">("idle");
-  const [editAutosaveSecs, setEditAutosaveSecs] = useState<number | null>(null);
+  const editSaveStartedAtRef = useRef<number | null>(null);
+  const editSaveStatusTimeoutRef = useRef<number | null>(null);
   const [mainPanelDocDragOver, setMainPanelDocDragOver] = useState(false);
 
   const encryptionPersistenceRef = useRef<
@@ -416,6 +433,8 @@ function AppContent() {
   const isEncryptedAtRest =
     encryption.session.documentId === currentDoc?.id &&
     isStoredContentEncrypted(encryption.session.storedContent);
+  const showDocumentSecurity =
+    isEncryptedAtRest || hasSecureBlocks(displayContent);
 
   const securityStatusLabel = getSecurityStatusLabel(
     encryption.session.securityState,
@@ -424,10 +443,15 @@ function AppContent() {
 
   const hasUnsavedDraft =
     !!currentDoc && draftContent !== displayContent;
-  /** Autosave only after a document has saved content (skip brand-new empty files). */
-  const allowEditAutosave = displayContent.trim().length > 0;
   const editDirty = editMode && hasUnsavedDraft;
-  const previewContent = hasUnsavedDraft ? draftContent : displayContent;
+  const debouncedDraftForAutosave = useDebouncedValue(
+    draftContent,
+    EDIT_AUTOSAVE_DELAY_MS
+  );
+  const previewContent =
+    hasUnsavedDraft && !isStoredContentEncrypted(draftContent)
+      ? draftContent
+      : displayContent;
   /**
    * Rendering a document re-runs the full markdown pipeline synchronously — for a
    * long document that can take a real, unavoidable amount of CPU time. Deferring
@@ -498,14 +522,16 @@ function AppContent() {
   }, [rightTocOpen]);
   const currentDocId = currentDoc?.id;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!currentDocId) return;
     if (encryption.session.documentId !== currentDocId) return;
     if (encryption.session.securityState !== DocumentSecurityState.Unlocked) return;
+    const decrypted = encryption.session.displayContent;
+    // Opening an encrypted doc seeds draftContent from stored ciphertext; after
+    // unlock, preview must use decrypted markdown instead of that stale draft.
+    setDraftContent(decrypted);
     setCurrentDoc((prev) =>
-      prev?.id === currentDocId
-        ? { ...prev, content: encryption.session.displayContent }
-        : prev
+      prev?.id === currentDocId ? { ...prev, content: decrypted } : prev
     );
   }, [
     currentDocId,
@@ -609,14 +635,16 @@ function AppContent() {
         shouldRestoreScrollRef.current = false;
         scrollTopBeforeEditRef.current = 0;
         if (contentScrollRef.current) contentScrollRef.current.scrollTop = 0;
-        setDraftContent(currentDoc?.content ?? "");
+        const raw = currentDoc?.content ?? "";
+        setDraftContent(isStoredContentEncrypted(raw) ? "" : raw);
         setDocumentViewMode("edit");
         return;
       }
 
       setDocumentViewMode("preview");
       shouldRestoreScrollRef.current = false;
-      setDraftContent(currentDoc?.content ?? "");
+      const raw = currentDoc?.content ?? "";
+      setDraftContent(isStoredContentEncrypted(raw) ? "" : raw);
     }
   }, [currentDoc?.id, currentDoc?.content]);
 
@@ -731,12 +759,21 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    if (!editMode) setEditAutosaveUi("idle");
+    if (!editMode) {
+      if (editSaveStatusTimeoutRef.current) {
+        clearTimeout(editSaveStatusTimeoutRef.current);
+        editSaveStatusTimeoutRef.current = null;
+      }
+      setEditAutosaveUi("idle");
+    }
   }, [editMode]);
 
   useEffect(() => {
     if (editAutosaveUi !== "saved") return;
-    const t = window.setTimeout(() => setEditAutosaveUi("idle"), 4000);
+    const t = window.setTimeout(
+      () => setEditAutosaveUi("idle"),
+      EDIT_AUTOSAVE_STATUS_MS
+    );
     return () => window.clearTimeout(t);
   }, [editAutosaveUi]);
 
@@ -752,6 +789,11 @@ function AppContent() {
       const interactive = options?.interactive ?? true;
       if (!currentDoc) return;
       if (!exitEditAfter) {
+        if (editSaveStatusTimeoutRef.current) {
+          clearTimeout(editSaveStatusTimeoutRef.current);
+          editSaveStatusTimeoutRef.current = null;
+        }
+        editSaveStartedAtRef.current = Date.now();
         setEditAutosaveUi("saving");
       }
       try {
@@ -760,12 +802,20 @@ function AppContent() {
         });
         if (!decision) {
           if (!exitEditAfter) {
+            if (editSaveStatusTimeoutRef.current) {
+              clearTimeout(editSaveStatusTimeoutRef.current);
+              editSaveStatusTimeoutRef.current = null;
+            }
             setEditAutosaveUi("idle");
           }
           return;
         }
         if (decision.action === "cancel") {
           if (!exitEditAfter) {
+            if (editSaveStatusTimeoutRef.current) {
+              clearTimeout(editSaveStatusTimeoutRef.current);
+              editSaveStatusTimeoutRef.current = null;
+            }
             setEditAutosaveUi("idle");
           }
           return;
@@ -787,10 +837,22 @@ function AppContent() {
         if (exitEditAfter) {
           handleShowPreviewView(true);
         } else {
-          setEditAutosaveUi("saved");
+          const startedAt = editSaveStartedAtRef.current ?? Date.now();
+          const remaining = Math.max(
+            0,
+            EDIT_AUTOSAVE_STATUS_MS - (Date.now() - startedAt)
+          );
+          editSaveStatusTimeoutRef.current = window.setTimeout(() => {
+            editSaveStatusTimeoutRef.current = null;
+            setEditAutosaveUi("saved");
+          }, remaining);
         }
       } catch (err) {
         if (!exitEditAfter) {
+          if (editSaveStatusTimeoutRef.current) {
+            clearTimeout(editSaveStatusTimeoutRef.current);
+            editSaveStatusTimeoutRef.current = null;
+          }
           setEditAutosaveUi("idle");
         }
         if (err instanceof DuplicateNameError) {
@@ -806,48 +868,22 @@ function AppContent() {
   const handleEditSaveRef = useRef(handleEditSave);
   handleEditSaveRef.current = handleEditSave;
 
-  const editAutosaveLatestRef = useRef({
-    draft: "",
-    savedContent: "",
-  });
-  editAutosaveLatestRef.current = {
-    draft: draftContent,
-    savedContent: displayContent,
-  };
-
   useEffect(() => {
-    if (!currentDoc?.id || !hasUnsavedDraft || !allowEditAutosave) {
-      setEditAutosaveSecs(null);
-      return;
-    }
-    let secCount = 0;
-    const latest0 = editAutosaveLatestRef.current;
-    setEditAutosaveSecs(
-      latest0.draft !== latest0.savedContent ? EDIT_AUTOSAVE_INTERVAL_SEC : null
-    );
-
-    const id = window.setInterval(() => {
-      secCount += 1;
-      const latest = editAutosaveLatestRef.current;
-      const dirty = latest.draft !== latest.savedContent;
-      if (secCount % EDIT_AUTOSAVE_INTERVAL_SEC === 0 && dirty) {
-        void handleEditSaveRef.current({
-          exitEditAfter: false,
-          interactive: false,
-        });
-      }
-      const rem =
-        secCount % EDIT_AUTOSAVE_INTERVAL_SEC === 0
-          ? EDIT_AUTOSAVE_INTERVAL_SEC
-          : EDIT_AUTOSAVE_INTERVAL_SEC - (secCount % EDIT_AUTOSAVE_INTERVAL_SEC);
-      setEditAutosaveSecs(dirty ? rem : null);
-    }, 1000);
-
-    return () => {
-      window.clearInterval(id);
-      setEditAutosaveSecs(null);
-    };
-  }, [currentDoc?.id, hasUnsavedDraft, allowEditAutosave]);
+    if (!editMode || !currentDoc?.id) return;
+    // Only save after typing stops (debounce caught up) and content actually changed.
+    if (debouncedDraftForAutosave !== draftContent) return;
+    if (draftContent === displayContent) return;
+    void handleEditSaveRef.current({
+      exitEditAfter: false,
+      interactive: false,
+    });
+  }, [
+    editMode,
+    currentDoc?.id,
+    debouncedDraftForAutosave,
+    draftContent,
+    displayContent,
+  ]);
 
   const performDownloadStored = useCallback(async () => {
     if (!currentDoc) return;
@@ -1199,7 +1235,7 @@ function AppContent() {
         <SidebarExpandTrigger />
         <div
           className={cn(
-            "relative min-h-0 flex-1 overflow-hidden",
+            "relative min-h-0 flex-1 gap-0 overflow-hidden bg-surface-panel p-1",
             currentDoc
               ? "flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:grid-rows-1"
               : "flex flex-col"
@@ -1212,7 +1248,7 @@ function AppContent() {
             className={cn(
               // Native overflow (not Radix ScrollArea): Radix wraps content in display:table + minWidth:100%,
               // which can grow wider than the grid column and clip right-aligned doc actions beside the TOC.
-              "relative z-[1] min-h-0 min-w-0 flex-1 font-base outline-none native-scrollbar",
+              "relative z-[1] min-h-0 min-w-0 flex-1 bg-surface-workspace font-base outline-none native-scrollbar",
               currentDoc
                 ? "flex flex-col overflow-hidden"
                 : "overflow-y-auto overflow-x-hidden",
@@ -1226,9 +1262,9 @@ function AppContent() {
               <div
                 className={cn(
                   documentActionToolbarClassName,
-                  !editMode && "lg:mt-4 lg:h-9",
-                  editMode && "lg:mt-4",
-                  editMode && "border-b-2 border-border"
+                  !editMode && "lg:mt-3 lg:h-9",
+                  editMode && "lg:mt-3",
+                  editMode && "border-b border-border-subtle"
                 )}
               >
                 <DocumentToolbarContent editMode={editMode}>
@@ -1242,28 +1278,34 @@ function AppContent() {
                           "min-w-[5.75rem]"
                         )}
                         onClick={() => {
-                          if (editMode) handleShowPreviewView(true);
-                          else handleShowEditView();
+                          if (editMode) {
+                            if (hasUnsavedDraft) {
+                              void handleEditSave({
+                                exitEditAfter: true,
+                                interactive: true,
+                              });
+                            } else {
+                              handleShowPreviewView(true);
+                            }
+                          } else {
+                            handleShowEditView();
+                          }
                         }}
                       >
                         {editMode ? "Preview" : "Edit"}
                       </button>
-                      {editMode || hasUnsavedDraft ? (
-                        <button
-                          type="button"
-                          className={workspaceToolbarTextActionClassName}
-                          onClick={() =>
-                            void handleEditSave({ exitEditAfter: false })
-                          }
-                        >
-                          {editAutosaveUi === "saving"
-                            ? "Save · …"
-                            : editAutosaveSecs !== null
-                              ? `Save (${editAutosaveSecs}s)`
-                              : "Save"}
-                        </button>
+                      {editMode ? (
+                        editAutosaveUi !== "idle" && (
+                          <span
+                            className="ml-6 text-sm font-medium text-foreground"
+                            aria-live="polite"
+                          >
+                            {editAutosaveUi === "saving" ? "Saving…" : "Saved"}
+                          </span>
+                        )
                       ) : (
                         <DocumentDownloadButton
+                          className="ml-4"
                           isEncryptedAtRest={isEncryptedAtRest}
                           isLocked={encryption.isLocked}
                           onDownloadPlain={() => void performDownloadStored()}
@@ -1271,8 +1313,9 @@ function AppContent() {
                           onExportMarkdown={handleExportMarkdownRequest}
                         />
                       )}
-                      {!editMode && (
+                      {!editMode && showDocumentSecurity && (
                         <DocumentSecurityMenu
+                          className="ml-4"
                           securityState={encryption.session.securityState}
                           isEncryptedAtRest={isEncryptedAtRest}
                           statusLabel={securityStatusLabel}
@@ -1281,14 +1324,6 @@ function AppContent() {
                           onUnlock={encryption.reopenUnlockDialog}
                           onRemoveEncryption={handleRemoveEncryptionRequest}
                         />
-                      )}
-                      {editAutosaveUi === "saving" && (
-                        <span
-                          className="text-xs text-muted-foreground"
-                          aria-live="polite"
-                        >
-                          Saving…
-                        </span>
                       )}
                     </>
                   )}
@@ -1305,11 +1340,33 @@ function AppContent() {
                     <button
                       type="button"
                       aria-label="Close document and return to overview"
-                      className={workspaceIconActionClassName}
+                      className={cn(
+                        workspaceIconActionClassName,
+                        "border-0 bg-transparent hover:border-0"
+                      )}
                       onClick={handleCloseDocument}
                     >
-                      <X className="size-4 shrink-0" strokeWidth={2.5} aria-hidden />
+                      <X className="size-5 shrink-0" strokeWidth={2.5} aria-hidden />
                     </button>
+                    {documentHasTocHeadings && !rightTocOpen && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label="Show outline"
+                            aria-expanded={rightTocOpen}
+                            aria-controls="document-outline-panel"
+                            onClick={() => setRightTocOpen((open) => !open)}
+                            className="relative left-7 inline-flex h-9 w-5 shrink-0 cursor-pointer items-center justify-center rounded-md border-2 border-border bg-surface-raised p-0 text-primary shadow-none transition-colors hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                          >
+                            <ChevronLeft className="size-5" strokeWidth={2.5} aria-hidden />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" align="center">
+                          Show outline
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                   </div>
                 )}
                 </DocumentToolbarContent>
@@ -1356,74 +1413,36 @@ function AppContent() {
           )}
             </div>
             )}
+
+          {currentDoc && !editMode && (
+            <BackToTopButton scrollContainerRef={contentScrollRef} />
+          )}
           </div>
 
           {currentDoc && (
             <div
               className={cn(
                 "hidden min-h-0 min-w-0 shrink-0 print:hidden lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:flex lg:h-full lg:min-h-0 lg:flex-col",
-                showRightToc ? "p-2 pl-0" : "w-0 p-0"
+                showRightToc ? "w-[15rem]" : "w-0"
               )}
             >
               {showRightToc && (
                 <aside
                   id="document-outline-panel"
                   aria-hidden={!showRightToc}
-                  className={cn(
-                    appCapsuleClassName,
-                    "flex min-h-0 w-[17rem] flex-1 flex-col px-3 pt-2 pb-4"
-                  )}
+                  className="flex min-h-0 w-[15rem] flex-1 flex-col bg-surface-workspace py-3 pl-5 pr-3"
                 >
                   <DocumentRightSidebar
                     doc={currentDoc}
                     content={displayContent}
                     contentScrollRef={contentScrollRef}
+                    onHide={() => setRightTocOpen(false)}
                   />
                 </aside>
               )}
             </div>
           )}
 
-          {currentDoc && !editMode && (
-            <BackToTopButton
-              scrollContainerRef={contentScrollRef}
-              rightTocOpen={showRightToc}
-            />
-          )}
-
-          {currentDoc && !editMode && documentHasTocHeadings && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-expanded={rightTocOpen}
-                  aria-controls="document-outline-panel"
-                  onClick={() => setRightTocOpen((o) => !o)}
-                  className={cn(
-                    "absolute top-1/2 z-30 hidden h-15 w-6 shrink-0 -translate-y-1/2 border-2 border-border bg-background text-primary shadow-none transition-[right,background-color,color] duration-150 ease-linear hover:bg-primary hover:text-background hover:-translate-y-1/2",
-                    "print:hidden lg:inline-flex",
-                    rightTocOpen
-                      ? "right-[calc(17rem+0.5rem-0.75rem)]"
-                      : "right-2"
-                  )}
-                >
-                  {rightTocOpen ? (
-                    <ChevronRight aria-hidden />
-                  ) : (
-                    <ChevronLeft aria-hidden />
-                  )}
-                  <span className="sr-only">
-                    {rightTocOpen ? "Hide outline" : "Show outline"}
-                  </span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left" align="center">
-                {rightTocOpen ? "Hide outline" : "Show outline"}
-              </TooltipContent>
-            </Tooltip>
-          )}
         </div>
       </SidebarInset>
 

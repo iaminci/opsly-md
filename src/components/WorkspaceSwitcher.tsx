@@ -34,10 +34,10 @@ const workspaceSwitcherDropdownMaxHeightClassName =
   "max-h-[min(50vh,16rem)]";
 
 export const workspaceTabBaseClassName =
-  "!h-9 !min-h-9 !rounded-[5px] !border-2 !border-border !font-heading !font-bold !shadow-shadow !outline-0 transition-[transform,box-shadow] hover:!translate-x-boxShadowX hover:!translate-y-boxShadowY hover:!shadow-none hover:!outline-0 focus-visible:!outline-0 focus-visible:!shadow-shadow";
+  "!h-9 !min-h-9 !rounded-[5px] !border-2 !border-border !font-heading !font-bold !shadow-none !outline-0 transition-colors hover:!shadow-none hover:!outline-0 focus-visible:!outline-0 focus-visible:!shadow-none";
 
 export const workspaceControlChromeClassName =
-  "rounded-md border-2 border-border bg-background shadow-none transition-colors hover:border-border hover:bg-sidebar-accent hover:translate-x-0 hover:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
+  "rounded-md border-2 border-border bg-surface-raised shadow-none transition-colors hover:border-border hover:bg-surface-hover hover:translate-x-0 hover:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
 
 export const workspaceDropdownTriggerClassName = cn(
   "flex h-9 min-h-9 w-full min-w-0 items-center gap-2 px-3 text-left text-sm font-medium text-foreground",
@@ -45,19 +45,19 @@ export const workspaceDropdownTriggerClassName = cn(
 );
 
 export const workspaceIconActionClassName = cn(
-  "inline-flex size-9 shrink-0 cursor-pointer items-center justify-center p-0 text-primary hover:text-primary-hover",
+  "inline-flex size-9 shrink-0 cursor-pointer items-center justify-center p-0 text-primary hover:text-foreground",
   workspaceControlChromeClassName
 );
 
 /** Flat toolbar label buttons (Edit, Download, Cancel, Save). */
 export const workspaceToolbarTextActionClassName = cn(
   workspaceControlChromeClassName,
-  "inline-flex h-9 shrink-0 cursor-pointer items-center justify-center px-3.5 text-sm font-medium text-primary"
+  "inline-flex h-9 shrink-0 cursor-pointer items-center justify-center px-3.5 text-sm font-medium text-primary hover:text-foreground"
 );
 
 /** Document action bar — shared by preview and edit so Edit/Preview stay put. */
 export const documentActionToolbarClassName =
-  "flex h-12 shrink-0 items-center bg-secondary-background print:hidden";
+  "flex h-12 shrink-0 items-center bg-surface-workspace print:hidden";
 
 /** Left cluster inside the document action bar. */
 export const documentActionToolbarActionsClassName =
@@ -66,13 +66,13 @@ export const documentActionToolbarActionsClassName =
 /** (+) “New workspace” and single-workspace ⋯ — same chrome as tabs, neutral surface. */
 export const workspaceNeutralChipClassName = cn(
   workspaceTabBaseClassName,
-  "!bg-background !text-foreground hover:!bg-background hover:!text-foreground focus-visible:!bg-background focus-visible:!text-foreground"
+  "!bg-surface-raised !text-foreground hover:!bg-surface-hover hover:!text-foreground focus-visible:!bg-surface-raised focus-visible:!text-foreground"
 );
 
 /** Single-workspace view: wide name + ⋯ as two matching “cards” (white fill, black border, hard shadow). */
 export const workspacePairTabClassName = cn(
   workspaceTabBaseClassName,
-  "!bg-background !text-foreground focus-visible:!bg-primary"
+  "!bg-surface-raised !text-foreground hover:!bg-surface-hover focus-visible:!bg-primary"
 );
 
 /** Workspace switcher dropdown panel (inline create/rename lives here). */
@@ -111,6 +111,7 @@ interface WorkspaceSwitcherProps {
     onSelect: (doc: Document) => void;
     matchNavigation?: SearchMatchNavigation | null;
   };
+  onCollapseTree?: () => void;
 }
 
 export function WorkspaceSwitcher({
@@ -130,6 +131,7 @@ export function WorkspaceSwitcher({
   onPendingTreeRenameSubmit,
   onPendingTreeRenameCancel,
   search,
+  onCollapseTree,
 }: WorkspaceSwitcherProps) {
   const skipCloseAutoFocusRef = useRef(false);
   const workspaceRowRef = useRef<HTMLUListElement>(null);
@@ -252,7 +254,7 @@ export function WorkspaceSwitcher({
               aria-label={`Rename ${ws.name}`}
               className={cn(
                 "pointer-events-auto ml-1 inline-flex size-7 shrink-0 items-center justify-center rounded-sm border-0 bg-transparent p-0 text-muted-foreground opacity-0 transition-opacity",
-                "hover:bg-sidebar-accent hover:text-primary",
+                "hover:bg-sidebar-accent hover:text-foreground",
                 "group-hover/workspace-row:opacity-100 group-focus-within/workspace-row:opacity-100"
               )}
               onClick={(e) => {
@@ -374,6 +376,7 @@ export function WorkspaceSwitcher({
         onUploadFile={onUploadFile}
         onCreateFolder={showCreateFolderButton ? onCreateFolder : undefined}
         search={search}
+        onCollapseTree={onCollapseTree}
       />
     </div>
   );

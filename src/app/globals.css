@@ -47,6 +47,15 @@
   --color-selection-bg: var(--selection-bg);
   --color-selection-bg-soft: var(--selection-bg-soft);
   --color-selection-border: var(--selection-border);
+  --color-surface-canvas: var(--surface-canvas);
+  --color-surface-panel: var(--surface-panel);
+  --color-surface-workspace: var(--surface-workspace);
+  --color-surface-nested: var(--surface-nested);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-selected: var(--surface-selected);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
   --color-search-highlight-bg: var(--search-highlight-bg);
   --color-search-highlight-active-bg: var(--search-highlight-active-bg);
   --color-destructive-foreground: var(--destructive-foreground);
@@ -81,6 +90,16 @@ mark.search-highlight-active {
 }
 
 :root {
+  /* Semantic depth scale: canvas → major panel → workspace → nested → raised. */
+  --surface-canvas: #f0efeb;
+  --surface-panel: #ffffff;
+  --surface-workspace: #fdfdfb;
+  --surface-nested: #f3f2ee;
+  --surface-raised: #ffffff;
+  --surface-hover: #f0ecfb;
+  --surface-selected: #e9e2ff;
+  --border-subtle: rgb(31 31 31 / 0.16);
+  --border-strong: #1f1f1f;
   --background: #fafaf7;
   --secondary-background: #ffffff;
   --sidebar: var(--secondary-background);
@@ -110,7 +129,7 @@ mark.search-highlight-active {
   --destructive: #d00000;
   --destructive-foreground: #ffffff;
   --sidebar-foreground: #1c1c1e;
-  --sidebar-accent: #ede9fe;
+  --sidebar-accent: var(--surface-selected);
   --sidebar-accent-foreground: #5b21b6;
   --sidebar-border: #1f1f1f;
   --sidebar-ring: #1f1f1f;
@@ -127,6 +146,15 @@ mark.search-highlight-active {
 }
 
 .dark {
+  --surface-canvas: #181b29;
+  --surface-panel: #24283b;
+  --surface-workspace: var(--background);
+  --surface-nested: #2a3045;
+  --surface-raised: #32384d;
+  --surface-hover: #363d52;
+  --surface-selected: rgb(52 211 153 / 0.16);
+  --border-subtle: rgb(192 202 245 / 0.16);
+  --border-strong: #0b0f14;
   --background: #24283b;
   --secondary-background: #24283b;
   --sidebar: var(--secondary-background);
@@ -154,7 +182,7 @@ mark.search-highlight-active {
   --card-foreground: #c0caf5;
   --popover-foreground: #c0caf5;
   --sidebar-foreground: #c0caf5;
-  --sidebar-accent: rgb(169 220 118 / 0.12);
+  --sidebar-accent: var(--surface-selected);
   --sidebar-accent-foreground: #34D399;
   --destructive: #FF6188;
   --destructive-foreground: #ffffff;
@@ -177,6 +205,15 @@ mark.search-highlight-active {
 /* Monokai Pro — classic spectrum accents on warm charcoal / soft paper */
 html[data-palette="monokai"],
 html.palette-monokai {
+  --surface-canvas: #e9dfdb;
+  --surface-panel: #f8f1ee;
+  --surface-workspace: #fdfaf8;
+  --surface-nested: #eee3df;
+  --surface-raised: #fffaf7;
+  --surface-hover: #e3eee7;
+  --surface-selected: #d5eadc;
+  --border-subtle: rgb(41 36 42 / 0.16);
+  --border-strong: #29242a;
   --background: #faf4f2;
   --secondary-background: #ffffff;
   --sidebar: #f3ece9;
@@ -205,7 +242,7 @@ html.palette-monokai {
   --destructive: #e14775;
   --destructive-foreground: #ffffff;
   --sidebar-foreground: #29242a;
-  --sidebar-accent: #dcefe4;
+  --sidebar-accent: var(--surface-selected);
   --sidebar-accent-foreground: #1e8257;
   --sidebar-border: #29242a;
   --sidebar-ring: #269d69;
@@ -225,6 +262,15 @@ html[data-palette="monokai"].dark,
 html[data-palette="monokai"] .dark,
 html.palette-monokai.dark,
 html.palette-monokai .dark {
+  --surface-canvas: #191719;
+  --surface-panel: #272427;
+  --surface-workspace: var(--background);
+  --surface-nested: #363337;
+  --surface-raised: #403e41;
+  --surface-hover: #474448;
+  --surface-selected: rgb(169 220 118 / 0.16);
+  --border-subtle: rgb(252 252 250 / 0.15);
+  --border-strong: #19181a;
   --background: #2d2a2e;
   --secondary-background: #221f22;
   --sidebar: #221f22;
@@ -252,7 +298,7 @@ html.palette-monokai .dark {
   --card-foreground: #fcfcfa;
   --popover-foreground: #fcfcfa;
   --sidebar-foreground: #fcfcfa;
-  --sidebar-accent: rgb(169 220 118 / 0.14);
+  --sidebar-accent: var(--surface-selected);
   --sidebar-accent-foreground: #a9dc76;
   --destructive: #ff6188;
   --destructive-foreground: #ffffff;
@@ -338,7 +384,7 @@ html[data-window-inactive].dark *::-moz-selection {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply text-foreground font-base bg-background;
+    @apply text-foreground font-base bg-surface-canvas;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading text-foreground;
@@ -350,9 +396,8 @@ html[data-window-inactive].dark *::-moz-selection {
 }
 
 /*
- * Surface hierarchy — components share Tailwind surface classes; map layers here
- * so sidebar, editor, cards, inputs, and TOC read as distinct stacked surfaces.
- * Borders and shadows unchanged. Accent orange stays on primary / active states only.
+ * Surface hierarchy. The app canvas is visible only in the shell gutters; the
+ * sidebar and workspace remain independent major containers above it.
  */
 .text-muted {
   color: var(--muted-foreground);
@@ -360,42 +405,43 @@ html[data-window-inactive].dark *::-moz-selection {
 
 [data-slot="sidebar-inner"],
 [data-slot="sidebar"] {
-  background-color: var(--sidebar) !important;
+  background-color: var(--surface-panel) !important;
 }
 
 [data-slot="sidebar-inset"] {
-  background-color: var(--secondary-background) !important;
+  background-color: var(--surface-panel) !important;
 }
 
 #document-outline-panel {
-  background-color: color-mix(in srgb, var(--sidebar) 14%, var(--card));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 14%, transparent);
+  background-color: var(--surface-workspace);
+  box-shadow: none;
+}
+
+#document-outline-panel [data-slot="tabs-list"] {
+  background-color: transparent;
 }
 
 [data-slot="input"],
 [data-sidebar="input"],
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]),
 textarea {
-  background-color: var(--input);
+  background-color: var(--surface-raised);
 }
 
 [data-slot="dialog-content"],
 [data-slot="alert-dialog-content"],
 [data-slot="sheet-content"]:not([data-sidebar="sidebar"]),
 [data-slot="dropdown-menu-content"] {
-  background-color: var(--popover);
+  background-color: var(--surface-raised);
 }
 
-/*
- * Encatch SDK iframe — dashboard CSS cannot target this node; form chrome is encatch-form.css (repo root).
- * Iframe shell uses the same border/radius/shadow tokens as the app UI.
- */
-iframe[src*="app.encatch.com/s/web-sdk-form"],
-iframe[id^="encatch-iframe-"] {
-  border: 2px solid var(--border) !important;
-  border-radius: var(--radius-base) !important;
-  box-shadow: var(--shadow) !important;
-  overflow: hidden !important;
+[data-slot="tabs-list"] {
+  background-color: var(--surface-nested);
+}
+
+[data-slot="tabs-trigger"]:not([data-state="active"]):hover,
+[data-slot="button"][data-variant="ghost"]:hover {
+  background-color: var(--surface-hover);
 }
 
 /* Theme toggle: circular reveal from click (View Transitions API) */
@@ -433,41 +479,4 @@ iframe[id^="encatch-iframe-"] {
   .print\:hidden {
     display: none !important;
   }
-}
-
-#encatch-iframe-container iframe {
-  border-radius: 10px !important;
-}
-
-/* Sidebar tree branch lines (vertical spine is border-l-2 on drop areas) */
-.tree-drop-with-branches {
-  --tree-guide-inset: 0.25rem; /* matches pl-1 on drop areas */
-}
-
-.tree-guide-entry {
-  --tree-guide-line: var(--sidebar-guide);
-  position: relative;
-  min-width: 0;
-}
-
-/* Horizontal branch (──) from spine to row icon */
-.tree-guide-entry::before {
-  content: "";
-  position: absolute;
-  left: calc(-1 * var(--tree-guide-inset));
-  top: 50%;
-  width: calc(var(--tree-guide-inset) + 0.25rem);
-  height: 2px;
-  background-color: var(--tree-guide-line);
-  pointer-events: none;
-  transform: translateY(-50%);
-}
-
-.tree-guide-entry--active-path::before {
-  background-color: var(--primary);
-  opacity: 0.7;
-}
-
-.tree-drop-with-branches--drag-target .tree-guide-entry::before {
-  background-color: var(--tree-drag-target-border);
 }

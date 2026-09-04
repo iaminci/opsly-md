@@ -17,7 +17,7 @@ export function ThemeSettingsControl({ className }: { className?: string }) {
         "inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-md border-2 border-border p-0 text-primary shadow-none transition-colors hover:translate-x-0 hover:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
         isDark
           ? "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
-          : "bg-background hover:border-border hover:bg-sidebar-accent hover:text-primary-hover",
+          : "bg-background hover:border-border hover:bg-sidebar-accent hover:text-foreground",
         className,
       )}
       onPointerDown={(e) => e.stopPropagation()}
