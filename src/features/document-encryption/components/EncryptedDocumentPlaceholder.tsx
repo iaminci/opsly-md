@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { Eye, EyeOff, Lock, LockOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 import { validatePassphraseForUnlock } from "../passphrase-validation";
 
 interface EncryptedDocumentPlaceholderProps {
@@ -49,25 +48,29 @@ export function EncryptedDocumentPlaceholder({
 
   return (
     <div className="flex min-h-[calc(100dvh-14rem)] items-center justify-center px-4 py-8">
-      <div className="w-full max-w-2xl rounded-lg border-2 border-border bg-violet-50 px-8 py-8 text-center">
-        <p className="mx-auto mt-3 inline-flex max-w-full items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-sm">
-          <Lock className="size-3.5 shrink-0 text-violet-600" aria-hidden />
-          <span className="truncate font-medium text-foreground">
-            {documentTitle} is Encrypted
+      <div className="w-full max-w-xl rounded-xl border border-border-subtle bg-surface-raised px-6 py-7 text-left shadow-shadow sm:px-8 sm:py-8">
+        <div className="flex items-start gap-3">
+          <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">
+            <Lock className="size-4" aria-hidden />
           </span>
-        </p>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-semibold leading-6 text-foreground">
+              {documentTitle} is encrypted
+            </h2>
+            <p className="mt-1 text-sm leading-5 text-muted-foreground">
+              Enter your passphrase to view and edit this document.
+            </p>
+          </div>
+        </div>
 
-        <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground">
-          Enter passphrase to decrypt the content for viewing and editing.
-        </p>
-        <p className="mx-auto mt-2 max-w-xl text-xs text-muted-foreground">
+        <p className="mt-5 rounded-lg bg-surface-nested px-3 py-2.5 text-xs leading-5 text-muted-foreground">
           Decrypted content exists only in memory until the document is locked or
           the tab is closed.
         </p>
 
         <form
           onSubmit={handleSubmit}
-          className="mx-auto mt-6 max-w-md space-y-4 text-left"
+          className="mt-6 space-y-4"
         >
           <div className="space-y-2">
             <label htmlFor="unlock-passphrase" className="text-sm font-medium">
@@ -85,7 +88,7 @@ export function EncryptedDocumentPlaceholder({
                 }}
                 autoComplete="current-password"
                 autoFocus
-                className="bg-background pr-10"
+                className="bg-input pr-10"
               />
               <button
                 type="button"
@@ -117,9 +120,7 @@ export function EncryptedDocumentPlaceholder({
             <Button
               type="submit"
               disabled={!passphrase || submitting}
-              className={cn(
-                "bg-background text-foreground hover:bg-main hover:text-main-foreground"
-              )}
+              className="min-w-28"
             >
               <LockOpen aria-hidden />
               {submitting ? "Unlocking…" : "Unlock"}

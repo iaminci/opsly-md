@@ -5,22 +5,18 @@ import { EncryptionSpecsList } from "@/features/document-encryption/components/E
 
 function InfoCallout({
   icon: Icon,
-  iconClassName,
   title,
-  className,
   children,
 }: {
   icon: typeof AlertTriangleIcon;
-  iconClassName: string;
   title?: string;
-  className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div
-      className={`flex items-start gap-3 rounded-md border-2 border-border px-4 py-3 text-sm text-foreground text-left ${className ?? ""}`}
-    >
-      <Icon className={`mt-0.5 size-6 shrink-0 ${iconClassName}`} aria-hidden />
+    <div className="flex items-start gap-3 rounded-xl border border-border-subtle bg-surface-raised px-5 py-4 text-left text-sm text-foreground shadow-shadow">
+      <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">
+        <Icon className="size-4" aria-hidden />
+      </span>
       <div className="min-w-0 space-y-1.5">
         {title ? (
           <p className="text-xs font-heading uppercase tracking-wider text-muted-foreground">
@@ -39,8 +35,6 @@ export function EmptyState({ hasDocuments = false }: { hasDocuments?: boolean })
       <div className="mx-auto flex max-w-xl flex-col gap-8 px-4 text-left">
         <InfoCallout
           icon={FileTextIcon}
-          iconClassName="text-sky-600 dark:text-sky-400"
-          className="bg-sky-50 dark:bg-sky-950/45"
         >
           {hasDocuments ? (
             <>
@@ -56,10 +50,8 @@ export function EmptyState({ hasDocuments = false }: { hasDocuments?: boolean })
         </InfoCallout>
         <InfoCallout
           icon={AlertTriangleIcon}
-          iconClassName="text-amber-500 dark:text-amber-400"
-          className="bg-amber-50 dark:bg-amber-950/40"
         >
-          <span className="font-semibold text-destructive">
+          <span className="font-semibold text-foreground">
             All documents are stored locally in this browser.
           </span>{" "}
           Clearing browser data may remove your documents. Export your workspace regularly to keep a
@@ -67,9 +59,7 @@ export function EmptyState({ hasDocuments = false }: { hasDocuments?: boolean })
         </InfoCallout>
         <InfoCallout
           icon={ShieldIcon}
-          iconClassName="text-violet-600 dark:text-violet-400"
           title="Document encryption"
-          className="bg-violet-50 dark:bg-violet-950/40"
         >
           <p>
             <span className="font-semibold">Encrypt sensitive documents</span> with a passphrase from
@@ -82,7 +72,7 @@ export function EmptyState({ hasDocuments = false }: { hasDocuments?: boolean })
               </span>
               <span>
                 Encrypted files are stored as{" "}
-                <code className="rounded border border-border bg-background px-1 py-0.5 text-xs text-foreground dark:bg-input">
+                <code className="rounded border border-border-subtle bg-surface-nested px-1 py-0.5 text-xs text-foreground">
                   .opsly
                 </code>{" "}
                 documents.

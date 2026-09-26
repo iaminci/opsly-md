@@ -1384,7 +1384,7 @@ function AppContent() {
             ) : (
             <div
               ref={contentScrollRef}
-              className="box-border max-w-full min-w-0 flex-1 overflow-y-auto overflow-x-hidden py-8 pl-8 pr-8 print:px-0 lg:pl-8 lg:pr-12"
+              className="native-scrollbar box-border max-w-full min-w-0 flex-1 overflow-y-auto overflow-x-hidden py-8 pl-8 pr-8 print:px-0 lg:pl-8 lg:pr-12"
             >
           {currentDoc ? (
             <DocumentColumn rightTocOpen={showRightToc}>
