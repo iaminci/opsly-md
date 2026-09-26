@@ -386,18 +386,6 @@ export function SettingsMenu({
                   switchAriaLabel="Play glitch animation when changing theme presets"
                 />
               </SettingsSection>
-              <SettingsSection title="Coming Soon">
-                <SettingsToggleRow
-                  id="eight-bit-sidebar-switch"
-                  label="8 bit sidebar"
-                  tooltip="A pixel-style sidebar. Not available yet"
-                  tooltipAriaLabel="About 8 bit sidebar"
-                  checked={false}
-                  onCheckedChange={() => {}}
-                  switchAriaLabel="8 bit sidebar (coming soon)"
-                  disabled
-                />
-              </SettingsSection>
             </div>
           ) : (
           <div className="flex flex-col gap-5 px-4 py-4">
