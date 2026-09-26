@@ -1729,7 +1729,7 @@ function FileItem({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       className={cn(
-        "group/file flex min-h-7 cursor-pointer items-center rounded-md py-0.5 pl-1 pr-0 transition-colors hover:bg-sidebar-accent/50",
+        "group/file flex min-h-8 cursor-pointer items-center rounded-lg px-2 py-1.5 transition-colors hover:bg-sidebar-accent/50",
         fileLooksSelected && TREE_ROW_SELECTED
       )}
       onClick={(e) => {
@@ -1745,7 +1745,7 @@ function FileItem({
     >
       <div
         className={cn(
-          "flex min-h-7 min-w-0 flex-1 items-center gap-2 rounded-[5px] py-0 pl-1 pr-0 transition-colors",
+          "flex min-h-5 min-w-0 flex-1 items-center gap-2 transition-colors",
           fileLooksSelected && "font-medium"
         )}
       >
@@ -1754,7 +1754,7 @@ function FileItem({
             <button
               type="button"
               className={cn(
-                "flex min-h-7 min-w-0 flex-1 items-center justify-start gap-2 border-0 bg-transparent text-left text-sm transition-colors hover:bg-transparent",
+                "flex min-h-5 min-w-0 flex-1 items-center justify-start gap-2 border-0 bg-transparent p-0 text-left text-sm transition-colors hover:bg-transparent",
                 !fileLooksSelected && !fileMenuOpen && "text-muted-foreground",
                 !fileLooksSelected && fileMenuOpen && "text-foreground",
                 nameTruncated && "min-w-0"
@@ -1768,7 +1768,7 @@ function FileItem({
               />
               <span
                 className={cn(
-                  "min-w-0 flex-1 leading-snug line-clamp-2 break-words",
+                  "min-w-0 flex-1 leading-5 line-clamp-2 break-words",
                   fileLooksSelected && "text-primary"
                 )}
               >

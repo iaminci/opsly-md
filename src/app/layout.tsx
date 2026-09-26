@@ -10,6 +10,7 @@ import { DeploymentReloadGuardProvider } from "@/components/DeploymentReloadGuar
 import { DeploymentRefreshWatcher } from "@/components/DeploymentRefreshWatcher";
 import { FeedbackHost } from "@/components/Feedback";
 import { WindowInactiveAttribute } from "@/components/WindowInactiveAttribute";
+import { ScrollbarActivity } from "@/components/ScrollbarActivity";
 import "./globals.css";
 
 const firaCode = Fira_Code({
@@ -103,9 +104,10 @@ export default function RootLayout({
                   document.documentElement.classList.remove('dark');
                 }
                 var root = document.documentElement;
-                root.classList.remove('palette-monokai');
+                root.classList.remove('palette-monokai', 'palette-lumen', 'palette-lumen-original');
                 var palette = localStorage.getItem('md-viewer-palette');
-                if (palette === 'monokai') {
+                if (palette === 'lumen-original') palette = 'lumen';
+                if (palette === 'monokai' || palette === 'lumen') {
                   root.setAttribute('data-palette', palette);
                   root.classList.add('palette-' + palette);
                 } else {
@@ -118,6 +120,7 @@ export default function RootLayout({
           <DeploymentReloadGuardProvider>
             <DeploymentRefreshWatcher />
             <WindowInactiveAttribute />
+            <ScrollbarActivity />
             <TooltipProvider>{children}</TooltipProvider>
             <FeedbackHost />
             <Toaster />

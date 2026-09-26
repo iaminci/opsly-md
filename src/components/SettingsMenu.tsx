@@ -47,9 +47,10 @@ const settingsDestructiveButtonClassName = cn(
   "text-destructive hover:!bg-destructive hover:!text-destructive-foreground focus-visible:ring-destructive [&_svg]:text-destructive hover:[&_svg]:!text-destructive-foreground"
 );
 
-const EXPERIMENT_PALETTES: { id: ThemePalette; label: string }[] = [
-  { id: "default", label: "Default" },
+const ACCENT_PRESETS: { id: ThemePalette; label: string }[] = [
+  { id: "violet", label: "Violet" },
   { id: "monokai", label: "Monokai" },
+  { id: "lumen", label: "Lumen" },
 ];
 
 interface SettingsMenuProps {
@@ -224,7 +225,7 @@ export function SettingsMenu({
   const feedback = useSettingsFeedbackView();
   const [additionalFeaturesOpen, setAdditionalFeaturesOpen] = useState(false);
   const activePaletteLabel =
-    EXPERIMENT_PALETTES.find((option) => option.id === palette)?.label ?? "Default";
+    ACCENT_PRESETS.find((option) => option.id === palette)?.label ?? "Violet";
 
   const updatePopoverOffset = useCallback(() => {
     const trigger = triggerRef.current;
@@ -417,9 +418,9 @@ export function SettingsMenu({
                 </Button>
                 <div className="flex items-center justify-between gap-3 py-0.5">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-medium text-foreground">Theme Presets</span>
-                    <SettingsInfoTooltip ariaLabel="About theme presets">
-                      Temporary color palettes for testing
+                    <span className="text-sm font-medium text-foreground">Accent Presets</span>
+                    <SettingsInfoTooltip ariaLabel="About accent presets">
+                      Change the interface accent color
                     </SettingsInfoTooltip>
                   </div>
                   <div className="flex items-center gap-2">
@@ -446,7 +447,7 @@ export function SettingsMenu({
                         data-theme-palette-dropdown
                       >
                         <div className="p-1">
-                          {EXPERIMENT_PALETTES.map((option) => (
+                          {ACCENT_PRESETS.map((option) => (
                             <DropdownMenuItem
                               key={option.id}
                               onClick={() => setPalette(option.id)}

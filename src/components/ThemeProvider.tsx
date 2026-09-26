@@ -11,8 +11,8 @@ import { flushSync } from "react-dom";
 
 export type ThemePreference = "light" | "dark" | "system";
 export type ResolvedTheme = "light" | "dark";
-/** Color pack; independent of light/dark. Default keeps existing tokens. */
-export type ThemePalette = "default" | "monokai";
+/** Accent pack; the shared visual foundation is independent of this choice. */
+export type ThemePalette = "violet" | "monokai" | "lumen";
 
 export type ThemeToggleOrigin = { clientX: number; clientY: number };
 
@@ -40,8 +40,9 @@ function resolveTheme(preference: ThemePreference): ResolvedTheme {
 }
 
 function parsePalette(value: string | null): ThemePalette {
-  if (value === "monokai") return value;
-  return "default";
+  if (value === "monokai" || value === "lumen") return value;
+  if (value === "lumen-original") return "lumen";
+  return "violet";
 }
 
 function parseGlitchEnabled(value: string | null): boolean {
@@ -50,8 +51,12 @@ function parseGlitchEnabled(value: string | null): boolean {
 
 function applyPaletteAttribute(palette: ThemePalette) {
   const root = document.documentElement;
-  root.classList.remove("palette-monokai");
-  if (palette === "default") {
+  root.classList.remove(
+    "palette-monokai",
+    "palette-lumen",
+    "palette-lumen-original",
+  );
+  if (palette === "violet") {
     root.removeAttribute("data-palette");
   } else {
     root.setAttribute("data-palette", palette);
@@ -91,7 +96,6 @@ const PALETTE_GLITCH_VARS = [
   "--sidebar-ring",
   "--sidebar-accent-foreground",
   "--selection-border",
-  "--shadow",
 ] as const;
 
 function readDocumentPalette(): ThemePalette {
@@ -129,9 +133,6 @@ function clearPaletteAccentGlitch() {
 function paintPaletteAccentFrame(frame: number) {
   const primary = PALETTE_GLITCH_PRIMARY[frame];
   const secondary = PALETTE_GLITCH_SECONDARY[frame];
-  const shadow = document.documentElement.classList.contains("dark")
-    ? `2px 2px 0px 0px ${primary}`
-    : `4px 4px 0px 0px ${primary}`;
 
   for (const el of glitchRoots()) {
     el.style.setProperty("--primary", primary);
@@ -143,7 +144,6 @@ function paintPaletteAccentFrame(frame: number) {
     el.style.setProperty("--sidebar-ring", primary);
     el.style.setProperty("--sidebar-accent-foreground", primary);
     el.style.setProperty("--selection-border", primary);
-    el.style.setProperty("--shadow", shadow);
   }
 }
 
@@ -168,7 +168,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themePreference, setThemePreference] = useState<ThemePreference>("system");
   const [theme, setThemeState] = useState<ResolvedTheme>("light");
-  const [palette, setPaletteState] = useState<ThemePalette>("default");
+  const [palette, setPaletteState] = useState<ThemePalette>("violet");
   const [glitchEnabled, setGlitchEnabledState] = useState(true);
   const [mounted, setMounted] = useState(false);
 
@@ -272,7 +272,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           theme: "light",
           themePreference: "system",
           setTheme,
-          palette: "default",
+          palette: "violet",
           setPalette,
           glitchEnabled: true,
           setGlitchEnabled,

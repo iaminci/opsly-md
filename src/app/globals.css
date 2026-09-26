@@ -19,12 +19,12 @@
   --spacing-boxShadowY: 2px;
   --spacing-reverseBoxShadowX: -2px;
   --spacing-reverseBoxShadowY: -2px;
-  --radius-base: 5px;
+  --radius-base: 0.5rem;
   --shadow-shadow: var(--shadow);
   --shadow-reverted: var(--reverted);
-  --font-weight-base: 500;
+  --font-weight-base: 400;
   --font-weight-heading: 700;
-  --font-sans: var(--font-fira-code), ui-monospace, monospace;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-fira-code), ui-monospace, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -90,34 +90,34 @@ mark.search-highlight-active {
 }
 
 :root {
-  /* Semantic depth scale: canvas → major panel → workspace → nested → raised. */
-  --surface-canvas: #f0efeb;
-  --surface-panel: #ffffff;
-  --surface-workspace: #fdfdfb;
-  --surface-nested: #f3f2ee;
+  /* Shared quiet-documentation foundation; presets below change accents only. */
+  --surface-canvas: #f7f7f7;
+  --surface-panel: #fafafa;
+  --surface-workspace: #ffffff;
+  --surface-nested: #f5f5f5;
   --surface-raised: #ffffff;
-  --surface-hover: #f0ecfb;
-  --surface-selected: #e9e2ff;
-  --border-subtle: rgb(31 31 31 / 0.16);
-  --border-strong: #1f1f1f;
-  --background: #fafaf7;
-  --secondary-background: #ffffff;
-  --sidebar: var(--secondary-background);
-  --card: #ffffff;
+  --surface-hover: #f1f1f1;
+  --surface-selected: #f1ebff;
+  --border-subtle: #e7e7e7;
+  --border-strong: #d8d8d8;
+  --background: #ffffff;
+  --secondary-background: #f7f7f7;
+  --sidebar: #f7f7f7;
+  --card: #fafafa;
   --popover: #ffffff;
-  --input: #fcfcfd;
-  --muted: #e6e9ed;
-  --foreground: #17181b;
+  --input: #ffffff;
+  --muted: #ededed;
+  --foreground: #171717;
   --main-foreground: #ffffff;
   --main: #8b5cf6;
-  --border: #1f1f1f;
-  --ring: #1f1f1f;
-  --shadow: 4px 4px 0px 0px #8b5cf6;
-  --reverted: 4px 4px 0px 0px #000000;
-  --radius: 0.5rem;
-  --muted-foreground: #667085;
-  --card-foreground: #17181b;
-  --popover-foreground: #17181b;
+  --border: #dedede;
+  --ring: #8b5cf6;
+  --shadow: 0 1px 2px rgb(23 23 23 / 0.05), 0 5px 16px rgb(23 23 23 / 0.04);
+  --reverted: 0 1px 2px rgb(23 23 23 / 0.07), 0 5px 16px rgb(23 23 23 / 0.05);
+  --radius: 0.625rem;
+  --muted-foreground: #6f6f6f;
+  --card-foreground: #171717;
+  --popover-foreground: #171717;
   --primary: #8b5cf6;
   --primary-hover: #7c3aed;
   --primary-foreground: #ffffff;
@@ -128,12 +128,12 @@ mark.search-highlight-active {
   --accent-foreground: #5b21b6;
   --destructive: #d00000;
   --destructive-foreground: #ffffff;
-  --sidebar-foreground: #1c1c1e;
+  --sidebar-foreground: #292929;
   --sidebar-accent: var(--surface-selected);
   --sidebar-accent-foreground: #5b21b6;
-  --sidebar-border: #1f1f1f;
-  --sidebar-ring: #1f1f1f;
-  --sidebar-guide: rgb(33 33 33 / 0.35);
+  --sidebar-border: #e2e2e2;
+  --sidebar-ring: #8b5cf6;
+  --sidebar-guide: rgb(23 23 23 / 0.16);
   --prose-blockquote-caution-icon: #7c3aed;
   --selection-bg: color-mix(in srgb, var(--primary) 12%, transparent);
   --selection-bg-soft: color-mix(in srgb, var(--primary) 8%, transparent);
@@ -146,48 +146,49 @@ mark.search-highlight-active {
 }
 
 .dark {
-  --surface-canvas: #181b29;
-  --surface-panel: #24283b;
-  --surface-workspace: var(--background);
-  --surface-nested: #2a3045;
-  --surface-raised: #32384d;
-  --surface-hover: #363d52;
-  --surface-selected: rgb(52 211 153 / 0.16);
-  --border-subtle: rgb(192 202 245 / 0.16);
-  --border-strong: #0b0f14;
-  --background: #24283b;
-  --secondary-background: #24283b;
-  --sidebar: var(--secondary-background);
-  --card: #272f45;
-  --popover: #2d3750;
-  --input: #32384d;
-  --muted: #2a3158;
-  --foreground: #c0caf5;
-  --muted-foreground: #9aa5ce;
-  --main: #34D399;
-  --primary: #34D399;
-  --primary-hover: #10B981;
-  --primary-foreground: #111111;
-  --secondary: #FFD866;
-  --secondary-hover: #F4C94A;
-  --secondary-foreground: #111111;
-  --accent: #363B54;
-  --accent-foreground: #c0caf5;
-  --border: #0b0f14;
-  --sidebar-border: #0b0f14;
-  --ring: #34D399;
-  --sidebar-ring: #34D399;
-  --shadow: 2px 2px 0px 0px #34D399;
-  --reverted: 4px 4px 0px 0px #000000;
-  --card-foreground: #c0caf5;
-  --popover-foreground: #c0caf5;
-  --sidebar-foreground: #c0caf5;
+  --surface-canvas: #111111;
+  --surface-panel: #141414;
+  --surface-workspace: #101010;
+  --surface-nested: #1b1b1b;
+  --surface-raised: #202020;
+  --surface-hover: #242424;
+  --surface-selected: rgb(167 139 250 / 0.16);
+  --border-subtle: #292929;
+  --border-strong: #383838;
+  --background: #101010;
+  --secondary-background: #171717;
+  --sidebar: #171717;
+  --card: #181818;
+  --popover: #1b1b1b;
+  --input: #202020;
+  --muted: #242424;
+  --foreground: #ededed;
+  --muted-foreground: #9b9b9b;
+  --main-foreground: #171717;
+  --main: #a78bfa;
+  --primary: #a78bfa;
+  --primary-hover: #8b5cf6;
+  --primary-foreground: #171717;
+  --secondary: #2e2445;
+  --secondary-hover: #3a2d59;
+  --secondary-foreground: #c4b5fd;
+  --accent: #242424;
+  --accent-foreground: #ededed;
+  --border: #2d2d2d;
+  --sidebar-border: #292929;
+  --ring: #a78bfa;
+  --sidebar-ring: #a78bfa;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 18px rgb(0 0 0 / 0.22);
+  --reverted: 0 1px 2px rgb(0 0 0 / 0.38), 0 6px 18px rgb(0 0 0 / 0.28);
+  --card-foreground: #ededed;
+  --popover-foreground: #ededed;
+  --sidebar-foreground: #d4d4d4;
   --sidebar-accent: var(--surface-selected);
-  --sidebar-accent-foreground: #34D399;
-  --destructive: #FF6188;
+  --sidebar-accent-foreground: #c4b5fd;
+  --destructive: #f87171;
   --destructive-foreground: #ffffff;
-  --sidebar-guide: rgb(154 165 206 / 0.25);
-  --prose-blockquote-caution-icon: #FFD866;
+  --sidebar-guide: rgb(237 237 237 / 0.14);
+  --prose-blockquote-caution-icon: #a78bfa;
   --search-highlight-bg: color-mix(in srgb, var(--primary) 32%, transparent);
   --search-highlight-active-bg: color-mix(in srgb, var(--primary) 58%, transparent);
   --tree-drag-target-bg: color-mix(in srgb, var(--primary) 28%, var(--sidebar));
@@ -195,120 +196,124 @@ mark.search-highlight-active {
   --tree-drag-target-border: color-mix(in srgb, var(--primary) 55%, var(--border));
 }
 
-/*
- * Experimental palettes — do not modify :root / .dark above.
- * Light/dark toggle still applies; these only swap the color pack.
- * Use data-palette (not classes) so Tailwind/LightningCSS won't strip JS-only theme rules.
- * `html[data-palette].dark` / `html[data-palette] .dark` beat ThemeProvider wrapper `.dark`.
- */
-
-/* Monokai Pro — classic spectrum accents on warm charcoal / soft paper */
+/* Accent presets — surfaces, typography, borders, radii, and shadows stay shared. */
 html[data-palette="monokai"],
 html.palette-monokai {
-  --surface-canvas: #e9dfdb;
-  --surface-panel: #f8f1ee;
-  --surface-workspace: #fdfaf8;
-  --surface-nested: #eee3df;
-  --surface-raised: #fffaf7;
-  --surface-hover: #e3eee7;
   --surface-selected: #d5eadc;
-  --border-subtle: rgb(41 36 42 / 0.16);
-  --border-strong: #29242a;
-  --background: #faf4f2;
-  --secondary-background: #ffffff;
-  --sidebar: #f3ece9;
-  --card: #ffffff;
-  --popover: #ffffff;
-  --input: #ffffff;
-  --muted: #ebe3df;
-  --foreground: #29242a;
-  --main-foreground: #ffffff;
   --main: #269d69;
-  --border: #29242a;
-  --ring: #269d69;
-  --shadow: 4px 4px 0px 0px #269d69;
-  --reverted: 4px 4px 0px 0px #29242a;
-  --muted-foreground: #706b6e;
-  --card-foreground: #29242a;
-  --popover-foreground: #29242a;
   --primary: #269d69;
   --primary-hover: #1e8257;
   --primary-foreground: #ffffff;
-  --secondary: #ffe8a3;
-  --secondary-hover: #ffd866;
-  --secondary-foreground: #29242a;
-  --accent: #f3ece9;
-  --accent-foreground: #29242a;
-  --destructive: #e14775;
-  --destructive-foreground: #ffffff;
-  --sidebar-foreground: #29242a;
+  --secondary: #e3f2e9;
+  --secondary-hover: #cde8d8;
+  --secondary-foreground: #176b46;
+  --ring: #269d69;
+  --sidebar-ring: #269d69;
   --sidebar-accent: var(--surface-selected);
   --sidebar-accent-foreground: #1e8257;
-  --sidebar-border: #29242a;
-  --sidebar-ring: #269d69;
-  --sidebar-guide: rgb(41 36 42 / 0.3);
-  --prose-blockquote-caution-icon: #cc7a0a;
-  --selection-bg: color-mix(in srgb, var(--primary) 14%, transparent);
-  --selection-bg-soft: color-mix(in srgb, var(--primary) 8%, transparent);
+  --prose-blockquote-caution-icon: #269d69;
+  --selection-bg: color-mix(in srgb, var(--primary) 18%, transparent);
+  --selection-bg-soft: color-mix(in srgb, var(--primary) 10%, transparent);
   --selection-border: var(--primary);
-  --search-highlight-bg: color-mix(in srgb, var(--primary) 28%, transparent);
-  --search-highlight-active-bg: color-mix(in srgb, var(--primary) 50%, transparent);
-  --tree-drag-target-bg: color-mix(in srgb, var(--primary) 14%, var(--sidebar));
+  --search-highlight-bg: color-mix(in srgb, var(--primary) 24%, transparent);
+  --search-highlight-active-bg: color-mix(in srgb, var(--primary) 44%, transparent);
+  --tree-drag-target-bg: color-mix(in srgb, var(--primary) 10%, var(--sidebar));
   --tree-drag-target-fg: var(--primary);
-  --tree-drag-target-border: color-mix(in srgb, var(--primary) 45%, var(--border));
+  --tree-drag-target-border: color-mix(in srgb, var(--primary) 42%, var(--border));
 }
 
 html[data-palette="monokai"].dark,
 html[data-palette="monokai"] .dark,
 html.palette-monokai.dark,
 html.palette-monokai .dark {
-  --surface-canvas: #191719;
-  --surface-panel: #272427;
-  --surface-workspace: var(--background);
-  --surface-nested: #363337;
-  --surface-raised: #403e41;
-  --surface-hover: #474448;
   --surface-selected: rgb(169 220 118 / 0.16);
-  --border-subtle: rgb(252 252 250 / 0.15);
-  --border-strong: #19181a;
-  --background: #2d2a2e;
-  --secondary-background: #221f22;
-  --sidebar: #221f22;
-  --card: #403e41;
-  --popover: #403e41;
-  --input: #403e41;
-  --muted: #403e41;
-  --foreground: #fcfcfa;
-  --muted-foreground: #939293;
   --main: #a9dc76;
   --primary: #a9dc76;
   --primary-hover: #8fc85a;
-  --primary-foreground: #19181a;
-  --secondary: #ffd866;
-  --secondary-hover: #f4c94a;
-  --secondary-foreground: #19181a;
-  --accent: #403e41;
-  --accent-foreground: #fcfcfa;
-  --border: #19181a;
-  --sidebar-border: #19181a;
+  --primary-foreground: #171717;
+  --secondary: #29331f;
+  --secondary-hover: #344127;
+  --secondary-foreground: #c6ec99;
   --ring: #a9dc76;
   --sidebar-ring: #a9dc76;
-  --shadow: 2px 2px 0px 0px #a9dc76;
-  --reverted: 4px 4px 0px 0px #19181a;
-  --card-foreground: #fcfcfa;
-  --popover-foreground: #fcfcfa;
-  --sidebar-foreground: #fcfcfa;
   --sidebar-accent: var(--surface-selected);
-  --sidebar-accent-foreground: #a9dc76;
-  --destructive: #ff6188;
-  --destructive-foreground: #ffffff;
-  --sidebar-guide: rgb(193 192 192 / 0.25);
-  --prose-blockquote-caution-icon: #ffd866;
-  --search-highlight-bg: color-mix(in srgb, var(--primary) 32%, transparent);
-  --search-highlight-active-bg: color-mix(in srgb, var(--primary) 55%, transparent);
-  --tree-drag-target-bg: color-mix(in srgb, var(--primary) 22%, var(--sidebar));
+  --sidebar-accent-foreground: #c6ec99;
+  --prose-blockquote-caution-icon: #a9dc76;
+  --search-highlight-bg: color-mix(in srgb, var(--primary) 25%, transparent);
+  --search-highlight-active-bg: color-mix(in srgb, var(--primary) 44%, transparent);
+  --tree-drag-target-bg: color-mix(in srgb, var(--primary) 13%, var(--sidebar));
   --tree-drag-target-fg: var(--primary);
-  --tree-drag-target-border: color-mix(in srgb, var(--primary) 55%, var(--border));
+  --tree-drag-target-border: color-mix(in srgb, var(--primary) 42%, var(--border));
+}
+
+html[data-palette="lumen"],
+html.palette-lumen {
+  --surface-selected: #f4ecd8;
+  --main: #c98b00;
+  --primary: #c98b00;
+  --primary-hover: #a97200;
+  --primary-foreground: #ffffff;
+  --secondary: #f4ecd8;
+  --secondary-hover: #eadcb9;
+  --secondary-foreground: #765100;
+  --ring: #d99a00;
+  --sidebar-ring: #d99a00;
+  --sidebar-accent: var(--surface-selected);
+  --sidebar-accent-foreground: #9a6900;
+  --prose-blockquote-caution-icon: #c98b00;
+  --selection-bg: color-mix(in srgb, var(--primary) 18%, transparent);
+  --selection-bg-soft: color-mix(in srgb, var(--primary) 10%, transparent);
+  --selection-border: var(--primary);
+  --search-highlight-bg: color-mix(in srgb, var(--primary) 24%, transparent);
+  --search-highlight-active-bg: color-mix(in srgb, var(--primary) 42%, transparent);
+  --tree-drag-target-bg: color-mix(in srgb, var(--primary) 10%, var(--sidebar));
+  --tree-drag-target-fg: #9a6900;
+  --tree-drag-target-border: color-mix(in srgb, var(--primary) 42%, var(--border));
+}
+
+html[data-palette="lumen"].dark,
+html[data-palette="lumen"] .dark,
+html.palette-lumen.dark,
+html.palette-lumen .dark {
+  --surface-selected: #302e20;
+  --main: #e6d84f;
+  --primary: #e6d84f;
+  --primary-hover: #f0e36a;
+  --primary-foreground: #171717;
+  --secondary: #302e20;
+  --secondary-hover: #3b3824;
+  --secondary-foreground: #f0e36a;
+  --ring: #e6d84f;
+  --sidebar-ring: #e6d84f;
+  --sidebar-accent: var(--surface-selected);
+  --sidebar-accent-foreground: #f0e36a;
+  --prose-blockquote-caution-icon: #e6d84f;
+  --search-highlight-bg: color-mix(in srgb, var(--primary) 25%, transparent);
+  --search-highlight-active-bg: color-mix(in srgb, var(--primary) 44%, transparent);
+  --tree-drag-target-bg: color-mix(in srgb, var(--primary) 13%, var(--sidebar));
+  --tree-drag-target-fg: var(--primary);
+  --tree-drag-target-border: color-mix(in srgb, var(--primary) 42%, var(--border));
+}
+
+/* Quiet the shared neo-brutalist chrome for every accent preset. */
+:where(
+  [class~="border-2"],
+  [class~="!border-2"]
+) {
+  border-width: 1px !important;
+}
+
+[class~="border-t-2"] {
+  border-top-width: 1px !important;
+}
+[class~="border-r-2"] {
+  border-right-width: 1px !important;
+}
+[class~="border-b-2"] {
+  border-bottom-width: 1px !important;
+}
+[class~="border-l-2"] {
+  border-left-width: 1px !important;
 }
 
 /* Unlayered: in-app ::selection must not live only in @layer base (Tailwind v4 can cascade it below preflight
@@ -349,23 +354,30 @@ html[data-window-inactive].dark *::-moz-selection {
 
   .native-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: var(--border) var(--secondary-background);
+    scrollbar-color: transparent transparent;
   }
   .native-scrollbar::-webkit-scrollbar {
     width: 0.5rem;
   }
   .native-scrollbar::-webkit-scrollbar-track {
     border-radius: var(--radius-base);
-    background-color: var(--secondary-background);
+    background-color: transparent;
   }
   .native-scrollbar::-webkit-scrollbar-thumb {
     border-radius: 9999px;
-    background-color: var(--border);
+    background-color: transparent;
+    transition: background-color 160ms ease;
+  }
+  .native-scrollbar[data-scrollbar-active] {
+    scrollbar-color: var(--border-strong) transparent;
+  }
+  .native-scrollbar[data-scrollbar-active]::-webkit-scrollbar-thumb {
+    background-color: var(--border-strong);
   }
 
   .native-scrollbar-transparent-track {
     scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
+    scrollbar-color: transparent transparent;
   }
   .native-scrollbar-transparent-track::-webkit-scrollbar {
     width: 0.625rem;
@@ -375,7 +387,14 @@ html[data-window-inactive].dark *::-moz-selection {
   }
   .native-scrollbar-transparent-track::-webkit-scrollbar-thumb {
     border-radius: 9999px;
-    background-color: var(--border);
+    background-color: transparent;
+    transition: background-color 160ms ease;
+  }
+  .native-scrollbar-transparent-track[data-scrollbar-active] {
+    scrollbar-color: var(--border-strong) transparent;
+  }
+  .native-scrollbar-transparent-track[data-scrollbar-active]::-webkit-scrollbar-thumb {
+    background-color: var(--border-strong);
   }
 }
 

@@ -7,7 +7,7 @@
   },
   "packageManager": "pnpm@10.29.2",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --hostname 0.0.0.0",
     "build": "node scripts/write-deployment-id.mjs && next build",
     "start": "next start",
     "lint": "eslint src scripts vscode-extension/src vscode-extension/esbuild.webview.mjs vscode-extension/scripts/copy-prose-fonts.mjs",
