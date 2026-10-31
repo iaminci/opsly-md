@@ -113,3 +113,138 @@ body {
   > blockquote:has(:is(.fenced-code-block, .markdown-table-wrap, .markdown-embed)) {
   max-width: var(--prose-measure);
 }
+
+/*
+ * Syntax highlighting tokens — tracks editor theme via VS Code injected CSS variables
+ * with light/dark fallbacks for standalone preview / builds.
+ */
+.fenced-code-block code.hljs {
+  color: var(--vscode-editor-foreground, inherit);
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: var(--vscode-descriptionForeground, #6a737d);
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-subst {
+  color: var(--vscode-symbolIcon-keywordForeground, #d73a49);
+  font-weight: 600;
+}
+
+.hljs-string,
+.hljs-doctag {
+  color: var(--vscode-symbolIcon-stringForeground, #032f62);
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-selector-id {
+  color: var(--vscode-symbolIcon-functionForeground, #6f42c1);
+}
+
+.hljs-title.class_,
+.hljs-type,
+.hljs-built_in {
+  color: var(--vscode-symbolIcon-classForeground, #e36209);
+}
+
+.hljs-variable,
+.hljs-template-variable {
+  color: var(--vscode-symbolIcon-variableForeground, #005cc5);
+}
+
+.hljs-number,
+.hljs-literal {
+  color: var(--vscode-symbolIcon-numberForeground, #005cc5);
+}
+
+.hljs-attr,
+.hljs-attribute {
+  color: var(--vscode-symbolIcon-propertyForeground, #22863a);
+}
+
+.hljs-meta,
+.hljs-meta .hljs-keyword {
+  color: var(--vscode-textLink-foreground, #005cc5);
+}
+
+.hljs-symbol,
+.hljs-bullet {
+  color: var(--vscode-terminal-ansiRed, #e36209);
+}
+
+.hljs-addition {
+  color: var(--vscode-terminal-ansiGreen, #22863a);
+}
+
+.hljs-deletion {
+  color: var(--vscode-terminal-ansiRed, #b31d28);
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+}
+
+:is(.dark, .dark *) .hljs-comment,
+:is(.dark, .dark *) .hljs-quote {
+  color: var(--vscode-descriptionForeground, #8b949e);
+}
+
+:is(.dark, .dark *) .hljs-keyword,
+:is(.dark, .dark *) .hljs-selector-tag,
+:is(.dark, .dark *) .hljs-subst {
+  color: var(--vscode-symbolIcon-keywordForeground, #ff7b72);
+}
+
+:is(.dark, .dark *) .hljs-string,
+:is(.dark, .dark *) .hljs-doctag {
+  color: var(--vscode-symbolIcon-stringForeground, #a5d6ff);
+}
+
+:is(.dark, .dark *) .hljs-title,
+:is(.dark, .dark *) .hljs-section,
+:is(.dark, .dark *) .hljs-selector-id {
+  color: var(--vscode-symbolIcon-functionForeground, #d2a8ff);
+}
+
+:is(.dark, .dark *) .hljs-title.class_,
+:is(.dark, .dark *) .hljs-type,
+:is(.dark, .dark *) .hljs-built_in {
+  color: var(--vscode-symbolIcon-classForeground, #ffa657);
+}
+
+:is(.dark, .dark *) .hljs-variable,
+:is(.dark, .dark *) .hljs-template-variable {
+  color: var(--vscode-symbolIcon-variableForeground, #79c0ff);
+}
+
+:is(.dark, .dark *) .hljs-number,
+:is(.dark, .dark *) .hljs-literal {
+  color: var(--vscode-symbolIcon-numberForeground, #79c0ff);
+}
+
+:is(.dark, .dark *) .hljs-attr,
+:is(.dark, .dark *) .hljs-attribute {
+  color: var(--vscode-symbolIcon-propertyForeground, #7ee787);
+}
+
+:is(.dark, .dark *) .hljs-meta,
+:is(.dark, .dark *) .hljs-meta .hljs-keyword {
+  color: var(--vscode-textLink-foreground, #79c0ff);
+}
+
+:is(.dark, .dark *) .hljs-addition {
+  color: var(--vscode-terminal-ansiGreen, #7ee787);
+}
+
+:is(.dark, .dark *) .hljs-deletion {
+  color: var(--vscode-terminal-ansiRed, #ffa198);
+}
