@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 
 const ENCATCH_WEB_HOST = "https://form.encatch.com";
 const ENCATCH_API_KEY =
-  "en_ZpxFYPlKUQq7zjg70QVJ1FDK4mvUXTKGioh1VSmGaYc3gDh8Rx8YUqEYqYS27cd7M4gkgIBcQb6FPfV_709035e6";
+  "en-pk_ZpyzBfSkdicNMe63TnBNSjeSg5WsolJr7xvFJ4GldFNKfo2NZfNPm8AjDyP9CrPcRgCs0tTl2RrPt0r_872c7b7b";
 const FEEDBACK_FORM_ID = "a2b01181-50e9-4daf-b06e-e07453b69d70";
 
 const feedbackPanelClassName =
