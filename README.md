@@ -128,7 +128,7 @@ pnpm run build
 pnpm run package
 ```
 
-Then: **Extensions** → `…` menu → **Install from VSIX…** → select `vscode-extension/opsly-md-0.2.0.vsix` (version may differ).
+Then: **Extensions** → `…` menu → **Install from VSIX…** → select `vscode-extension/opsly-md-preview-0.3.3.vsix` (version may differ).
 
 ### Architecture
 

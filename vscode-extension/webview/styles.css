@@ -115,74 +115,110 @@ body {
 }
 
 /*
- * Syntax highlighting tokens — tracks editor theme via VS Code injected CSS variables
- * with light/dark fallbacks for standalone preview / builds.
+ * Syntax highlighting tokens.
+ *
+ * VS Code does not expose a theme's token colours to webviews, so the palette is taken
+ * from the theme's terminal colours (--vscode-terminal-ansi*): nearly every theme sets
+ * them to its own keyword / string / function hues. The symbolIcon.* colours must not be
+ * used here — themes rarely define them, and keyword and string default to the plain
+ * foreground, which leaves those tokens uncoloured. Hex values are fallbacks for
+ * standalone builds outside VS Code.
  */
+:root {
+  --syntax-comment: var(--vscode-descriptionForeground, #6a737d);
+  --syntax-keyword: var(--vscode-terminal-ansiMagenta, #d73a49);
+  --syntax-string: var(--vscode-terminal-ansiGreen, #22863a);
+  --syntax-function: var(--vscode-terminal-ansiBlue, #6f42c1);
+  --syntax-type: var(--vscode-terminal-ansiYellow, #e36209);
+  --syntax-constant: var(--vscode-terminal-ansiYellow, #005cc5);
+  --syntax-property: var(--vscode-terminal-ansiCyan, #005cc5);
+  --syntax-tag: var(--vscode-terminal-ansiRed, #b31d28);
+  --syntax-meta: var(--vscode-textLink-foreground, #005cc5);
+  --syntax-added: var(--vscode-terminal-ansiGreen, #22863a);
+  --syntax-removed: var(--vscode-terminal-ansiRed, #b31d28);
+}
+
+.dark {
+  --syntax-comment: var(--vscode-descriptionForeground, #8b949e);
+  --syntax-keyword: var(--vscode-terminal-ansiMagenta, #ff7b72);
+  --syntax-string: var(--vscode-terminal-ansiGreen, #a5d6ff);
+  --syntax-function: var(--vscode-terminal-ansiBlue, #d2a8ff);
+  --syntax-type: var(--vscode-terminal-ansiYellow, #ffa657);
+  --syntax-constant: var(--vscode-terminal-ansiYellow, #79c0ff);
+  --syntax-property: var(--vscode-terminal-ansiCyan, #79c0ff);
+  --syntax-tag: var(--vscode-terminal-ansiRed, #7ee787);
+  --syntax-meta: var(--vscode-textLink-foreground, #79c0ff);
+  --syntax-added: var(--vscode-terminal-ansiGreen, #7ee787);
+  --syntax-removed: var(--vscode-terminal-ansiRed, #ffa198);
+}
+
 .fenced-code-block code.hljs {
   color: var(--vscode-editor-foreground, inherit);
 }
 
 .hljs-comment,
 .hljs-quote {
-  color: var(--vscode-descriptionForeground, #6a737d);
+  color: var(--syntax-comment);
   font-style: italic;
 }
 
 .hljs-keyword,
 .hljs-selector-tag,
-.hljs-subst {
-  color: var(--vscode-symbolIcon-keywordForeground, #d73a49);
-  font-weight: 600;
+.hljs-template-tag {
+  color: var(--syntax-keyword);
 }
 
 .hljs-string,
+.hljs-regexp,
 .hljs-doctag {
-  color: var(--vscode-symbolIcon-stringForeground, #032f62);
+  color: var(--syntax-string);
 }
 
 .hljs-title,
 .hljs-section,
 .hljs-selector-id {
-  color: var(--vscode-symbolIcon-functionForeground, #6f42c1);
+  color: var(--syntax-function);
 }
 
 .hljs-title.class_,
 .hljs-type,
-.hljs-built_in {
-  color: var(--vscode-symbolIcon-classForeground, #e36209);
-}
-
-.hljs-variable,
-.hljs-template-variable {
-  color: var(--vscode-symbolIcon-variableForeground, #005cc5);
+.hljs-selector-class {
+  color: var(--syntax-type);
 }
 
 .hljs-number,
-.hljs-literal {
-  color: var(--vscode-symbolIcon-numberForeground, #005cc5);
+.hljs-literal,
+.hljs-symbol,
+.hljs-bullet {
+  color: var(--syntax-constant);
 }
 
+.hljs-built_in,
 .hljs-attr,
-.hljs-attribute {
-  color: var(--vscode-symbolIcon-propertyForeground, #22863a);
+.hljs-attribute,
+.hljs-property,
+.hljs-selector-attr,
+.hljs-selector-pseudo {
+  color: var(--syntax-property);
+}
+
+.hljs-name,
+.hljs-variable,
+.hljs-template-variable {
+  color: var(--syntax-tag);
 }
 
 .hljs-meta,
 .hljs-meta .hljs-keyword {
-  color: var(--vscode-textLink-foreground, #005cc5);
-}
-
-.hljs-symbol,
-.hljs-bullet {
-  color: var(--vscode-terminal-ansiRed, #e36209);
+  color: var(--syntax-meta);
 }
 
 .hljs-addition {
-  color: var(--vscode-terminal-ansiGreen, #22863a);
+  color: var(--syntax-added);
 }
 
 .hljs-deletion {
-  color: var(--vscode-terminal-ansiRed, #b31d28);
+  color: var(--syntax-removed);
 }
 
 .hljs-emphasis {
@@ -191,60 +227,4 @@ body {
 
 .hljs-strong {
   font-weight: bold;
-}
-
-:is(.dark, .dark *) .hljs-comment,
-:is(.dark, .dark *) .hljs-quote {
-  color: var(--vscode-descriptionForeground, #8b949e);
-}
-
-:is(.dark, .dark *) .hljs-keyword,
-:is(.dark, .dark *) .hljs-selector-tag,
-:is(.dark, .dark *) .hljs-subst {
-  color: var(--vscode-symbolIcon-keywordForeground, #ff7b72);
-}
-
-:is(.dark, .dark *) .hljs-string,
-:is(.dark, .dark *) .hljs-doctag {
-  color: var(--vscode-symbolIcon-stringForeground, #a5d6ff);
-}
-
-:is(.dark, .dark *) .hljs-title,
-:is(.dark, .dark *) .hljs-section,
-:is(.dark, .dark *) .hljs-selector-id {
-  color: var(--vscode-symbolIcon-functionForeground, #d2a8ff);
-}
-
-:is(.dark, .dark *) .hljs-title.class_,
-:is(.dark, .dark *) .hljs-type,
-:is(.dark, .dark *) .hljs-built_in {
-  color: var(--vscode-symbolIcon-classForeground, #ffa657);
-}
-
-:is(.dark, .dark *) .hljs-variable,
-:is(.dark, .dark *) .hljs-template-variable {
-  color: var(--vscode-symbolIcon-variableForeground, #79c0ff);
-}
-
-:is(.dark, .dark *) .hljs-number,
-:is(.dark, .dark *) .hljs-literal {
-  color: var(--vscode-symbolIcon-numberForeground, #79c0ff);
-}
-
-:is(.dark, .dark *) .hljs-attr,
-:is(.dark, .dark *) .hljs-attribute {
-  color: var(--vscode-symbolIcon-propertyForeground, #7ee787);
-}
-
-:is(.dark, .dark *) .hljs-meta,
-:is(.dark, .dark *) .hljs-meta .hljs-keyword {
-  color: var(--vscode-textLink-foreground, #79c0ff);
-}
-
-:is(.dark, .dark *) .hljs-addition {
-  color: var(--vscode-terminal-ansiGreen, #7ee787);
-}
-
-:is(.dark, .dark *) .hljs-deletion {
-  color: var(--vscode-terminal-ansiRed, #ffa198);
 }
