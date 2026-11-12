@@ -30,6 +30,8 @@ const eslintConfig = defineConfig([
     "vscode-extension/out/**",
     "vscode-extension/.esbuild/**",
     "vscode-extension/node_modules/**",
+    "cli/dist/**",
+    "cli/node_modules/**",
   ]),
 ]);
 
