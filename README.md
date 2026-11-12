@@ -135,3 +135,42 @@ Then: **Extensions** → `…` menu → **Install from VSIX…** → select `vsc
 - **Extension host** (`src/`) — custom editor provider, file change sync, theme sync
 - **Webview** (`webview/`) — React app importing `MarkdownRenderer` from the main app
 - **CSS** — Tailwind v4 + shared `markdown-prose.css`, Geist fonts copied into `media/fonts/`
+
+## Terminal
+
+Render `.md` files straight in your terminal — like `cat`, but formatted.
+
+```bash
+opslymd README.md
+```
+
+Headings, lists, tables, task lists, blockquotes, links, and syntax-highlighted code blocks are drawn with colors and box characters. Opsly secure code fences stay masked unless you pass `--reveal`.
+
+### Install
+
+**Requirements:** Node.js 20.9+, pnpm
+
+From the repository root:
+
+```bash
+pnpm install
+pnpm cli:build
+npm install -g ./cli
+```
+
+### Usage
+
+| Command | Description |
+|---------|-------------|
+| `opslymd file.md` | Render a file |
+| `opslymd a.md b.md` | Render several files in order |
+| `cat file.md \| opslymd` | Render standard input |
+| `opslymd --width 80 file.md` | Wrap at 80 columns (default: terminal width, max 120) |
+| `opslymd --reveal file.md` | Show the contents of secure fences |
+| `opslymd --color file.md \| less -R` | Keep colors when piping into a pager |
+
+Colors are turned off automatically when output is piped or `NO_COLOR` is set.
+
+### Architecture
+
+The CLI lives in `cli/` and is bundled to a single file with esbuild. It parses with the same remark plugins as the web app (GFM, math, tree structures, pretty JSON) and renders the result as ANSI text instead of HTML.

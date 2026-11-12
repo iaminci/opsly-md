@@ -54,6 +54,10 @@ vscode-extension/.esbuild/
 .vscode-test/
 *.vsix
 
+# terminal cli (local deps + build output)
+cli/node_modules/
+cli/dist/
+
 # desktop app
 desktop/
 

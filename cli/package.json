@@ -1,0 +1,37 @@
+{
+  "name": "opsly-md-cli",
+  "version": "0.1.0",
+  "description": "Render Markdown files in the terminal with Opsly MD (GFM, syntax highlighting, tables, secure fences)",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iaminci/opsly-md"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "bin": {
+    "opslymd": "dist/opslymd.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "prepack": "node esbuild.mjs"
+  },
+  "devDependencies": {
+    "@types/mdast": "^4.0.4",
+    "@types/node": "^26",
+    "esbuild": "^0.27.3",
+    "highlight.js": "^11.11.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "remark-parse": "^11.0.0",
+    "string-width": "^7.2.0",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.1.0"
+  }
+}
