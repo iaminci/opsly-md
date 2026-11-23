@@ -97,6 +97,17 @@ body {
 }
 
 /*
+ * Fluid width: content fills the pane, leaving a fixed percentage of space on
+ * each side regardless of window size. Overrides the fixed rem measure from
+ * markdown-prose.css (set on the element so it beats the :root media queries).
+ */
+.preview-main {
+  --prose-measure: 100%;
+  --prose-wide: 100%;
+  padding-inline: 10%;
+}
+
+/*
  * VS Code preview has no doc column / TOC — wide blocks (code, tables) should
  * match prose text width. Web app keeps markdown-prose wide layout as-is.
  */

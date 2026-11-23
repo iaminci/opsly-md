@@ -72,7 +72,7 @@ function PreviewApp() {
           {fileName.split(/[/\\]/).pop()}
         </header>
       ) : null}
-      <main className="preview-main mx-auto min-w-0 max-w-full overflow-x-hidden px-8 py-8 lg:pr-12">
+      <main className="preview-main mx-auto min-w-0 max-w-full overflow-x-hidden py-8">
         {content.trim() ? (
           <MarkdownRenderer
             content={content}
