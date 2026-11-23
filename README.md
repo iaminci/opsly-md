@@ -148,15 +148,18 @@ Headings, lists, tables, task lists, blockquotes, links, and syntax-highlighted 
 
 ### Install
 
-**Requirements:** Node.js 20.9+, pnpm
+**Requirements:** Go 1.26+
 
 From the repository root:
 
 ```bash
-pnpm install
-pnpm cli:build
-npm install -g ./cli
+cd cli
+go build -o opslymd .
+# or install into $GOPATH/bin:
+go install .
 ```
+
+`go install github.com/iaminci/opsly-md/cli@latest` also works and produces a binary named `cli`; rename it to `opslymd` or build locally as above.
 
 ### Usage
 
@@ -173,4 +176,4 @@ Colors are turned off automatically when output is piped or `NO_COLOR` is set.
 
 ### Architecture
 
-The CLI lives in `cli/` and is bundled to a single file with esbuild. It parses with the same remark plugins as the web app (GFM, math, tree structures, pretty JSON) and renders the result as ANSI text instead of HTML.
+The CLI is a single static Go binary in `cli/`. It parses with [goldmark](https://github.com/yuin/goldmark) (GFM, footnotes, math), highlights code with [chroma](https://github.com/alecthomas/chroma), and applies the same tree-structure and pretty-JSON rules as the web app before rendering the result as ANSI text instead of HTML.

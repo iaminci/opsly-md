@@ -1,7 +1,6 @@
 packages:
   - "vscode-extension"
   - "desktop"
-  - "cli"
 
 allowBuilds:
   sharp: true
