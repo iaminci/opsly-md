@@ -34,24 +34,3 @@ jobs:
 
       - name: Build project
         run: pnpm build
-
-  cli:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: cli/go.mod
-          cache-dependency-path: cli/go.sum
-
-      - name: Vet
-        working-directory: cli
-        run: go vet ./...
-
-      - name: Build
-        working-directory: cli
-        run: go build -o opslymd .

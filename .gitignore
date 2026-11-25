@@ -54,10 +54,6 @@ vscode-extension/.esbuild/
 .vscode-test/
 *.vsix
 
-# terminal cli build output
-/cli/opslymd
-/cli/dist/
-
 # desktop app
 desktop/
 
