@@ -138,11 +138,11 @@ Then: **Extensions** → `…` menu → **Install from VSIX…** → select `vsc
 
 ## Terminal
 
-Render `.md` files straight in your terminal — like `cat`, but formatted — with the standalone [`opslymd`](https://github.com/iaminci/opslymd) CLI.
+Render `.md` files straight in your terminal — like `cat`, but formatted — with the standalone [`opslymd`](https://github.com/iaminci/opslymd-cli) CLI.
 
 ```bash
-go install github.com/iaminci/opslymd@latest
+go install github.com/iaminci/opslymd-cli/cmd/opslymd@latest
 opslymd README.md
 ```
 
-See the [opslymd repository](https://github.com/iaminci/opslymd) for install options and usage.
+See the [opslymd repository](https://github.com/iaminci/opslymd-cli) for install options and usage.
