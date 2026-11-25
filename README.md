@@ -167,6 +167,7 @@ go install .
 |---------|-------------|
 | `opslymd file.md` | Render a file |
 | `opslymd a.md b.md` | Render several files in order |
+| `opslymd main.go` | Non-Markdown files are printed unchanged, like `cat` |
 | `cat file.md \| opslymd` | Render standard input |
 | `opslymd --width 80 file.md` | Wrap at 80 columns (default: terminal width, max 120) |
 | `opslymd --reveal file.md` | Show the contents of secure fences |

@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -23,8 +24,9 @@ const (
 
 const help = `Usage: opslymd [options] [file ...]
 
-Render Markdown files in the terminal. With no file, or when file is "-",
-reads standard input.
+Render Markdown files (.md, .markdown, .mdown, .mkd, .mdx) in the terminal.
+Other files are printed unchanged, like cat. With no file, or when file is "-",
+reads standard input as Markdown.
 
 Options:
   -w, --width <n>   Wrap output at <n> columns (default: terminal width, max 120)
@@ -130,6 +132,14 @@ func describeError(err error) string {
 	return err.Error()
 }
 
+func isMarkdown(path string) bool {
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".md", ".markdown", ".mdown", ".mkd", ".mdx":
+		return true
+	}
+	return false
+}
+
 func write(s string) {
 	if _, err := io.WriteString(os.Stdout, s); err != nil {
 		// Exit quietly when the reader goes away, e.g. `opslymd file.md | head`.
@@ -177,6 +187,13 @@ func main() {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "opslymd: %s: %s\n", file, describeError(err))
 			failed = true
+			continue
+		}
+
+		// Only Markdown files are rendered; anything else is printed as-is, like cat.
+		if file != "-" && !isMarkdown(file) {
+			write(string(data))
+			printed++
 			continue
 		}
 
