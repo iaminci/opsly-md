@@ -138,42 +138,11 @@ Then: **Extensions** → `…` menu → **Install from VSIX…** → select `vsc
 
 ## Terminal
 
-Render `.md` files straight in your terminal — like `cat`, but formatted.
+Render `.md` files straight in your terminal — like `cat`, but formatted — with the standalone [`opslymd`](https://github.com/iaminci/opslymd-cli) CLI.
 
 ```bash
+brew install iaminci/tap/opslymd
 opslymd README.md
 ```
 
-Headings, lists, tables, task lists, blockquotes, links, and syntax-highlighted code blocks are drawn with colors and box characters. Opsly secure code fences stay masked unless you pass `--reveal`.
-
-### Install
-
-**Requirements:** Go 1.26+
-
-From the repository root:
-
-```bash
-cd cli
-go build -o opslymd .
-# or install into $GOPATH/bin:
-go install .
-```
-
-`go install github.com/iaminci/opsly-md/cli@latest` also works and produces a binary named `cli`; rename it to `opslymd` or build locally as above.
-
-### Usage
-
-| Command | Description |
-|---------|-------------|
-| `opslymd file.md` | Render a file |
-| `opslymd a.md b.md` | Render several files in order |
-| `cat file.md \| opslymd` | Render standard input |
-| `opslymd --width 80 file.md` | Wrap at 80 columns (default: terminal width, max 120) |
-| `opslymd --reveal file.md` | Show the contents of secure fences |
-| `opslymd --color file.md \| less -R` | Keep colors when piping into a pager |
-
-Colors are turned off automatically when output is piped or `NO_COLOR` is set.
-
-### Architecture
-
-The CLI is a single static Go binary in `cli/`. It parses with [goldmark](https://github.com/yuin/goldmark) (GFM, footnotes, math), highlights code with [chroma](https://github.com/alecthomas/chroma), and applies the same tree-structure and pretty-JSON rules as the web app before rendering the result as ANSI text instead of HTML.
+See the [opslymd repository](https://github.com/iaminci/opslymd-cli) for install options and usage.
