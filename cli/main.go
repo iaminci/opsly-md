@@ -25,7 +25,7 @@ const (
 const help = `Usage: opslymd [options] [file ...]
 
 Render Markdown files (.md, .markdown, .mdown, .mkd, .mdx) in the terminal.
-Other files are printed unchanged, like cat. With no file, or when file is "-",
+Other files are printed like cat, syntax-coloured when colors are on. With no file, or when file is "-",
 reads standard input as Markdown.
 
 Options:
@@ -192,6 +192,13 @@ func main() {
 
 		// Only Markdown files are rendered; anything else is printed as-is, like cat.
 		if file != "-" && !isMarkdown(file) {
+			if opts.color {
+				if colored, ok := highlightFile(file, data); ok {
+					write(colored)
+					printed++
+					continue
+				}
+			}
 			write(string(data))
 			printed++
 			continue

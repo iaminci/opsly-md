@@ -1,6 +1,8 @@
 package main
 
 import (
+	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/alecthomas/chroma/v2"
@@ -93,4 +95,43 @@ func highlightCode(code, lang string) []Line {
 		lines = lines[:n-1]
 	}
 	return lines
+}
+
+var fileControlChars = regexp.MustCompile("[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]")
+
+// highlightFile colours a non-Markdown file for display, keeping its text byte-for-byte
+// (tabs and all) apart from stripping control characters that could drive the terminal.
+// ok is false when no lexer matches the file name, so callers can print it unchanged.
+func highlightFile(path string, data []byte) (out string, ok bool) {
+	lexer := lexers.Match(filepath.Base(path))
+	if lexer == nil {
+		return "", false
+	}
+	source := string(data)
+	iterator, err := chroma.Coalesce(lexer).Tokenise(nil, source)
+	if err != nil {
+		return "", false
+	}
+
+	var b strings.Builder
+	for _, tok := range iterator.Tokens() {
+		value := fileControlChars.ReplaceAllString(tok.Value, "")
+		style := styleForToken(tok.Type)
+		// Colour each line separately so a pager or `head` never cuts a style mid-run.
+		for i, part := range strings.Split(value, "\n") {
+			if i > 0 {
+				b.WriteString("\n")
+			}
+			if part == "" {
+				continue
+			}
+			b.WriteString(serialize(Line{{Text: part, Style: style}}, true))
+		}
+	}
+	result := b.String()
+	// Lexers append a newline when the source lacks one; restore the original ending.
+	if !strings.HasSuffix(source, "\n") {
+		result = strings.TrimSuffix(result, "\n")
+	}
+	return result, true
 }
